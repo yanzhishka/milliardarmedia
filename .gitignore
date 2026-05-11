@@ -1,0 +1,6 @@
+.DS_Store
+assets/.DS_Store
+
+# Private team photos. Keep these local and do not commit them.
+assets/konstantin-sazonov.jpg
+assets/mikhail-nazarov.jpg

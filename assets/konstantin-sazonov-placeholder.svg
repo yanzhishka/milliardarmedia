@@ -1,0 +1,13 @@
+<svg width="1200" height="800" viewBox="0 0 1200 800" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title">
+  <title id="title">Публичная заглушка портрета Константина Сазонова</title>
+  <rect width="1200" height="800" fill="#171717"/>
+  <rect x="44" y="44" width="1112" height="712" rx="8" fill="#f4f2ed"/>
+  <path d="M260 545C310 442 420 374 548 374C676 374 786 442 836 545" stroke="#171717" stroke-width="34" stroke-linecap="round"/>
+  <circle cx="548" cy="294" r="112" fill="#dfe4df" stroke="#171717" stroke-width="28"/>
+  <path d="M780 214H930" stroke="#171717" stroke-width="22" stroke-linecap="round"/>
+  <path d="M780 282H1012" stroke="#171717" stroke-width="18" stroke-linecap="round"/>
+  <path d="M780 342H956" stroke="#171717" stroke-width="18" stroke-linecap="round"/>
+  <path d="M780 412C830 448 932 448 982 412" stroke="#171717" stroke-width="18" stroke-linecap="round"/>
+  <circle cx="838" cy="396" r="12" fill="#171717"/>
+  <circle cx="922" cy="396" r="12" fill="#171717"/>
+</svg>

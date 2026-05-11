@@ -1,0 +1,13 @@
+<svg width="1200" height="800" viewBox="0 0 1200 800" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title">
+  <title id="title">Публичная заглушка портрета Назарова Михаила</title>
+  <rect width="1200" height="800" fill="#171717"/>
+  <rect x="44" y="44" width="1112" height="712" rx="8" fill="#fbfaf7"/>
+  <rect x="248" y="184" width="560" height="360" rx="8" fill="#dfe4df" stroke="#171717" stroke-width="28"/>
+  <circle cx="528" cy="364" r="96" fill="#f4f2ed" stroke="#171717" stroke-width="24"/>
+  <path d="M808 300L988 216V512L808 428V300Z" fill="#171717"/>
+  <path d="M402 612H654" stroke="#171717" stroke-width="24" stroke-linecap="round"/>
+  <path d="M528 544V612" stroke="#171717" stroke-width="24" stroke-linecap="round"/>
+  <path d="M458 360C486 386 570 386 598 360" stroke="#171717" stroke-width="16" stroke-linecap="round"/>
+  <circle cx="486" cy="332" r="10" fill="#171717"/>
+  <circle cx="570" cy="332" r="10" fill="#171717"/>
+</svg>

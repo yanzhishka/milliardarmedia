@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Миллиардар - агентство журналистов, которое превращает сложные темы в точные, живые и влиятельные истории."
+    />
+    <title>Миллиардар - агентство журналистов</title>
+    <link rel="icon" href="assets/logo.svg" type="image/svg+xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="noise" aria-hidden="true"></div>
+
+    <header class="site-header">
+      <a class="brand" href="#top" aria-label="Миллиардар - главная">
+        <img class="brand-mark" src="assets/logo.svg" alt="" aria-hidden="true" />
+        <span class="brand-name">Миллиардар</span>
+      </a>
+
+      <nav class="site-nav" aria-label="Основная навигация">
+        <a href="#about">О нас</a>
+        <a href="#team">Команда</a>
+        <a href="#contacts">Контакты</a>
+      </nav>
+    </header>
+
+    <main id="top">
+      <section class="hero section reveal">
+        <div class="hero-copy">
+          <p class="eyebrow">Журналистика для тех, кто строит повестку</p>
+          <h1>Точные истории о деньгах, власти и новых идеях.</h1>
+          <p class="hero-text">
+            «Миллиардар» объединяет репортёров, редакторов и аналитиков, чтобы
+            находить факты, видеть контекст и выпускать материалы, которые
+            читают внимательно.
+          </p>
+          <div class="hero-actions">
+            <a class="button primary" href="#contact-form">Обсудить материал</a>
+            <a class="button ghost" href="#team">Познакомиться</a>
+          </div>
+        </div>
+
+        <div class="hero-visual" aria-hidden="true">
+          <div class="orbit orbit-one"></div>
+          <div class="orbit orbit-two"></div>
+          <div class="ticker">
+            <span>Факт</span>
+            <span>Контекст</span>
+            <span>Голос</span>
+          </div>
+        </div>
+      </section>
+
+      <section id="about" class="section split reveal">
+        <div>
+          <p class="eyebrow">Подход</p>
+          <h2>Мы пишем так, будто каждая строка будет проверена рынком.</h2>
+        </div>
+        <div class="about-grid">
+          <article class="metric">
+            <span>01</span>
+            <h3>Расследования</h3>
+            <p>Данные, интервью, документы и аккуратная проверка каждого вывода.</p>
+          </article>
+          <article class="metric">
+            <span>02</span>
+            <h3>Редактура</h3>
+            <p>Сильная драматургия без шума: факты остаются на первом плане.</p>
+          </article>
+          <article class="metric">
+            <span>03</span>
+            <h3>Медиа-стратегия</h3>
+            <p>Помогаем брендам, фондам и авторам говорить с умной аудиторией.</p>
+          </article>
+        </div>
+      </section>
+
+      <section id="team" class="section reveal">
+        <div class="section-head">
+          <p class="eyebrow">Команда</p>
+          <h2>Редакция, которая держит в фокусе и смысл, и кадр.</h2>
+        </div>
+
+        <div class="team-grid">
+          <details class="person">
+            <summary class="person-summary">
+              <img
+                class="portrait portrait-konstantin"
+                src="assets/konstantin-sazonov-placeholder.svg"
+                alt="Константин Сазонов"
+              />
+              <span class="person-info">
+                <span>Главный редактор</span>
+                <strong>Сазонов Константин</strong>
+                <em>Биография</em>
+              </span>
+            </summary>
+            <div class="person-bio">
+              <p>
+                Константин отвечает за редакционную линию «Миллиардара»: выбирает
+                темы, собирает фактуру и доводит материалы до ясной, точной
+                формы. Его зона внимания - истории на стыке бизнеса, медиа и
+                общественной повестки.
+              </p>
+            </div>
+          </details>
+
+          <details class="person">
+            <summary class="person-summary">
+              <img
+                class="portrait portrait-mikhail"
+                src="assets/mikhail-nazarov-placeholder.svg"
+                alt="Назаров Михаил"
+              />
+              <span class="person-info">
+                <span>Оператор</span>
+                <strong>Назаров Михаил</strong>
+                <em>Биография</em>
+              </span>
+            </summary>
+            <div class="person-bio">
+              <p>
+                Михаил работает с визуальным языком агентства: съёмкой, светом,
+                композицией и ритмом кадра. Он помогает материалам звучать не
+                только текстом, но и изображением, которое удерживает внимание.
+              </p>
+            </div>
+          </details>
+        </div>
+      </section>
+
+      <section id="contacts" class="section contact reveal">
+        <div class="contact-copy">
+          <p class="eyebrow">Контакты</p>
+          <h2>Напишите нам, если теме нужен точный голос.</h2>
+          <ul class="contact-list">
+            <li>
+              <span>Email</span>
+              <a href="mailto:milliardar.media@gmail.com">milliardar.media@gmail.com</a>
+            </li>
+            <li>
+              <span>Telegram</span>
+              <a href="https://t.me/milliardarmedia">@milliardarmedia</a>
+            </li>
+          </ul>
+        </div>
+
+        <form
+          id="contact-form"
+          class="contact-form"
+          action="https://formsubmit.co/ajax/milliardar.media@gmail.com"
+          method="POST"
+          novalidate
+        >
+          <input type="text" name="_honey" class="hidden-field" tabindex="-1" autocomplete="off" />
+          <input type="hidden" name="_subject" value="Новая заявка с сайта Миллиардар" />
+          <input type="hidden" name="_template" value="table" />
+          <label>
+            <span>Имя</span>
+            <input name="name" type="text" autocomplete="name" required />
+          </label>
+          <label>
+            <span>Email</span>
+            <input
+              name="email"
+              type="text"
+              inputmode="email"
+              autocomplete="email"
+              pattern="[^@\s]+@[^@\s]+\.[^@\s]+"
+              required
+            />
+          </label>
+          <label>
+            <span>Сообщение</span>
+            <textarea name="message" rows="5" required></textarea>
+          </label>
+          <button class="button primary" type="submit">Отправить</button>
+          <p class="form-note" aria-live="polite"></p>
+        </form>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <span>© 2026 Миллиардар</span>
+      <a href="#top">Наверх</a>
+    </footer>
+
+    <script src="script.js"></script>
+  </body>
+</html>
