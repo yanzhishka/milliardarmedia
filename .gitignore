@@ -1,8 +1,5 @@
 .DS_Store
 assets/.DS_Store
 
-# Private local media. Keep these files on the machine, not in GitHub.
-assets/*.jpg
-assets/*.jpeg
-assets/*.heic
+# Keep heavy local media out of GitHub.
 assets/*.mp4
