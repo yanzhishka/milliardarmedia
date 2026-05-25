@@ -1,13 +1,20 @@
-<svg width="1200" height="800" viewBox="0 0 1200 800" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title">
-  <title id="title">Публичная заглушка портрета Назарова Михаила</title>
-  <rect width="1200" height="800" fill="#171717"/>
-  <rect x="44" y="44" width="1112" height="712" rx="8" fill="#fbfaf7"/>
-  <rect x="248" y="184" width="560" height="360" rx="8" fill="#dfe4df" stroke="#171717" stroke-width="28"/>
-  <circle cx="528" cy="364" r="96" fill="#f4f2ed" stroke="#171717" stroke-width="24"/>
-  <path d="M808 300L988 216V512L808 428V300Z" fill="#171717"/>
-  <path d="M402 612H654" stroke="#171717" stroke-width="24" stroke-linecap="round"/>
-  <path d="M528 544V612" stroke="#171717" stroke-width="24" stroke-linecap="round"/>
-  <path d="M458 360C486 386 570 386 598 360" stroke="#171717" stroke-width="16" stroke-linecap="round"/>
-  <circle cx="486" cy="332" r="10" fill="#171717"/>
-  <circle cx="570" cy="332" r="10" fill="#171717"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 600" role="img" aria-label="Mikhail Nazarov">
+  <defs>
+    <linearGradient id="chrome" x1="0" x2="1" y1="0.2" y2="0.88">
+      <stop offset="0" stop-color="#f8fff9"/>
+      <stop offset="0.32" stop-color="#8df7ff"/>
+      <stop offset="0.62" stop-color="#ff8fdc"/>
+      <stop offset="1" stop-color="#6a42ff"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="48%" cy="44%" r="62%">
+      <stop offset="0" stop-color="#8df7ff" stop-opacity="0.24"/>
+      <stop offset="1" stop-color="#000000" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="900" height="600" fill="#050507"/>
+  <rect width="900" height="600" fill="url(#glow)"/>
+  <path d="M128 168 L772 434" stroke="#ffffff" stroke-opacity="0.16" stroke-width="4"/>
+  <path d="M152 422 C310 300 430 336 530 214 C620 104 734 142 810 176" fill="none" stroke="#ff8fdc" stroke-opacity="0.22" stroke-width="4"/>
+  <text x="50%" y="51%" text-anchor="middle" dominant-baseline="middle" font-family="Arial Black, Arial, sans-serif" font-size="170" font-weight="900" fill="url(#chrome)" stroke="#ffffff" stroke-width="3">MN</text>
+  <text x="50%" y="73%" text-anchor="middle" font-family="Arial, sans-serif" font-size="32" font-weight="700" fill="#f7f4ff" opacity="0.72">CAMERA</text>
 </svg>

@@ -1,6 +1,8 @@
 .DS_Store
 assets/.DS_Store
 
-# Private team photos. Keep these local and do not commit them.
-assets/konstantin-sazonov.jpg
-assets/mikhail-nazarov.jpg
+# Private local media. Keep these files on the machine, not in GitHub.
+assets/*.jpg
+assets/*.jpeg
+assets/*.heic
+assets/*.mp4

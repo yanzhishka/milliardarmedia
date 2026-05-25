@@ -5,29 +5,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta
       name="description"
-      content="Миллиардар - агентство журналистов, которое превращает сложные темы в точные, живые и влиятельные истории."
+      content="Миллиардар - журналистское агентство."
     />
-    <title>Миллиардар - агентство журналистов</title>
-    <link rel="icon" href="assets/logo.svg" type="image/svg+xml" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap"
-      rel="stylesheet"
-    />
+    <title>Миллиардар - журналистское агентство</title>
+    <link rel="icon" href="assets/logo-favicon.png" type="image/png" />
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
-    <div class="noise" aria-hidden="true"></div>
-
     <header class="site-header">
       <a class="brand" href="#top" aria-label="Миллиардар - главная">
-        <img class="brand-mark" src="assets/logo.svg" alt="" aria-hidden="true" />
+        <img class="brand-mark" src="assets/logo.png" alt="" aria-hidden="true" />
         <span class="brand-name">Миллиардар</span>
       </a>
 
       <nav class="site-nav" aria-label="Основная навигация">
         <a href="#about">О нас</a>
+        <a href="#studio">Пульт</a>
         <a href="#team">Команда</a>
         <a href="#contacts">Контакты</a>
       </nav>
@@ -36,26 +29,29 @@
     <main id="top">
       <section class="hero section reveal">
         <div class="hero-copy">
-          <p class="eyebrow">Журналистика для тех, кто строит повестку</p>
-          <h1>Точные истории о деньгах, власти и новых идеях.</h1>
+          <p class="eyebrow">Журналистское агентство</p>
+          <h1>Материалы, интервью, видео.</h1>
           <p class="hero-text">
-            «Миллиардар» объединяет репортёров, редакторов и аналитиков, чтобы
-            находить факты, видеть контекст и выпускать материалы, которые
-            читают внимательно.
+            Собираем факты, задаём вопросы и превращаем идеи в понятные истории.
           </p>
           <div class="hero-actions">
-            <a class="button primary" href="#contact-form">Обсудить материал</a>
-            <a class="button ghost" href="#team">Познакомиться</a>
+            <a class="button primary" href="#contact-form">Написать</a>
+            <a class="button ghost" href="#team">Команда</a>
           </div>
         </div>
 
         <div class="hero-visual" aria-hidden="true">
-          <div class="orbit orbit-one"></div>
-          <div class="orbit orbit-two"></div>
+          <div class="chrome-word">Миллиардар</div>
+          <div class="spark spark-one"></div>
+          <div class="spark spark-two"></div>
+          <div class="spark spark-three"></div>
+          <div class="drip drip-one"></div>
+          <div class="drip drip-two"></div>
+          <div class="drip drip-three"></div>
           <div class="ticker">
             <span>Факт</span>
-            <span>Контекст</span>
             <span>Голос</span>
+            <span>Тема</span>
           </div>
         </div>
       </section>
@@ -63,75 +59,167 @@
       <section id="about" class="section split reveal">
         <div>
           <p class="eyebrow">Подход</p>
-          <h2>Мы пишем так, будто каждая строка будет проверена рынком.</h2>
+          <h2>Журналистика без лишнего шума.</h2>
         </div>
         <div class="about-grid">
           <article class="metric">
             <span>01</span>
-            <h3>Расследования</h3>
-            <p>Данные, интервью, документы и аккуратная проверка каждого вывода.</p>
+            <h3>Темы</h3>
+            <p>Ищем сильные поводы.</p>
           </article>
           <article class="metric">
             <span>02</span>
-            <h3>Редактура</h3>
-            <p>Сильная драматургия без шума: факты остаются на первом плане.</p>
+            <h3>Проверка</h3>
+            <p>Держимся фактов.</p>
           </article>
           <article class="metric">
             <span>03</span>
-            <h3>Медиа-стратегия</h3>
-            <p>Помогаем брендам, фондам и авторам говорить с умной аудиторией.</p>
+            <h3>Подача</h3>
+            <p>Собираем ясную форму.</p>
           </article>
+        </div>
+      </section>
+
+      <section id="studio" class="section studio reveal">
+        <div class="section-head">
+          <p class="eyebrow">Редакционный пульт</p>
+          <h2>Настройте формат.</h2>
+        </div>
+
+        <div class="topic-marquee" aria-label="Темы агентства">
+          <div class="topic-track">
+            <span>репортажи</span>
+            <span>интервью</span>
+            <span>видео</span>
+            <span>редактура</span>
+            <span>факты</span>
+          </div>
+        </div>
+
+        <div class="studio-grid">
+          <div class="format-switch" role="tablist" aria-label="Тип материала">
+            <button class="format-button is-active" type="button" data-format="investigation">
+              Материал
+            </button>
+            <button class="format-button" type="button" data-format="interview">Интервью</button>
+            <button class="format-button" type="button" data-format="video">Видео</button>
+            <button class="format-button" type="button" data-format="special">Спецпроект</button>
+          </div>
+
+          <article class="brief-panel" aria-live="polite">
+            <p class="brief-kicker" id="brief-kicker">Тема + факты</p>
+            <h3 id="brief-title">Материал</h3>
+            <p id="brief-text">Факты, контекст, ясный текст.</p>
+            <div class="brief-tags" id="brief-tags">
+              <span>факты</span>
+              <span>контекст</span>
+              <span>редактура</span>
+            </div>
+          </article>
+
+          <div class="mixer-panel">
+            <label class="range-row">
+              <span>Факты</span>
+              <input class="mixer-range" name="facts" type="range" min="0" max="100" step="25" value="75" />
+              <output>75</output>
+            </label>
+            <label class="range-row">
+              <span>Подача</span>
+              <input class="mixer-range" name="humor" type="range" min="0" max="100" step="25" value="50" />
+              <output>50</output>
+            </label>
+            <label class="range-row">
+              <span>Акцент</span>
+              <input class="mixer-range" name="drama" type="range" min="0" max="100" step="25" value="50" />
+              <output>50</output>
+            </label>
+
+            <article class="headline-machine">
+              <span>Черновик заголовка</span>
+              <p id="headline-output">История, которую хочется дочитать.</p>
+            </article>
+          </div>
         </div>
       </section>
 
       <section id="team" class="section reveal">
         <div class="section-head">
           <p class="eyebrow">Команда</p>
-          <h2>Редакция, которая держит в фокусе и смысл, и кадр.</h2>
+          <h2>Редакция в три человека.</h2>
         </div>
 
         <div class="team-grid">
           <details class="person">
             <summary class="person-summary">
-              <img
-                class="portrait portrait-konstantin"
-                src="assets/konstantin-sazonov-placeholder.svg"
-                alt="Константин Сазонов"
-              />
+              <span class="portrait-shell">
+                <img
+                  class="portrait portrait-konstantin"
+                  src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw=="
+                  data-src="assets/konstantin-sazonov-color.jpg"
+                  data-fallback="assets/konstantin-sazonov-placeholder.svg"
+                  alt="Константин Сазонов"
+                  decoding="async"
+                />
+              </span>
               <span class="person-info">
                 <span>Главный редактор</span>
-                <strong>Сазонов Константин</strong>
+                <strong>Константин Сазонов</strong>
                 <em>Биография</em>
               </span>
             </summary>
             <div class="person-bio">
               <p>
-                Константин отвечает за редакционную линию «Миллиардара»: выбирает
-                темы, собирает фактуру и доводит материалы до ясной, точной
-                формы. Его зона внимания - истории на стыке бизнеса, медиа и
-                общественной повестки.
+                Темы, структура и редакционный фокус.
               </p>
             </div>
           </details>
 
           <details class="person">
             <summary class="person-summary">
-              <img
-                class="portrait portrait-mikhail"
-                src="assets/mikhail-nazarov-placeholder.svg"
-                alt="Назаров Михаил"
-              />
+              <span class="portrait-shell">
+                <img
+                  class="portrait portrait-atemiy"
+                  src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw=="
+                  data-src="assets/prokhorenko-atemiy-color.jpg"
+                  data-fallback="assets/prokhorenko-atemiy-placeholder.svg"
+                  alt="Прохоренко Атемий"
+                  decoding="async"
+                />
+              </span>
               <span class="person-info">
-                <span>Оператор</span>
+                <span>Главный редактор</span>
+                <strong>Прохоренко Атемий</strong>
+                <em>Биография</em>
+              </span>
+            </summary>
+            <div class="person-bio">
+              <p>
+                Факты, формулировки и логика материала.
+              </p>
+            </div>
+          </details>
+
+          <details class="person">
+            <summary class="person-summary">
+              <span class="portrait-shell">
+                <img
+                  class="portrait portrait-mikhail"
+                  src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw=="
+                  data-src="assets/mikhail-nazarov-color.jpg"
+                  data-fallback="assets/mikhail-nazarov-placeholder.svg"
+                  alt="Назаров Михаил"
+                  decoding="async"
+                />
+              </span>
+              <span class="person-info">
+                <span>Оператор и ведущий</span>
                 <strong>Назаров Михаил</strong>
                 <em>Биография</em>
               </span>
             </summary>
             <div class="person-bio">
               <p>
-                Михаил работает с визуальным языком агентства: съёмкой, светом,
-                композицией и ритмом кадра. Он помогает материалам звучать не
-                только текстом, но и изображением, которое удерживает внимание.
+                Съёмка, кадр и визуальный ритм.
               </p>
             </div>
           </details>
@@ -141,7 +229,7 @@
       <section id="contacts" class="section contact reveal">
         <div class="contact-copy">
           <p class="eyebrow">Контакты</p>
-          <h2>Напишите нам, если теме нужен точный голос.</h2>
+          <h2>Предложите тему или проект.</h2>
           <ul class="contact-list">
             <li>
               <span>Email</span>
@@ -162,7 +250,7 @@
           novalidate
         >
           <input type="text" name="_honey" class="hidden-field" tabindex="-1" autocomplete="off" />
-          <input type="hidden" name="_subject" value="Новая заявка с сайта Миллиардар" />
+          <input type="hidden" name="_subject" value="Новое сообщение с сайта Миллиардар" />
           <input type="hidden" name="_template" value="table" />
           <label>
             <span>Имя</span>
@@ -189,10 +277,39 @@
       </section>
     </main>
 
+    <section class="command-console" aria-label="Консоль команд">
+      <form class="console-form" id="command-console">
+        <span aria-hidden="true">milliardar:~$</span>
+        <label class="visually-hidden" for="command-input">Команда</label>
+        <input
+          id="command-input"
+          name="command"
+          type="text"
+          autocomplete="off"
+          spellcheck="false"
+          placeholder="_"
+        />
+      </form>
+      <p class="console-output" aria-live="polite"></p>
+    </section>
+
     <footer class="site-footer">
       <span>© 2026 Миллиардар</span>
       <a href="#top">Наверх</a>
     </footer>
+
+    <div class="rickroll-modal" id="rickroll-modal" aria-hidden="true" role="dialog" aria-label="Сюрприз">
+      <button class="rickroll-close" type="button" aria-label="Закрыть видео">×</button>
+      <div class="rickroll-frame">
+        <video
+          title="Rick Astley - Never Gonna Give You Up"
+          data-src="assets/rickroll.mp4"
+          preload="none"
+          controls
+          playsinline
+        ></video>
+      </div>
+    </div>
 
     <script src="script.js"></script>
   </body>

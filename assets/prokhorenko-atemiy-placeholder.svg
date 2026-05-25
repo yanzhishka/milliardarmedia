@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 600" role="img" aria-label="Prokhorenko Atemiy">
+  <defs>
+    <linearGradient id="chrome" x1="0" x2="1" y1="0.15" y2="0.9">
+      <stop offset="0" stop-color="#f8fff9"/>
+      <stop offset="0.28" stop-color="#b7ffe8"/>
+      <stop offset="0.58" stop-color="#ff8fdc"/>
+      <stop offset="1" stop-color="#8d5cff"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="52%" cy="42%" r="58%">
+      <stop offset="0" stop-color="#ff8fdc" stop-opacity="0.22"/>
+      <stop offset="1" stop-color="#000000" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="900" height="600" fill="#050507"/>
+  <rect width="900" height="600" fill="url(#glow)"/>
+  <circle cx="184" cy="142" r="5" fill="#eaff72" opacity="0.78"/>
+  <circle cx="744" cy="410" r="5" fill="#8df7ff" opacity="0.78"/>
+  <path d="M110 476 C244 282 360 410 474 216 C570 54 690 118 810 80" fill="none" stroke="#ffffff" stroke-opacity="0.17" stroke-width="4"/>
+  <text x="50%" y="51%" text-anchor="middle" dominant-baseline="middle" font-family="Arial Black, Arial, sans-serif" font-size="170" font-weight="900" fill="url(#chrome)" stroke="#ffffff" stroke-width="3">AP</text>
+  <text x="50%" y="73%" text-anchor="middle" font-family="Arial, sans-serif" font-size="32" font-weight="700" fill="#f7f4ff" opacity="0.72">CHIEF EDITOR</text>
+</svg>
