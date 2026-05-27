@@ -1,6 +1,6 @@
 const POSTS_KEY = "telegram_posts";
 const MAX_POSTS = 30;
-const DEFAULT_FEED_RESET_AT = 1779912679;
+const DEFAULT_FEED_RESET_AT = 1779913144;
 
 export async function onRequestPost({ request, env }) {
   if (!env.POSTS_KV) {
