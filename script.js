@@ -18,9 +18,12 @@ const briefTags = document.querySelector("#brief-tags");
 const mixerRanges = document.querySelectorAll(".mixer-range");
 const headlineOutput = document.querySelector("#headline-output");
 const lazyPortraits = document.querySelectorAll(".portrait[data-src]");
+const feedList = document.querySelector("[data-feed-list]");
+const feedStatus = document.querySelector("[data-feed-status]");
 const canAnimateCursor =
   window.matchMedia("(pointer: fine)").matches &&
   !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+const FEED_REFRESH_INTERVAL = 30000;
 let sixtySevenTimer;
 let activeFormat = "investigation";
 
@@ -116,6 +119,7 @@ const revealObserver = new IntersectionObserver(
 revealItems.forEach((item) => revealObserver.observe(item));
 
 initLazyPortraits();
+initTelegramFeed();
 
 if (canAnimateCursor) {
   initCursorSticker();
@@ -395,6 +399,82 @@ function initLazyPortraits() {
   );
 
   lazyPortraits.forEach((image) => portraitObserver.observe(image));
+}
+
+async function initTelegramFeed() {
+  if (!feedList || !feedStatus) {
+    return;
+  }
+
+  await loadTelegramFeed();
+  window.setInterval(loadTelegramFeed, FEED_REFRESH_INTERVAL);
+}
+
+async function loadTelegramFeed() {
+  try {
+    const response = await fetch("/api/posts", {
+      cache: "no-store",
+      headers: {
+        Accept: "application/json",
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error("Feed endpoint is not ready");
+    }
+
+    const data = await response.json();
+    const posts = Array.isArray(data.posts) ? data.posts : [];
+
+    renderFeed(posts);
+  } catch (error) {
+    feedStatus.textContent =
+      "Лента появится здесь после подключения Telegram webhook в Cloudflare.";
+    feedList.replaceChildren();
+  }
+}
+
+function renderFeed(posts) {
+  const latestPosts = posts.slice(0, 6);
+
+  feedList.replaceChildren(...latestPosts.map(createFeedCard));
+
+  if (!latestPosts.length) {
+    feedStatus.textContent = "Ждём первые публикации из Telegram.";
+    return;
+  }
+
+  feedStatus.textContent = `Последние ${latestPosts.length} публикаций из Telegram.`;
+}
+
+function createFeedCard(post) {
+  const card = document.createElement("article");
+  const time = document.createElement("time");
+  const text = document.createElement("p");
+  const link = document.createElement("a");
+  const date = post.date ? new Date(post.date * 1000) : new Date();
+
+  card.className = "feed-card";
+  time.dateTime = date.toISOString();
+  time.textContent = formatFeedDate(date);
+  text.textContent = post.text || post.caption || "Публикация без текста.";
+  link.href = post.link || "https://t.me/milliardarmedia";
+  link.target = "_blank";
+  link.rel = "noopener";
+  link.textContent = "Открыть в Telegram";
+
+  card.append(time, text, link);
+
+  return card;
+}
+
+function formatFeedDate(date) {
+  return new Intl.DateTimeFormat("ru-RU", {
+    day: "numeric",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(date);
 }
 
 function initCursorSticker() {

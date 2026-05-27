@@ -935,6 +935,128 @@ h3 {
   line-height: 1.65;
 }
 
+.feed-section {
+  border-top: 1px solid var(--line);
+}
+
+.feed-link {
+  display: inline-flex;
+  min-height: 42px;
+  align-items: center;
+  justify-content: center;
+  padding: 0 16px;
+  border: 1px solid rgba(141, 247, 255, 0.32);
+  border-radius: 999px;
+  background:
+    linear-gradient(112deg, rgba(141, 247, 255, 0.14), rgba(255, 143, 220, 0.12)),
+    rgba(255, 255, 255, 0.06);
+  color: #fff;
+  font-size: 0.88rem;
+  font-weight: 800;
+  transition: transform 220ms ease, border-color 220ms ease, background 220ms ease;
+}
+
+.feed-link:hover {
+  border-color: rgba(255, 255, 255, 0.42);
+  background:
+    linear-gradient(112deg, rgba(141, 247, 255, 0.22), rgba(255, 143, 220, 0.18)),
+    rgba(255, 255, 255, 0.08);
+  transform: translateY(-2px);
+}
+
+.feed-board {
+  position: relative;
+  min-height: 230px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 88% 12%, rgba(255, 143, 220, 0.18), transparent 19rem),
+    radial-gradient(circle at 12% 70%, rgba(141, 247, 255, 0.14), transparent 22rem),
+    linear-gradient(145deg, rgba(255, 255, 255, 0.09), rgba(255, 255, 255, 0.03)),
+    rgba(3, 3, 5, 0.74);
+  box-shadow: var(--shadow), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.feed-board::before {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+  background-size: 64px 64px;
+  content: "";
+  mask-image: linear-gradient(to bottom, black, transparent 88%);
+  pointer-events: none;
+}
+
+.feed-status {
+  position: relative;
+  z-index: 1;
+  padding: 22px 24px;
+  border-bottom: 1px solid var(--line);
+  color: rgba(247, 244, 255, 0.68);
+  font-weight: 800;
+}
+
+.feed-status:empty {
+  display: none;
+}
+
+.feed-grid {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  padding: 16px;
+}
+
+.feed-card {
+  display: grid;
+  gap: 14px;
+  min-height: 210px;
+  padding: 18px;
+  border: 1px solid rgba(247, 244, 255, 0.16);
+  border-radius: var(--radius);
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.035)),
+    rgba(0, 0, 0, 0.7);
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.09);
+  transition: transform 220ms ease, border-color 220ms ease, box-shadow 220ms ease;
+}
+
+.feed-card:hover {
+  border-color: rgba(141, 247, 255, 0.42);
+  box-shadow: 0 20px 54px rgba(0, 0, 0, 0.42), 0 0 24px rgba(141, 247, 255, 0.12);
+  transform: translateY(-5px);
+}
+
+.feed-card time {
+  color: rgba(234, 255, 114, 0.8);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.feed-card p {
+  margin: 0;
+  color: rgba(247, 244, 255, 0.78);
+  line-height: 1.62;
+  white-space: pre-line;
+}
+
+.feed-card a {
+  align-self: end;
+  width: fit-content;
+  padding-bottom: 3px;
+  border-bottom: 1px solid currentColor;
+  color: #fff;
+  font-size: 0.84rem;
+  font-weight: 800;
+}
+
 .contact {
   display: grid;
   grid-template-columns: minmax(0, 0.9fr) minmax(320px, 0.76fr);
@@ -1377,6 +1499,10 @@ body.is-sixty-seven .sixty-seven-badge {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .feed-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .format-switch {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
@@ -1403,11 +1529,12 @@ body.is-sixty-seven .sixty-seven-badge {
 
   .site-nav {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(5, 1fr);
   }
 
   .site-nav a {
-    padding: 10px 8px;
+    padding: 10px 6px;
+    font-size: 0.82rem;
     text-align: center;
   }
 
@@ -1451,6 +1578,22 @@ body.is-sixty-seven .sixty-seven-badge {
 
   .team-grid {
     grid-template-columns: 1fr;
+  }
+
+  .feed-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .feed-board {
+    min-height: 210px;
+  }
+
+  .feed-status {
+    padding: 18px;
+  }
+
+  .feed-grid {
+    padding: 12px;
   }
 
   .topic-track {
