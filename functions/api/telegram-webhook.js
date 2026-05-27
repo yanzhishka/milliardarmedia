@@ -71,6 +71,10 @@ async function handleBotMessage(message, env) {
     return jsonResponse({ ok: true, command: "whoami" });
   }
 
+  if (isCommand(text, "status")) {
+    return handleStatusCommand(message, env);
+  }
+
   if (!isCommand(text, "delete")) {
     return jsonResponse({ ok: true, ignored: true });
   }
@@ -124,6 +128,33 @@ async function handleBotMessage(message, env) {
     telegramDeleted: telegramResult.ok,
     siteDeleted: posts.length !== nextPosts.length,
   });
+}
+
+async function handleStatusCommand(message, env) {
+  if (!isAdminMessage(message, env)) {
+    await replyToBotMessage(env, message, "Команда доступна только администраторам ленты.");
+    return jsonResponse({ ok: true, command: "status", denied: true });
+  }
+
+  const posts = await readPosts(env);
+  const latestPost = posts[0];
+  const latestImageLine = latestPost
+    ? `Последний пост: ${latestPost.mediaType || "text"}, фото: ${latestPost.imageStatus || "none"}`
+    : "Последний пост: нет";
+
+  await replyToBotMessage(
+    env,
+    message,
+    [
+      `KV: ${env.POSTS_KV ? "ok" : "нет"}`,
+      `TELEGRAM_BOT_TOKEN: ${env.TELEGRAM_BOT_TOKEN ? "ok" : "нет"}`,
+      `Канал: ${getChannelChatId(env) || "не настроен"}`,
+      `Постов в ленте: ${posts.length}`,
+      latestImageLine,
+    ].join("\n"),
+  );
+
+  return jsonResponse({ ok: true, command: "status" });
 }
 
 function isValidTelegramSecret(request, env) {
@@ -218,6 +249,7 @@ async function normalizePost(message, env) {
   const postId = `${chat.id}:${message.message_id}`;
   const photo = pickPhoto(message.photo);
   const image = photo ? await saveTelegramPhoto(env, postId, photo) : null;
+  const imageStatus = photo ? image?.status || "error" : "none";
 
   return {
     id: postId,
@@ -232,6 +264,8 @@ async function normalizePost(message, env) {
     mediaType: detectMediaType(message),
     imageUrl: image?.url || "",
     imageKey: image?.key || "",
+    imageStatus,
+    imageError: image?.error || "",
     imageWidth: photo?.width || null,
     imageHeight: photo?.height || null,
     receivedAt: new Date().toISOString(),
@@ -301,7 +335,10 @@ function pickPhoto(photos = []) {
 
 async function saveTelegramPhoto(env, postId, photo) {
   if (!photo?.file_id || !env.TELEGRAM_BOT_TOKEN) {
-    return null;
+    return {
+      status: "error",
+      error: "TELEGRAM_BOT_TOKEN не настроен",
+    };
   }
 
   const file = await callTelegram(env, "getFile", {
@@ -309,7 +346,10 @@ async function saveTelegramPhoto(env, postId, photo) {
   });
 
   if (!file.ok || !file.result?.file_path) {
-    return null;
+    return {
+      status: "error",
+      error: file.description || "Telegram не вернул путь к файлу",
+    };
   }
 
   const fileResponse = await fetch(
@@ -317,13 +357,26 @@ async function saveTelegramPhoto(env, postId, photo) {
   );
 
   if (!fileResponse.ok) {
-    return null;
+    return {
+      status: "error",
+      error: `Telegram file API error ${fileResponse.status}`,
+    };
   }
 
   const imageBytes = await fileResponse.arrayBuffer();
 
-  if (!imageBytes.byteLength || imageBytes.byteLength > MAX_IMAGE_BYTES) {
-    return null;
+  if (!imageBytes.byteLength) {
+    return {
+      status: "error",
+      error: "Telegram вернул пустой файл",
+    };
+  }
+
+  if (imageBytes.byteLength > MAX_IMAGE_BYTES) {
+    return {
+      status: "error",
+      error: "Файл больше лимита 4 МБ",
+    };
   }
 
   const imageKey = `${IMAGE_KEY_PREFIX}${postId}`;
@@ -340,6 +393,7 @@ async function saveTelegramPhoto(env, postId, photo) {
   });
 
   return {
+    status: "saved",
     key: imageKey,
     url: `/api/post-image?key=${encodeURIComponent(imageKey)}`,
   };

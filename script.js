@@ -506,7 +506,7 @@ function createFeedMedia(post) {
     const placeholder = document.createElement("div");
 
     placeholder.className = "feed-media feed-media-placeholder";
-    placeholder.textContent = "Медиа в Telegram";
+    placeholder.textContent = post.mediaType === "photo" ? "Фото в Telegram" : "Медиа в Telegram";
 
     return placeholder;
   }
