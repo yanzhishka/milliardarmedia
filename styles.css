@@ -161,12 +161,13 @@ textarea {
 }
 
 .brand-mark {
-  width: 92px;
-  height: 36px;
+  width: 48px;
+  height: 48px;
   flex: 0 0 auto;
-  border-radius: 0;
-  object-fit: contain;
-  box-shadow: 0 0 24px rgba(141, 247, 255, 0.12);
+  border-radius: 12px;
+  object-fit: cover;
+  background: #000;
+  box-shadow: 0 0 24px rgba(141, 247, 255, 0.18);
   transition: transform 240ms ease, filter 240ms ease;
 }
 
