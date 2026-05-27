@@ -1,4 +1,5 @@
 const POSTS_KEY = "telegram_posts";
+const DEFAULT_FEED_RESET_AT = 1779912679;
 
 export async function onRequestGet({ env }) {
   const posts = await readPosts(env);
@@ -24,7 +25,17 @@ async function readPosts(env) {
 
   const posts = await env.POSTS_KV.get(POSTS_KEY, { type: "json" });
 
-  return Array.isArray(posts) ? posts : [];
+  return Array.isArray(posts) ? filterVisiblePosts(posts, env) : [];
+}
+
+function filterVisiblePosts(posts, env) {
+  const resetAt = getFeedResetAt(env);
+
+  return posts.filter((post) => Number(post.date || 0) >= resetAt);
+}
+
+function getFeedResetAt(env) {
+  return Number(env.TELEGRAM_FEED_RESET_AT || DEFAULT_FEED_RESET_AT) || 0;
 }
 
 function jsonResponse(payload, init = {}) {

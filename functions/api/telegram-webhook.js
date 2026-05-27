@@ -1,5 +1,6 @@
 const POSTS_KEY = "telegram_posts";
 const MAX_POSTS = 30;
+const DEFAULT_FEED_RESET_AT = 1779912679;
 
 export async function onRequestPost({ request, env }) {
   if (!env.POSTS_KV) {
@@ -54,7 +55,7 @@ export async function onRequestOptions() {
 async function readPosts(env) {
   const posts = await env.POSTS_KV.get(POSTS_KEY, { type: "json" });
 
-  return Array.isArray(posts) ? posts : [];
+  return Array.isArray(posts) ? filterVisiblePosts(posts, env) : [];
 }
 
 async function handleBotMessage(message, env) {
@@ -74,13 +75,24 @@ async function handleBotMessage(message, env) {
     return jsonResponse({ ok: true, command: "delete", denied: true });
   }
 
-  const messageId = parseDeleteTarget(text);
+  const posts = await readPosts(env);
+  const deleteTarget = parseDeleteTarget(text);
+  let messageId = deleteTarget.messageId;
 
-  if (!messageId) {
+  if (!deleteTarget.raw && posts.length) {
+    messageId = posts[0].messageId;
+  }
+
+  if (!deleteTarget.raw && !posts.length) {
+    await replyToBotMessage(env, message, "В ленте сайта пока нет постов.");
+    return jsonResponse({ ok: true, command: "delete", empty: true });
+  }
+
+  if (deleteTarget.raw && !messageId) {
     await replyToBotMessage(
       env,
       message,
-      "Формат: /delete 123 или /delete https://t.me/milliardarmedia/123",
+      "Формат: /delete, /delete 123 или /delete https://t.me/milliardarmedia/123",
     );
     return jsonResponse({ ok: true, command: "delete", error: "missing_message_id" });
   }
@@ -93,7 +105,6 @@ async function handleBotMessage(message, env) {
       })
     : { ok: false, description: "TELEGRAM_CHANNEL_ID или TELEGRAM_CHANNEL_USERNAME не настроен" };
 
-  const posts = await readPosts(env);
   const nextPosts = removePost(posts, messageId);
 
   await env.POSTS_KV.put(POSTS_KEY, JSON.stringify(nextPosts));
@@ -159,13 +170,26 @@ function isAdminMessage(message, env) {
 function parseDeleteTarget(text) {
   const target = text.replace(/^\/delete(?:@\w+)?/i, "").trim();
 
+  if (!target) {
+    return {
+      raw: "",
+      messageId: null,
+    };
+  }
+
   if (/^\d+$/.test(target)) {
-    return Number(target);
+    return {
+      raw: target,
+      messageId: Number(target),
+    };
   }
 
   const match = target.match(/\/(\d+)(?:\?.*)?$/);
 
-  return match ? Number(match[1]) : null;
+  return {
+    raw: target,
+    messageId: match ? Number(match[1]) : null,
+  };
 }
 
 function getChannelChatId(env) {
@@ -226,6 +250,16 @@ function upsertPost(posts, post) {
   return [post, ...withoutCurrent]
     .sort((left, right) => (right.date || 0) - (left.date || 0))
     .slice(0, MAX_POSTS);
+}
+
+function filterVisiblePosts(posts, env) {
+  const resetAt = getFeedResetAt(env);
+
+  return posts.filter((post) => Number(post.date || 0) >= resetAt);
+}
+
+function getFeedResetAt(env) {
+  return Number(env.TELEGRAM_FEED_RESET_AT || DEFAULT_FEED_RESET_AT) || 0;
 }
 
 function removePost(posts, messageId) {
