@@ -1,5 +1,7 @@
 const POSTS_KEY = "telegram_posts";
+const IMAGE_KEY_PREFIX = "telegram_post_image:";
 const MAX_POSTS = 30;
+const MAX_IMAGE_BYTES = 4 * 1024 * 1024;
 const DEFAULT_FEED_RESET_AT = 1779913144;
 
 export async function onRequestPost({ request, env }) {
@@ -36,11 +38,14 @@ export async function onRequestPost({ request, env }) {
     return jsonResponse({ ok: true, ignored: true, reason: "channel_mismatch" });
   }
 
-  const post = normalizePost(channelPost);
   const posts = await readPosts(env);
+  const previousPost = findPost(posts, channelPost);
+  const post = await normalizePost(channelPost, env);
   const nextPosts = upsertPost(posts, post);
+  const stalePosts = collectStaleImagePosts(posts, nextPosts, previousPost, post);
 
   await env.POSTS_KV.put(POSTS_KEY, JSON.stringify(nextPosts));
+  await deletePostImages(env, stalePosts);
 
   return jsonResponse({ ok: true, stored: post.id });
 }
@@ -106,8 +111,10 @@ async function handleBotMessage(message, env) {
     : { ok: false, description: "TELEGRAM_CHANNEL_ID или TELEGRAM_CHANNEL_USERNAME не настроен" };
 
   const nextPosts = removePost(posts, messageId);
+  const deletedPosts = posts.filter((post) => !nextPosts.some((nextPost) => nextPost.id === post.id));
 
   await env.POSTS_KV.put(POSTS_KEY, JSON.stringify(nextPosts));
+  await deletePostImages(env, deletedPosts);
   await replyToBotMessage(env, message, buildDeleteReply(messageId, telegramResult, posts, nextPosts));
 
   return jsonResponse({
@@ -204,13 +211,16 @@ function getChannelChatId(env) {
   return "";
 }
 
-function normalizePost(message) {
+async function normalizePost(message, env) {
   const chat = message.chat || {};
   const text = message.text || message.caption || "";
   const username = chat.username || "";
+  const postId = `${chat.id}:${message.message_id}`;
+  const photo = pickPhoto(message.photo);
+  const image = photo ? await saveTelegramPhoto(env, postId, photo) : null;
 
   return {
-    id: `${chat.id}:${message.message_id}`,
+    id: postId,
     messageId: message.message_id,
     chatId: chat.id,
     chatTitle: chat.title || "",
@@ -220,6 +230,10 @@ function normalizePost(message) {
     text: text.trim().slice(0, 1400),
     link: username ? `https://t.me/${username}/${message.message_id}` : "",
     mediaType: detectMediaType(message),
+    imageUrl: image?.url || "",
+    imageKey: image?.key || "",
+    imageWidth: photo?.width || null,
+    imageHeight: photo?.height || null,
     receivedAt: new Date().toISOString(),
   };
 }
@@ -250,6 +264,105 @@ function upsertPost(posts, post) {
   return [post, ...withoutCurrent]
     .sort((left, right) => (right.date || 0) - (left.date || 0))
     .slice(0, MAX_POSTS);
+}
+
+function findPost(posts, message) {
+  const chatId = message.chat?.id;
+  const messageId = message.message_id;
+
+  return posts.find((post) => String(post.id) === `${chatId}:${messageId}`) || null;
+}
+
+function collectStaleImagePosts(posts, nextPosts, previousPost, nextPost) {
+  const nextIds = new Set(nextPosts.map((post) => post.id));
+  const removedPosts = posts.filter((post) => !nextIds.has(post.id));
+
+  if (previousPost?.imageKey && previousPost.imageKey !== nextPost.imageKey) {
+    removedPosts.push(previousPost);
+  }
+
+  return removedPosts;
+}
+
+function pickPhoto(photos = []) {
+  if (!Array.isArray(photos) || !photos.length) {
+    return null;
+  }
+
+  const sorted = [...photos].sort((left, right) => {
+    const leftPixels = Number(left.width || 0) * Number(left.height || 0);
+    const rightPixels = Number(right.width || 0) * Number(right.height || 0);
+
+    return rightPixels - leftPixels;
+  });
+
+  return sorted.find((photo) => Number(photo.file_size || 0) <= MAX_IMAGE_BYTES) || sorted.at(-1);
+}
+
+async function saveTelegramPhoto(env, postId, photo) {
+  if (!photo?.file_id || !env.TELEGRAM_BOT_TOKEN) {
+    return null;
+  }
+
+  const file = await callTelegram(env, "getFile", {
+    file_id: photo.file_id,
+  });
+
+  if (!file.ok || !file.result?.file_path) {
+    return null;
+  }
+
+  const fileResponse = await fetch(
+    `https://api.telegram.org/file/bot${env.TELEGRAM_BOT_TOKEN}/${file.result.file_path}`,
+  );
+
+  if (!fileResponse.ok) {
+    return null;
+  }
+
+  const imageBytes = await fileResponse.arrayBuffer();
+
+  if (!imageBytes.byteLength || imageBytes.byteLength > MAX_IMAGE_BYTES) {
+    return null;
+  }
+
+  const imageKey = `${IMAGE_KEY_PREFIX}${postId}`;
+  const contentType =
+    fileResponse.headers.get("Content-Type") || inferImageContentType(file.result.file_path);
+
+  await env.POSTS_KV.put(imageKey, imageBytes, {
+    metadata: {
+      contentType,
+      filePath: file.result.file_path,
+      width: photo.width || null,
+      height: photo.height || null,
+    },
+  });
+
+  return {
+    key: imageKey,
+    url: `/api/post-image?key=${encodeURIComponent(imageKey)}`,
+  };
+}
+
+function inferImageContentType(filePath = "") {
+  const path = String(filePath).toLowerCase();
+
+  if (path.endsWith(".png")) {
+    return "image/png";
+  }
+
+  if (path.endsWith(".webp")) {
+    return "image/webp";
+  }
+
+  return "image/jpeg";
+}
+
+async function deletePostImages(env, posts) {
+  const imageKeys = [...new Set(posts.map((post) => post.imageKey).filter(Boolean))];
+
+  await Promise.all(imageKeys.map((imageKey) => env.POSTS_KV.delete(imageKey).catch(() => {})));
 }
 
 function filterVisiblePosts(posts, env) {

@@ -453,19 +453,77 @@ function createFeedCard(post) {
   const text = document.createElement("p");
   const link = document.createElement("a");
   const date = post.date ? new Date(post.date * 1000) : new Date();
+  const media = createFeedMedia(post);
 
   card.className = "feed-card";
+  card.classList.toggle("has-media", Boolean(media));
   time.dateTime = date.toISOString();
   time.textContent = formatFeedDate(date);
-  text.textContent = post.text || post.caption || "Публикация без текста.";
+  text.textContent = getFeedText(post);
   link.href = post.link || "https://t.me/milliardarmedia";
   link.target = "_blank";
   link.rel = "noopener";
   link.textContent = "Открыть в Telegram";
 
-  card.append(time, text, link);
+  card.append(time);
+
+  if (media) {
+    card.append(media);
+  }
+
+  card.append(text, link);
 
   return card;
+}
+
+function createFeedMedia(post) {
+  if (post.imageUrl) {
+    const figure = document.createElement("figure");
+    const image = document.createElement("img");
+
+    figure.className = "feed-media";
+    image.src = post.imageUrl;
+    image.alt = post.text
+      ? `Изображение к публикации: ${post.text.slice(0, 90)}`
+      : "Изображение из Telegram";
+    image.loading = "lazy";
+    image.decoding = "async";
+
+    if (post.imageWidth) {
+      image.width = post.imageWidth;
+    }
+
+    if (post.imageHeight) {
+      image.height = post.imageHeight;
+    }
+
+    figure.append(image);
+
+    return figure;
+  }
+
+  if (post.mediaType && post.mediaType !== "text") {
+    const placeholder = document.createElement("div");
+
+    placeholder.className = "feed-media feed-media-placeholder";
+    placeholder.textContent = "Медиа в Telegram";
+
+    return placeholder;
+  }
+
+  return null;
+}
+
+function getFeedText(post) {
+  if (post.text || post.caption) {
+    return post.text || post.caption;
+  }
+
+  if (post.imageUrl || post.mediaType === "photo") {
+    return "Фото из Telegram.";
+  }
+
+  return "Публикация без текста.";
 }
 
 function formatFeedDate(date) {

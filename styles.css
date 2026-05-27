@@ -1032,10 +1032,50 @@ h3 {
   transform: translateY(-5px);
 }
 
+.feed-card.has-media {
+  min-height: 330px;
+}
+
 .feed-card time {
   color: rgba(234, 255, 114, 0.8);
   font-size: 0.78rem;
   font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.feed-media {
+  position: relative;
+  aspect-ratio: 16 / 10;
+  margin: 0;
+  border: 1px solid rgba(247, 244, 255, 0.14);
+  border-radius: calc(var(--radius) - 8px);
+  overflow: hidden;
+  background:
+    linear-gradient(135deg, rgba(141, 247, 255, 0.12), rgba(255, 143, 220, 0.14)),
+    rgba(255, 255, 255, 0.04);
+}
+
+.feed-media img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: saturate(0.92) contrast(1.08);
+  transition: filter 240ms ease, transform 240ms ease;
+}
+
+.feed-card:hover .feed-media img {
+  filter: saturate(1.08) contrast(1.05);
+  transform: scale(1.025);
+}
+
+.feed-media-placeholder {
+  display: grid;
+  place-items: center;
+  color: rgba(247, 244, 255, 0.58);
+  font-size: 0.82rem;
+  font-weight: 900;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
