@@ -2,11 +2,13 @@ const POSTS_KEY = "telegram_posts";
 const PODCASTS_KEY = "telegram_podcasts";
 const IMAGE_KEY_PREFIX = "telegram_post_image:";
 const PODCAST_VIDEO_KEY_PREFIX = "telegram_podcast_video:";
+const PENDING_ACTION_KEY_PREFIX = "telegram_pending_action:";
 const MAX_POSTS = 30;
 const MAX_PODCASTS = 24;
 const MAX_IMAGE_BYTES = 4 * 1024 * 1024;
 const MAX_PODCAST_VIDEO_BYTES = 20 * 1024 * 1024;
 const DEFAULT_FEED_RESET_AT = 1779913144;
+const DELETE_CONFIRM_TTL_SECONDS = 10 * 60;
 
 export async function onRequestPost({ request, env }) {
   if (!env.POSTS_KV) {
@@ -26,6 +28,10 @@ export async function onRequestPost({ request, env }) {
     update = await request.json();
   } catch (error) {
     return jsonResponse({ ok: false, error: "Invalid JSON" }, { status: 400 });
+  }
+
+  if (update.callback_query) {
+    return handleCallbackQuery(update.callback_query, env);
   }
 
   if (update.message) {
@@ -82,6 +88,10 @@ async function readPodcasts(env) {
 async function handleBotMessage(message, env) {
   const text = (message.text || message.caption || "").trim();
 
+  if (isCommand(text, "help") || isCommand(text, "commands")) {
+    return handleHelpCommand(message, env);
+  }
+
   if (isCommand(text, "whoami")) {
     await replyToBotMessage(env, message, `Ваш Telegram ID: ${message.from?.id || "неизвестен"}`);
     return jsonResponse({ ok: true, command: "whoami" });
@@ -99,10 +109,51 @@ async function handleBotMessage(message, env) {
     return handleStatusCommand(message, env);
   }
 
-  if (!isCommand(text, "delete")) {
-    return jsonResponse({ ok: true, ignored: true });
+  if (isCommand(text, "confirmdelete")) {
+    return handleConfirmDeleteCommand(message, env);
   }
 
+  if (isCommand(text, "canceldelete") || isCommand(text, "cancel")) {
+    return handleCancelDeleteCommand(message, env);
+  }
+
+  if (isCommand(text, "delete")) {
+    return handleDeleteCommand(message, env, text);
+  }
+
+  return jsonResponse({ ok: true, ignored: true });
+}
+
+async function handleHelpCommand(message, env) {
+  const admin = isAdminMessage(message, env);
+  const publicLines = [
+    "Команды бота:",
+    "/help — показать эту памятку.",
+    "/whoami — узнать свой Telegram ID.",
+  ];
+  const adminLines = [
+    "",
+    "Команды администратора:",
+    "/status — проверить KV, канал, ленту и подкасты.",
+    "/delete — подготовить удаление последнего поста из Telegram и с сайта.",
+    "/delete 123 — подготовить удаление поста по номеру сообщения.",
+    "/delete ссылка — подготовить удаление поста по ссылке Telegram.",
+    "/deletepodcast — подготовить удаление последнего выпуска со страницы подкастов.",
+    "/deletepodcast 123 — подготовить удаление выпуска по номеру сообщения.",
+    "/confirmdelete — запасное подтверждение, если кнопка не сработала.",
+    "/canceldelete — отменить подготовленное удаление, если кнопка потерялась.",
+    "/podcast Название — отправьте видео с этой подписью, чтобы добавить выпуск.",
+    "",
+    "После /delete и /deletepodcast бот пришлёт кнопки подтверждения.",
+    "Важно: /deletepodcast чистит карточку и файл на сайте, но не удаляет сообщение в Telegram.",
+  ];
+
+  await replyToBotMessage(env, message, (admin ? [...publicLines, ...adminLines] : publicLines).join("\n"));
+
+  return jsonResponse({ ok: true, command: "help", admin });
+}
+
+async function handleDeleteCommand(message, env, text) {
   if (!isAdminMessage(message, env)) {
     await replyToBotMessage(env, message, "Команда доступна только администраторам ленты.");
     return jsonResponse({ ok: true, command: "delete", denied: true });
@@ -130,6 +181,32 @@ async function handleBotMessage(message, env) {
     return jsonResponse({ ok: true, command: "delete", error: "missing_message_id" });
   }
 
+  const action = await savePendingAction(env, message, {
+    type: "delete_post",
+    messageId,
+  });
+
+  if (!action) {
+    await replyToBotMessage(env, message, "Не смог сохранить подтверждение. Попробуйте ещё раз.");
+    return jsonResponse({ ok: true, command: "delete", error: "pending_action_failed" });
+  }
+
+  await replyToBotMessage(
+    env,
+    message,
+    [
+      `Пост ${messageId} подготовлен к удалению из Telegram и с сайта.`,
+      "Подтвердите действие кнопкой ниже.",
+      "Команда действует 10 минут.",
+    ].join("\n"),
+    { reply_markup: buildDeleteKeyboard(action.actionId) },
+  );
+
+  return jsonResponse({ ok: true, command: "delete", pending: true, messageId });
+}
+
+async function executeDeletePost(message, env, messageId) {
+  const posts = await readPosts(env);
   const chatId = getChannelChatId(env);
   const telegramResult = chatId
     ? await callTelegram(env, "deleteMessage", {
@@ -147,11 +224,196 @@ async function handleBotMessage(message, env) {
 
   return jsonResponse({
     ok: true,
-    command: "delete",
+    command: "confirmdelete",
+    action: "delete",
     messageId,
     telegramDeleted: telegramResult.ok,
     siteDeleted: posts.length !== nextPosts.length,
   });
+}
+
+async function handleConfirmDeleteCommand(message, env) {
+  if (!isAdminMessage(message, env)) {
+    await replyToBotMessage(env, message, "Команда доступна только администраторам.");
+    return jsonResponse({ ok: true, command: "confirmdelete", denied: true });
+  }
+
+  const action = await readPendingAction(env, message);
+
+  if (!action) {
+    await replyToBotMessage(env, message, "Нет удаления для подтверждения. Сначала используйте /delete.");
+    return jsonResponse({ ok: true, command: "confirmdelete", empty: true });
+  }
+
+  let response;
+
+  try {
+    if (action.type === "delete_post") {
+      response = await executeDeletePost(message, env, action.messageId);
+    } else if (action.type === "delete_podcast") {
+      response = await executeDeletePodcast(message, env, action.messageId);
+    } else {
+      await replyToBotMessage(env, message, "Не понял сохранённое действие. Попробуйте команду заново.");
+      response = jsonResponse({ ok: true, command: "confirmdelete", error: "unknown_action" });
+    }
+  } finally {
+    await clearPendingAction(env, message);
+  }
+
+  return response;
+}
+
+async function handleCallbackQuery(query, env) {
+  const data = String(query.data || "");
+  const match = data.match(/^delete_(confirm|cancel):([a-z0-9_-]+)$/i);
+
+  if (!match) {
+    await answerCallbackQuery(env, query, "Неизвестная кнопка.");
+    return jsonResponse({ ok: true, ignored: true, reason: "unknown_callback" });
+  }
+
+  const [, actionName, actionId] = match;
+  const message = messageFromCallbackQuery(query);
+
+  if (!isAdminMessage(message, env)) {
+    await answerCallbackQuery(env, query, "Команда доступна только администраторам.", true);
+    return jsonResponse({ ok: true, command: "callback_delete", denied: true });
+  }
+
+  const action = await readPendingAction(env, message);
+
+  if (!action || action.actionId !== actionId) {
+    await answerCallbackQuery(env, query, "Это подтверждение уже не актуально.", true);
+    await removeCallbackButtons(env, query);
+    return jsonResponse({ ok: true, command: "callback_delete", stale: true });
+  }
+
+  if (actionName.toLowerCase() === "cancel") {
+    await clearPendingAction(env, message);
+    await answerCallbackQuery(env, query, "Удаление отменено.");
+    await editCallbackMessage(env, query, "Удаление отменено.");
+    return jsonResponse({ ok: true, command: "callback_delete", cancelled: true });
+  }
+
+  await answerCallbackQuery(env, query, "Удаляю...");
+
+  let response;
+
+  try {
+    if (action.type === "delete_post") {
+      response = await executeDeletePost(message, env, action.messageId);
+    } else if (action.type === "delete_podcast") {
+      response = await executeDeletePodcast(message, env, action.messageId);
+    } else {
+      await replyToBotMessage(env, message, "Не понял сохранённое действие. Попробуйте команду заново.");
+      response = jsonResponse({ ok: true, command: "callback_delete", error: "unknown_action" });
+    }
+  } finally {
+    await clearPendingAction(env, message);
+    await removeCallbackButtons(env, query);
+  }
+
+  return response;
+}
+
+async function handleCancelDeleteCommand(message, env) {
+  if (!isAdminMessage(message, env)) {
+    await replyToBotMessage(env, message, "Команда доступна только администраторам.");
+    return jsonResponse({ ok: true, command: "canceldelete", denied: true });
+  }
+
+  const action = await readPendingAction(env, message);
+
+  if (!action) {
+    await replyToBotMessage(env, message, "Нет подготовленного удаления.");
+    return jsonResponse({ ok: true, command: "canceldelete", empty: true });
+  }
+
+  await clearPendingAction(env, message);
+  await replyToBotMessage(env, message, "Удаление отменено.");
+
+  return jsonResponse({ ok: true, command: "canceldelete", cancelled: true });
+}
+
+async function savePendingAction(env, message, action) {
+  const key = getPendingActionKey(message);
+  const now = Date.now();
+  const pendingAction = {
+    ...action,
+    actionId: createPendingActionId(),
+    createdAt: now,
+    expiresAt: now + DELETE_CONFIRM_TTL_SECONDS * 1000,
+  };
+
+  if (!key) {
+    return null;
+  }
+
+  await env.POSTS_KV.put(
+    key,
+    JSON.stringify(pendingAction),
+    { expirationTtl: DELETE_CONFIRM_TTL_SECONDS },
+  );
+
+  return pendingAction;
+}
+
+async function readPendingAction(env, message) {
+  const key = getPendingActionKey(message);
+
+  if (!key) {
+    return null;
+  }
+
+  const action = await env.POSTS_KV.get(key, { type: "json" });
+
+  if (!action) {
+    return null;
+  }
+
+  if (Number(action.expiresAt || 0) < Date.now()) {
+    await env.POSTS_KV.delete(key);
+    return null;
+  }
+
+  return action;
+}
+
+async function clearPendingAction(env, message) {
+  const key = getPendingActionKey(message);
+
+  if (key) {
+    await env.POSTS_KV.delete(key);
+  }
+}
+
+function getPendingActionKey(message) {
+  const userId = message.from?.id || message.chat?.id;
+
+  return userId ? `${PENDING_ACTION_KEY_PREFIX}${userId}` : "";
+}
+
+function createPendingActionId() {
+  return `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 10)}`;
+}
+
+function buildDeleteKeyboard(actionId) {
+  return {
+    inline_keyboard: [
+      [
+        { text: "Да, удалить", callback_data: `delete_confirm:${actionId}` },
+        { text: "Отмена", callback_data: `delete_cancel:${actionId}` },
+      ],
+    ],
+  };
+}
+
+function messageFromCallbackQuery(query) {
+  return {
+    chat: query.message?.chat || {},
+    message_id: query.message?.message_id,
+    from: query.from,
+  };
 }
 
 async function handlePodcastCommand(message, env, text) {
@@ -196,7 +458,7 @@ async function handleDeletePodcastCommand(message, env, text) {
   }
 
   const podcasts = await readPodcasts(env);
-  const deleteTarget = parseDeleteTarget(text.replace(/^\/deletepodcast/i, "/delete"));
+  const deleteTarget = parseDeleteTarget(text.replace(/^\/deletepodcast(?:@\w+)?/i, "/delete"));
   let messageId = deleteTarget.messageId;
 
   if (!deleteTarget.raw && podcasts.length) {
@@ -213,6 +475,32 @@ async function handleDeletePodcastCommand(message, env, text) {
     return jsonResponse({ ok: true, command: "deletepodcast", error: "missing_message_id" });
   }
 
+  const action = await savePendingAction(env, message, {
+    type: "delete_podcast",
+    messageId,
+  });
+
+  if (!action) {
+    await replyToBotMessage(env, message, "Не смог сохранить подтверждение. Попробуйте ещё раз.");
+    return jsonResponse({ ok: true, command: "deletepodcast", error: "pending_action_failed" });
+  }
+
+  await replyToBotMessage(
+    env,
+    message,
+    [
+      `Подкаст ${messageId} подготовлен к удалению со страницы.`,
+      "Подтвердите действие кнопкой ниже.",
+      "Команда действует 10 минут.",
+    ].join("\n"),
+    { reply_markup: buildDeleteKeyboard(action.actionId) },
+  );
+
+  return jsonResponse({ ok: true, command: "deletepodcast", pending: true, messageId });
+}
+
+async function executeDeletePodcast(message, env, messageId) {
+  const podcasts = await readPodcasts(env);
   const nextPodcasts = removePodcast(podcasts, messageId);
   const deletedPodcasts = podcasts.filter(
     (podcast) => !nextPodcasts.some((nextPodcast) => nextPodcast.id === podcast.id),
@@ -230,7 +518,8 @@ async function handleDeletePodcastCommand(message, env, text) {
 
   return jsonResponse({
     ok: true,
-    command: "deletepodcast",
+    command: "confirmdelete",
+    action: "deletepodcast",
     messageId,
     siteDeleted: podcasts.length !== nextPodcasts.length,
   });
@@ -796,7 +1085,7 @@ function normalizeUsername(username) {
   return String(username).replace(/^@/, "").trim().toLowerCase();
 }
 
-async function replyToBotMessage(env, message, text) {
+async function replyToBotMessage(env, message, text, extraPayload = {}) {
   if (!env.TELEGRAM_BOT_TOKEN || !message.chat?.id) {
     return;
   }
@@ -805,6 +1094,49 @@ async function replyToBotMessage(env, message, text) {
     chat_id: message.chat.id,
     text,
     reply_to_message_id: message.message_id,
+    ...extraPayload,
+  });
+}
+
+async function answerCallbackQuery(env, query, text, showAlert = false) {
+  if (!query.id) {
+    return;
+  }
+
+  await callTelegram(env, "answerCallbackQuery", {
+    callback_query_id: query.id,
+    text,
+    show_alert: showAlert,
+  });
+}
+
+async function removeCallbackButtons(env, query) {
+  const chatId = query.message?.chat?.id;
+  const messageId = query.message?.message_id;
+
+  if (!chatId || !messageId) {
+    return;
+  }
+
+  await callTelegram(env, "editMessageReplyMarkup", {
+    chat_id: chatId,
+    message_id: messageId,
+    reply_markup: { inline_keyboard: [] },
+  });
+}
+
+async function editCallbackMessage(env, query, text) {
+  const chatId = query.message?.chat?.id;
+  const messageId = query.message?.message_id;
+
+  if (!chatId || !messageId) {
+    return;
+  }
+
+  await callTelegram(env, "editMessageText", {
+    chat_id: chatId,
+    message_id: messageId,
+    text,
   });
 }
 
