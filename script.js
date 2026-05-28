@@ -9,97 +9,20 @@ const rickrollClose = rickrollModal.querySelector(".rickroll-close");
 const commandForm = document.querySelector("#command-console");
 const commandInput = document.querySelector("#command-input");
 const consoleOutput = document.querySelector(".console-output");
-const formatButtons = document.querySelectorAll(".format-button");
-const briefPanel = document.querySelector(".brief-panel");
-const briefKicker = document.querySelector("#brief-kicker");
-const briefTitle = document.querySelector("#brief-title");
-const briefText = document.querySelector("#brief-text");
-const briefTags = document.querySelector("#brief-tags");
-const mixerRanges = document.querySelectorAll(".mixer-range");
-const headlineOutput = document.querySelector("#headline-output");
 const lazyPortraits = document.querySelectorAll(".portrait[data-src]");
 const feedList = document.querySelector("[data-feed-list]");
 const feedStatus = document.querySelector("[data-feed-status]");
+const feedTicker = document.querySelector("[data-feed-ticker]");
+const feedPanel = document.querySelector("#feed-panel");
+const feedOpenTriggers = document.querySelectorAll("[data-feed-open]");
+const feedCloseTriggers = document.querySelectorAll("[data-feed-close]");
 const canAnimateCursor =
   window.matchMedia("(pointer: fine)").matches &&
   !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 const FEED_REFRESH_INTERVAL = 30000;
+const TICKER_REPEAT_COUNT = 3;
+let latestFeedPosts = [];
 let sixtySevenTimer;
-let activeFormat = "investigation";
-
-const formatContent = {
-  investigation: {
-    kicker: "Тема + факты",
-    title: "Материал",
-    text: "Факты, контекст, ясный текст.",
-    tags: ["факты", "контекст", "редактура"],
-  },
-  interview: {
-    kicker: "Герой + разговор",
-    title: "Интервью",
-    text: "Коротко, живо, по делу.",
-    tags: ["диалог", "герой", "смысл"],
-  },
-  video: {
-    kicker: "Съёмка + монтаж",
-    title: "Видео",
-    text: "Кадр, голос, ритм.",
-    tags: ["кадр", "монтаж", "ритм"],
-  },
-  special: {
-    kicker: "Идея + упаковка",
-    title: "Спецпроект",
-    text: "Одна идея, цельная форма.",
-    tags: ["серия", "подача", "публикация"],
-  },
-};
-
-const headlineBank = {
-  investigation: {
-    sharp: "Главное по теме.",
-    funny: "Серьёзно, но живо.",
-    dramatic: "Деталь меняет всё.",
-    forensic: "Факты и контекст.",
-    satire: "Ясно, без пафоса.",
-    noir: "Материал с характером.",
-    human: "Человек за событием.",
-    absurd: "Сложное простым языком.",
-    balanced: "История, которую хочется дочитать.",
-  },
-  interview: {
-    sharp: "Разговор по делу.",
-    funny: "Без деревянных вопросов.",
-    dramatic: "Ответ, который меняет тему.",
-    forensic: "Голос и детали.",
-    satire: "Серьёзно, не скучно.",
-    noir: "Интервью с настроением.",
-    human: "Герой и его опыт.",
-    absurd: "Один вопрос открывает всё.",
-    balanced: "Когда героя слушают.",
-  },
-  video: {
-    sharp: "Видео, которое держит.",
-    funny: "Кадр без шума.",
-    dramatic: "История в ритме.",
-    forensic: "Детали объясняют.",
-    satire: "Лёгко, но точно.",
-    noir: "Сдержанная атмосфера.",
-    human: "Герой, место, голос.",
-    absurd: "Идея оживает в монтаже.",
-    balanced: "Тема в памяти.",
-  },
-  special: {
-    sharp: "Тема в системе.",
-    funny: "Большая идея легко.",
-    dramatic: "Серия с усилением.",
-    forensic: "Сложное по частям.",
-    satire: "Лёгкая упаковка.",
-    noir: "Серия с характером.",
-    human: "Люди и контекст.",
-    absurd: "Факты сложились.",
-    balanced: "Сильный спецпроект.",
-  },
-};
 
 const revealObserver = new IntersectionObserver(
   (entries) => {
@@ -125,7 +48,22 @@ if (canAnimateCursor) {
   initCursorSticker();
 }
 
+feedOpenTriggers.forEach((trigger) => {
+  trigger.addEventListener("click", (event) => {
+    event.preventDefault();
+    openFeedPanel();
+  });
+});
+
+feedCloseTriggers.forEach((trigger) => {
+  trigger.addEventListener("click", closeFeedPanel);
+});
+
 document.querySelectorAll('a[href^="#"]').forEach((link) => {
+  if (link.matches("[data-feed-open]")) {
+    return;
+  }
+
   link.addEventListener("click", (event) => {
     const target = document.querySelector(link.getAttribute("href"));
 
@@ -149,26 +87,6 @@ people.forEach((person) => {
         otherPerson.open = false;
       }
     });
-  });
-});
-
-formatButtons.forEach((button) => {
-  button.addEventListener("click", () => {
-    activeFormat = button.dataset.format;
-
-    formatButtons.forEach((item) => {
-      item.classList.toggle("is-active", item === button);
-    });
-
-    updateBrief(activeFormat);
-    updateHeadline();
-  });
-});
-
-mixerRanges.forEach((range) => {
-  range.addEventListener("input", () => {
-    range.nextElementSibling.value = range.value;
-    updateHeadline();
   });
 });
 
@@ -210,7 +128,33 @@ document.addEventListener("keydown", (event) => {
   if (event.key === "Escape" && rickrollModal.classList.contains("is-open")) {
     closeRickroll();
   }
+
+  if (event.key === "Escape" && feedPanel?.classList.contains("is-open")) {
+    closeFeedPanel();
+  }
 });
+
+function openFeedPanel() {
+  if (!feedPanel) {
+    return;
+  }
+
+  renderFeedPanel(latestFeedPosts);
+  feedPanel.classList.add("is-open");
+  feedPanel.setAttribute("aria-hidden", "false");
+  document.body.classList.add("is-feed-open");
+  feedPanel.querySelector(".feed-panel-close")?.focus();
+}
+
+function closeFeedPanel() {
+  if (!feedPanel) {
+    return;
+  }
+
+  feedPanel.classList.remove("is-open");
+  feedPanel.setAttribute("aria-hidden", "true");
+  document.body.classList.remove("is-feed-open");
+}
 
 function openRickroll() {
   rickrollModal.classList.add("is-open");
@@ -235,81 +179,6 @@ function closeRickroll() {
   rickrollVideo.currentTime = 0;
   rickrollVideo.removeAttribute("src");
   rickrollVideo.load();
-}
-
-function updateBrief(format) {
-  const content = formatContent[format];
-
-  briefPanel.classList.add("is-changing");
-  window.setTimeout(() => {
-    briefKicker.textContent = content.kicker;
-    briefTitle.textContent = content.title;
-    briefText.textContent = content.text;
-    briefTags.innerHTML = content.tags.map((tag) => `<span>${tag}</span>`).join("");
-    briefPanel.classList.remove("is-changing");
-  }, 140);
-}
-
-function updateHeadline() {
-  const facts = Number(document.querySelector('[name="facts"]').value);
-  const humor = Number(document.querySelector('[name="humor"]').value);
-  const drama = Number(document.querySelector('[name="drama"]').value);
-  const options = headlineBank[activeFormat];
-  const nextHeadline = pickHeadline(options, facts, humor, drama);
-
-  headlineOutput.classList.add("is-changing");
-  window.setTimeout(() => {
-    headlineOutput.textContent = nextHeadline;
-    headlineOutput.classList.remove("is-changing");
-  }, 110);
-}
-
-function pickHeadline(options, facts, humor, drama) {
-  if (facts === 100 && humor === 100 && drama === 100) {
-    return options.absurd;
-  }
-
-  if (facts >= 75 && humor >= 75 && drama >= 75) {
-    return options.absurd;
-  }
-
-  if (facts >= 75 && humor >= 75) {
-    return options.satire;
-  }
-
-  if (facts >= 75 && drama >= 75) {
-    return options.forensic;
-  }
-
-  if (humor >= 75 && drama >= 75) {
-    return options.noir;
-  }
-
-  if (facts <= 25 && humor <= 25 && drama <= 25) {
-    return options.human;
-  }
-
-  if (facts >= 75 && facts >= humor && facts >= drama) {
-    return options.sharp;
-  }
-
-  if (humor >= 75 && humor >= facts && humor >= drama) {
-    return options.funny;
-  }
-
-  if (drama >= 75 && drama >= facts && drama >= humor) {
-    return options.dramatic;
-  }
-
-  if (facts <= 25 && drama >= 50) {
-    return options.human;
-  }
-
-  if (humor <= 25 && facts >= 50) {
-    return options.forensic;
-  }
-
-  return options.balanced;
 }
 
 function runConsoleCommand(command) {
@@ -402,7 +271,7 @@ function initLazyPortraits() {
 }
 
 async function initTelegramFeed() {
-  if (!feedList || !feedStatus) {
+  if (!feedTicker && (!feedList || !feedStatus)) {
     return;
   }
 
@@ -435,19 +304,60 @@ async function loadTelegramFeed() {
 }
 
 function renderFeed(posts) {
-  const latestPosts = posts.slice(0, 6);
+  latestFeedPosts = posts;
+  renderFeedTicker(posts);
+  renderFeedPanel(posts);
+}
 
-  feedList.replaceChildren(...latestPosts.map(createFeedCard));
+function renderFeedTicker(posts) {
+  if (!feedTicker) {
+    return;
+  }
 
-  if (!latestPosts.length) {
+  if (!posts.length) {
+    feedTicker.classList.add("is-empty");
+    feedTicker.replaceChildren(createTickerItem({ text: "Ждём первые публикации из Telegram" }));
+    return;
+  }
+
+  feedTicker.classList.remove("is-empty");
+
+  const tickerPosts = Array.from({ length: TICKER_REPEAT_COUNT }, () => posts).flat();
+  feedTicker.replaceChildren(...tickerPosts.map(createTickerItem));
+}
+
+function renderFeedPanel(posts) {
+  if (!feedList || !feedStatus) {
+    return;
+  }
+
+  feedList.replaceChildren(...posts.map(createFeedCard));
+
+  if (!posts.length) {
     feedStatus.textContent = "Ждём первые публикации из Telegram.";
     return;
   }
 
-  feedStatus.textContent = `Последние ${latestPosts.length} публикаций из Telegram.`;
+  feedStatus.textContent = `Всего ${posts.length} публикаций из Telegram.`;
 }
 
-function createFeedCard(post) {
+function createTickerItem(post) {
+  const item = document.createElement("span");
+  const time = document.createElement("span");
+  const text = document.createElement("span");
+  const date = post.date ? new Date(post.date * 1000) : null;
+
+  item.className = "top-feed-item";
+  time.className = "top-feed-time";
+  time.textContent = date ? formatFeedDate(date) : "Live";
+  text.textContent = getFeedText(post);
+
+  item.append(time, text);
+
+  return item;
+}
+
+function createFeedCard(post, index = 0) {
   const card = document.createElement("article");
   const time = document.createElement("time");
   const text = document.createElement("p");
@@ -457,6 +367,7 @@ function createFeedCard(post) {
 
   card.className = "feed-card";
   card.classList.toggle("has-media", Boolean(media));
+  card.classList.toggle("is-featured", index === 0);
   time.dateTime = date.toISOString();
   time.textContent = formatFeedDate(date);
   text.textContent = getFeedText(post);

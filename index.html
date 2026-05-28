@@ -9,7 +9,7 @@
     />
     <title>Миллиардар - журналистское агентство</title>
     <link rel="icon" href="assets/logo-favicon.png" type="image/png" />
-    <link rel="stylesheet" href="styles.css?v=20260527-feed-images" />
+    <link rel="stylesheet" href="styles.css?v=20260528-editorial" />
   </head>
   <body>
     <header class="site-header">
@@ -20,12 +20,23 @@
 
       <nav class="site-nav" aria-label="Основная навигация">
         <a href="#about">О нас</a>
-        <a href="#studio">Пульт</a>
-        <a href="#feed">Лента</a>
+        <a href="#feed-panel" data-feed-open>Лента</a>
         <a href="#team">Команда</a>
         <a href="#contacts">Контакты</a>
       </nav>
     </header>
+
+    <section class="top-feed" aria-label="Живая лента публикаций">
+      <button class="top-feed-button" type="button" data-feed-open>
+        <span class="top-feed-label">Сейчас</span>
+        <span class="top-feed-marquee" aria-hidden="true">
+          <span class="top-feed-track" data-feed-ticker>
+            <span class="top-feed-item">Подключаем Telegram-ленту</span>
+          </span>
+        </span>
+        <span class="top-feed-action">Все посты</span>
+      </button>
+    </section>
 
     <main id="top">
       <section class="hero section reveal">
@@ -78,68 +89,6 @@
             <h3>Подача</h3>
             <p>Собираем ясную форму.</p>
           </article>
-        </div>
-      </section>
-
-      <section id="studio" class="section studio reveal">
-        <div class="section-head">
-          <p class="eyebrow">Редакционный пульт</p>
-          <h2>Настройте формат.</h2>
-        </div>
-
-        <div class="topic-marquee" aria-label="Темы агентства">
-          <div class="topic-track">
-            <span>репортажи</span>
-            <span>интервью</span>
-            <span>видео</span>
-            <span>редактура</span>
-            <span>факты</span>
-          </div>
-        </div>
-
-        <div class="studio-grid">
-          <div class="format-switch" role="tablist" aria-label="Тип материала">
-            <button class="format-button is-active" type="button" data-format="investigation">
-              Материал
-            </button>
-            <button class="format-button" type="button" data-format="interview">Интервью</button>
-            <button class="format-button" type="button" data-format="video">Видео</button>
-            <button class="format-button" type="button" data-format="special">Спецпроект</button>
-          </div>
-
-          <article class="brief-panel" aria-live="polite">
-            <p class="brief-kicker" id="brief-kicker">Тема + факты</p>
-            <h3 id="brief-title">Материал</h3>
-            <p id="brief-text">Факты, контекст, ясный текст.</p>
-            <div class="brief-tags" id="brief-tags">
-              <span>факты</span>
-              <span>контекст</span>
-              <span>редактура</span>
-            </div>
-          </article>
-
-          <div class="mixer-panel">
-            <label class="range-row">
-              <span>Факты</span>
-              <input class="mixer-range" name="facts" type="range" min="0" max="100" step="25" value="75" />
-              <output>75</output>
-            </label>
-            <label class="range-row">
-              <span>Подача</span>
-              <input class="mixer-range" name="humor" type="range" min="0" max="100" step="25" value="50" />
-              <output>50</output>
-            </label>
-            <label class="range-row">
-              <span>Акцент</span>
-              <input class="mixer-range" name="drama" type="range" min="0" max="100" step="25" value="50" />
-              <output>50</output>
-            </label>
-
-            <article class="headline-machine">
-              <span>Черновик заголовка</span>
-              <p id="headline-output">История, которую хочется дочитать.</p>
-            </article>
-          </div>
         </div>
       </section>
 
@@ -238,23 +187,6 @@
         </div>
       </section>
 
-      <section id="feed" class="section feed-section reveal">
-        <div class="section-head">
-          <div>
-            <p class="eyebrow">Лента</p>
-            <h2>Последние публикации.</h2>
-          </div>
-          <a class="feed-link" href="https://t.me/milliardarmedia" target="_blank" rel="noopener">
-            Telegram
-          </a>
-        </div>
-
-        <div class="feed-board" aria-live="polite">
-          <div class="feed-status" data-feed-status>Подключаем редакционную ленту.</div>
-          <div class="feed-grid" data-feed-list></div>
-        </div>
-      </section>
-
       <section id="contacts" class="section contact reveal">
         <div class="contact-copy">
           <p class="eyebrow">Контакты</p>
@@ -306,6 +238,34 @@
       </section>
     </main>
 
+    <section
+      class="feed-panel"
+      id="feed-panel"
+      aria-hidden="true"
+      aria-labelledby="feed-panel-title"
+      role="dialog"
+    >
+      <button class="feed-panel-backdrop" type="button" data-feed-close aria-label="Закрыть ленту"></button>
+      <div class="feed-panel-shell" role="document">
+        <header class="feed-panel-header">
+          <div>
+            <p class="feed-panel-kicker">Telegram / архив</p>
+            <h2 id="feed-panel-title">Все публикации.</h2>
+          </div>
+          <button class="feed-panel-close" type="button" data-feed-close aria-label="Закрыть ленту">
+            ×
+          </button>
+        </header>
+
+        <div class="feed-panel-toolbar">
+          <div class="feed-status" data-feed-status>Подключаем редакционную ленту.</div>
+          <a href="https://t.me/milliardarmedia" target="_blank" rel="noopener">Открыть Telegram</a>
+        </div>
+
+        <div class="feed-panel-list" data-feed-list></div>
+      </div>
+    </section>
+
     <section class="command-console" aria-label="Консоль команд">
       <form class="console-form" id="command-console">
         <span aria-hidden="true">milliardar:~$</span>
@@ -340,6 +300,6 @@
       </div>
     </div>
 
-    <script src="script.js?v=20260527-feed-images"></script>
+    <script src="script.js?v=20260528-editorial"></script>
   </body>
 </html>
