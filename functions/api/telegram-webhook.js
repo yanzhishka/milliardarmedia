@@ -3,14 +3,12 @@ const PODCASTS_KEY = "telegram_podcasts";
 const IMAGE_KEY_PREFIX = "telegram_post_image:";
 const PODCAST_VIDEO_KEY_PREFIX = "telegram_podcast_video:";
 const PENDING_ACTION_KEY_PREFIX = "telegram_pending_action:";
-const PODCAST_UPLOAD_SESSION_KEY_PREFIX = "telegram_podcast_upload:";
 const MAX_POSTS = 30;
 const MAX_PODCASTS = 24;
 const MAX_IMAGE_BYTES = 4 * 1024 * 1024;
 const MAX_PODCAST_VIDEO_BYTES = 20 * 1024 * 1024;
 const DEFAULT_FEED_RESET_AT = 1779913144;
 const DELETE_CONFIRM_TTL_SECONDS = 10 * 60;
-const PODCAST_UPLOAD_TTL_SECONDS = 24 * 60 * 60;
 
 export async function onRequestPost({ request, env }) {
   if (!env.POSTS_KV) {
@@ -103,10 +101,6 @@ async function handleBotMessage(message, env) {
     return handlePodcastCommand(message, env, text);
   }
 
-  if (isCommand(text, "uploadpodcast")) {
-    return handleUploadPodcastCommand(message, env, text);
-  }
-
   if (isCommand(text, "deletepodcast")) {
     return handleDeletePodcastCommand(message, env, text);
   }
@@ -149,7 +143,6 @@ async function handleHelpCommand(message, env) {
     "/confirmdelete — запасное подтверждение, если кнопка не сработала.",
     "/canceldelete — отменить подготовленное удаление, если кнопка потерялась.",
     "/podcast Название — отправьте видео с этой подписью, чтобы добавить выпуск.",
-    "/uploadpodcast Название — получить одноразовую ссылку для большого видео в R2.",
     "",
     "После /delete и /deletepodcast бот пришлёт кнопки подтверждения.",
     "Важно: /deletepodcast чистит карточку и файл на сайте, но не удаляет сообщение в Telegram.",
@@ -458,46 +451,6 @@ async function handlePodcastCommand(message, env, text) {
   });
 }
 
-async function handleUploadPodcastCommand(message, env, text) {
-  if (!isAdminMessage(message, env)) {
-    await replyToBotMessage(env, message, "Команда доступна только администраторам подкастов.");
-    return jsonResponse({ ok: true, command: "uploadpodcast", denied: true });
-  }
-
-  const details = parseUploadPodcastDetails(text);
-  const token = createToken();
-  const session = {
-    token,
-    title: details.title,
-    description: details.description,
-    authorId: message.from?.id || null,
-    authorName: [message.from?.first_name, message.from?.last_name].filter(Boolean).join(" "),
-    chatId: message.chat?.id || null,
-    commandMessageId: message.message_id,
-    status: "created",
-    createdAt: Date.now(),
-    expiresAt: Date.now() + PODCAST_UPLOAD_TTL_SECONDS * 1000,
-  };
-  const link = `${getSiteBaseUrl(env)}/upload.html?token=${encodeURIComponent(token)}`;
-
-  await env.POSTS_KV.put(getPodcastUploadSessionKey(token), JSON.stringify(session), {
-    expirationTtl: PODCAST_UPLOAD_TTL_SECONDS,
-  });
-  await replyToBotMessage(
-    env,
-    message,
-    [
-      `Ссылка для загрузки выпуска: ${details.title}`,
-      link,
-      "",
-      "Она одноразовая и действует 24 часа.",
-      "Видео загрузится в R2, после успешной загрузки выпуск появится на странице подкастов.",
-    ].join("\n"),
-  );
-
-  return jsonResponse({ ok: true, command: "uploadpodcast", token });
-}
-
 async function handleDeletePodcastCommand(message, env, text) {
   if (!isAdminMessage(message, env)) {
     await replyToBotMessage(env, message, "Команда доступна только администраторам подкастов.");
@@ -586,7 +539,7 @@ async function handleStatusCommand(message, env) {
     ? `Последний пост: ${latestPost.mediaType || "text"}, фото: ${latestPost.imageStatus || "none"}`
     : "Последний пост: нет";
   const latestPodcastLine = latestPodcast
-    ? `Последний подкаст: ${latestPodcast.title} (#${latestPodcast.messageId}), видео: ${latestPodcast.videoStatus || "none"}`
+    ? `Последний подкаст: ${latestPodcast.title}, видео: ${latestPodcast.videoStatus || "none"}`
     : "Последний подкаст: нет";
 
   await replyToBotMessage(
@@ -1093,27 +1046,9 @@ async function deletePostImages(env, posts) {
 }
 
 async function deletePodcastVideos(env, podcasts) {
-  const r2VideoKeys = [
-    ...new Set(
-      podcasts
-        .filter((podcast) => podcast.videoStorage === "r2")
-        .map((podcast) => podcast.videoKey)
-        .filter(Boolean),
-    ),
-  ];
-  const kvVideoKeys = [
-    ...new Set(
-      podcasts
-        .filter((podcast) => podcast.videoStorage !== "r2")
-        .map((podcast) => podcast.videoKey)
-        .filter(Boolean),
-    ),
-  ];
+  const videoKeys = [...new Set(podcasts.map((podcast) => podcast.videoKey).filter(Boolean))];
 
-  await Promise.all([
-    ...kvVideoKeys.map((videoKey) => env.POSTS_KV.delete(videoKey).catch(() => {})),
-    ...r2VideoKeys.map((videoKey) => env.PODCASTS_R2?.delete(videoKey).catch(() => {})),
-  ]);
+  await Promise.all(videoKeys.map((videoKey) => env.POSTS_KV.delete(videoKey).catch(() => {})));
 }
 
 function filterVisiblePosts(posts, env) {
@@ -1148,39 +1083,6 @@ function removePodcast(podcasts, messageId) {
 
 function normalizeUsername(username) {
   return String(username).replace(/^@/, "").trim().toLowerCase();
-}
-
-function parseUploadPodcastDetails(text) {
-  const body = String(text || "")
-    .replace(/^\/uploadpodcast(?:@\w+)?/i, "")
-    .trim();
-  const lines = body
-    .split(/\n+/)
-    .map((line) => line.trim())
-    .filter(Boolean);
-  const title = lines.shift() || "Недельный выпуск";
-  const description = lines.join("\n").trim();
-
-  return {
-    title: title.slice(0, 120),
-    description: description.slice(0, 1200),
-  };
-}
-
-function createToken() {
-  const bytes = new Uint8Array(24);
-  crypto.getRandomValues(bytes);
-
-  return Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join("");
-}
-
-function getPodcastUploadSessionKey(token) {
-  return `${PODCAST_UPLOAD_SESSION_KEY_PREFIX}${token}`;
-}
-
-function getSiteBaseUrl(env) {
-  return String(env.PUBLIC_SITE_URL || env.SITE_URL || env.CF_PAGES_URL || "https://milliardarmedia.ru")
-    .replace(/\/+$/, "");
 }
 
 async function replyToBotMessage(env, message, text, extraPayload = {}) {
