@@ -733,7 +733,10 @@ h3 {
 }
 
 .split h2 {
-  max-width: 600px;
+  max-width: 500px;
+  font-size: clamp(2.95rem, 4.2vw, 4.45rem);
+  line-height: 0.92;
+  overflow-wrap: break-word;
 }
 
 .about-grid {
