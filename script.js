@@ -359,6 +359,7 @@ function createTickerItem(post) {
 
 function createFeedCard(post, index = 0) {
   const card = document.createElement("article");
+  const copy = document.createElement("div");
   const time = document.createElement("time");
   const text = document.createElement("p");
   const link = document.createElement("a");
@@ -366,6 +367,7 @@ function createFeedCard(post, index = 0) {
   const media = createFeedMedia(post);
 
   card.className = "feed-card";
+  copy.className = "feed-copy";
   card.classList.toggle("has-media", Boolean(media));
   card.classList.toggle("is-featured", index === 0);
   time.dateTime = date.toISOString();
@@ -376,13 +378,12 @@ function createFeedCard(post, index = 0) {
   link.rel = "noopener";
   link.textContent = "Открыть в Telegram";
 
-  card.append(time);
+  copy.append(time, text, link);
+  card.append(copy);
 
   if (media) {
     card.append(media);
   }
-
-  card.append(text, link);
 
   return card;
 }
