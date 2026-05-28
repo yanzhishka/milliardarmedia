@@ -432,14 +432,18 @@ h3 {
 }
 
 h1 {
-  max-width: 780px;
+  max-width: 720px;
   margin-bottom: 24px;
   color: var(--ink);
-  font-size: clamp(3.45rem, 7.6vw, 6.75rem);
+  font-size: clamp(3.25rem, 6.9vw, 6.35rem);
   font-weight: 900;
   line-height: 0.88;
-  overflow-wrap: break-word;
-  text-wrap: balance;
+  overflow-wrap: normal;
+  text-wrap: auto;
+}
+
+.hero-title span {
+  display: block;
 }
 
 h2 {
@@ -580,12 +584,14 @@ h3 {
   z-index: 1;
   color: var(--ink);
   font-family: var(--serif);
-  font-size: clamp(2.3rem, 4.1vw, 4.3rem);
+  font-size: clamp(2rem, 3.25vw, 3.35rem);
   font-weight: 900;
+  letter-spacing: -0.05em;
   line-height: 0.78;
   text-align: center;
   text-transform: uppercase;
   transform: scaleY(1.08);
+  white-space: nowrap;
 }
 
 .chrome-word::after {
