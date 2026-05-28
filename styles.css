@@ -789,7 +789,7 @@ h3 {
 
 .team-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 18px;
 }
 
@@ -864,6 +864,10 @@ h3 {
   object-position: 50% 44%;
 }
 
+.portrait-anna {
+  object-position: 54% 38%;
+}
+
 .person:hover .portrait,
 .person.is-hovered .portrait {
   filter: grayscale(0) saturate(1.08) contrast(1.05) brightness(1.02);
@@ -893,7 +897,7 @@ h3 {
 
 .person-info strong {
   font-family: var(--serif);
-  font-size: clamp(1.65rem, 3vw, 2.34rem);
+  font-size: clamp(1.52rem, 2.2vw, 2.12rem);
   font-weight: 900;
   letter-spacing: -0.05em;
   line-height: 0.96;
