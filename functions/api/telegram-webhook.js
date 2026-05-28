@@ -1,7 +1,11 @@
 const POSTS_KEY = "telegram_posts";
+const PODCASTS_KEY = "telegram_podcasts";
 const IMAGE_KEY_PREFIX = "telegram_post_image:";
+const PODCAST_VIDEO_KEY_PREFIX = "telegram_podcast_video:";
 const MAX_POSTS = 30;
+const MAX_PODCASTS = 24;
 const MAX_IMAGE_BYTES = 4 * 1024 * 1024;
+const MAX_PODCAST_VIDEO_BYTES = 20 * 1024 * 1024;
 const DEFAULT_FEED_RESET_AT = 1779913144;
 
 export async function onRequestPost({ request, env }) {
@@ -38,6 +42,12 @@ export async function onRequestPost({ request, env }) {
     return jsonResponse({ ok: true, ignored: true, reason: "channel_mismatch" });
   }
 
+  if (isPodcastPost(channelPost)) {
+    const { podcast } = await storePodcast(channelPost, env);
+
+    return jsonResponse({ ok: true, storedPodcast: podcast.id });
+  }
+
   const posts = await readPosts(env);
   const previousPost = findPost(posts, channelPost);
   const post = await normalizePost(channelPost, env);
@@ -63,12 +73,26 @@ async function readPosts(env) {
   return Array.isArray(posts) ? filterVisiblePosts(posts, env) : [];
 }
 
+async function readPodcasts(env) {
+  const podcasts = await env.POSTS_KV.get(PODCASTS_KEY, { type: "json" });
+
+  return Array.isArray(podcasts) ? filterVisiblePodcasts(podcasts, env) : [];
+}
+
 async function handleBotMessage(message, env) {
-  const text = (message.text || "").trim();
+  const text = (message.text || message.caption || "").trim();
 
   if (isCommand(text, "whoami")) {
     await replyToBotMessage(env, message, `Ваш Telegram ID: ${message.from?.id || "неизвестен"}`);
     return jsonResponse({ ok: true, command: "whoami" });
+  }
+
+  if (isCommand(text, "podcast")) {
+    return handlePodcastCommand(message, env, text);
+  }
+
+  if (isCommand(text, "deletepodcast")) {
+    return handleDeletePodcastCommand(message, env, text);
   }
 
   if (isCommand(text, "status")) {
@@ -130,6 +154,88 @@ async function handleBotMessage(message, env) {
   });
 }
 
+async function handlePodcastCommand(message, env, text) {
+  if (!isAdminMessage(message, env)) {
+    await replyToBotMessage(env, message, "Команда доступна только администраторам подкастов.");
+    return jsonResponse({ ok: true, command: "podcast", denied: true });
+  }
+
+  if (!pickPodcastVideo(message)) {
+    await replyToBotMessage(
+      env,
+      message,
+      "Пришлите видео с подписью: /podcast Название выпуска",
+    );
+    return jsonResponse({ ok: true, command: "podcast", error: "missing_video" });
+  }
+
+  const { podcast } = await storePodcast(message, env, text);
+  const statusLine =
+    podcast.videoStatus === "saved"
+      ? "Видео сохранено для страницы подкастов."
+      : `Видео не сохранено: ${podcast.videoError || "неизвестная ошибка"}`;
+
+  await replyToBotMessage(
+    env,
+    message,
+    [`Подкаст добавлен: ${podcast.title}`, statusLine].join("\n"),
+  );
+
+  return jsonResponse({
+    ok: true,
+    command: "podcast",
+    storedPodcast: podcast.id,
+    videoStatus: podcast.videoStatus,
+  });
+}
+
+async function handleDeletePodcastCommand(message, env, text) {
+  if (!isAdminMessage(message, env)) {
+    await replyToBotMessage(env, message, "Команда доступна только администраторам подкастов.");
+    return jsonResponse({ ok: true, command: "deletepodcast", denied: true });
+  }
+
+  const podcasts = await readPodcasts(env);
+  const deleteTarget = parseDeleteTarget(text.replace(/^\/deletepodcast/i, "/delete"));
+  let messageId = deleteTarget.messageId;
+
+  if (!deleteTarget.raw && podcasts.length) {
+    messageId = podcasts[0].messageId;
+  }
+
+  if (!deleteTarget.raw && !podcasts.length) {
+    await replyToBotMessage(env, message, "На странице подкастов пока нет выпусков.");
+    return jsonResponse({ ok: true, command: "deletepodcast", empty: true });
+  }
+
+  if (deleteTarget.raw && !messageId) {
+    await replyToBotMessage(env, message, "Формат: /deletepodcast или /deletepodcast 123");
+    return jsonResponse({ ok: true, command: "deletepodcast", error: "missing_message_id" });
+  }
+
+  const nextPodcasts = removePodcast(podcasts, messageId);
+  const deletedPodcasts = podcasts.filter(
+    (podcast) => !nextPodcasts.some((nextPodcast) => nextPodcast.id === podcast.id),
+  );
+
+  await env.POSTS_KV.put(PODCASTS_KEY, JSON.stringify(nextPodcasts));
+  await deletePodcastVideos(env, deletedPodcasts);
+  await replyToBotMessage(
+    env,
+    message,
+    podcasts.length !== nextPodcasts.length
+      ? `Подкаст ${messageId} удалён со страницы.`
+      : `Подкаст ${messageId} не найден на странице.`,
+  );
+
+  return jsonResponse({
+    ok: true,
+    command: "deletepodcast",
+    messageId,
+    siteDeleted: podcasts.length !== nextPodcasts.length,
+  });
+}
+
 async function handleStatusCommand(message, env) {
   if (!isAdminMessage(message, env)) {
     await replyToBotMessage(env, message, "Команда доступна только администраторам ленты.");
@@ -137,10 +243,15 @@ async function handleStatusCommand(message, env) {
   }
 
   const posts = await readPosts(env);
+  const podcasts = await readPodcasts(env);
   const latestPost = posts[0];
+  const latestPodcast = podcasts[0];
   const latestImageLine = latestPost
     ? `Последний пост: ${latestPost.mediaType || "text"}, фото: ${latestPost.imageStatus || "none"}`
     : "Последний пост: нет";
+  const latestPodcastLine = latestPodcast
+    ? `Последний подкаст: ${latestPodcast.title}, видео: ${latestPodcast.videoStatus || "none"}`
+    : "Последний подкаст: нет";
 
   await replyToBotMessage(
     env,
@@ -150,7 +261,9 @@ async function handleStatusCommand(message, env) {
       `TELEGRAM_BOT_TOKEN: ${env.TELEGRAM_BOT_TOKEN ? "ok" : "нет"}`,
       `Канал: ${getChannelChatId(env) || "не настроен"}`,
       `Постов в ленте: ${posts.length}`,
+      `Подкастов: ${podcasts.length}`,
       latestImageLine,
+      latestPodcastLine,
     ].join("\n"),
   );
 
@@ -272,6 +385,89 @@ async function normalizePost(message, env) {
   };
 }
 
+async function storePodcast(message, env, rawText = "") {
+  const podcasts = await readPodcasts(env);
+  const previousPodcast = findPodcast(podcasts, message);
+  const podcast = await normalizePodcast(message, env, rawText);
+  const nextPodcasts = upsertPodcast(podcasts, podcast);
+  const stalePodcasts = collectStaleVideoPodcasts(
+    podcasts,
+    nextPodcasts,
+    previousPodcast,
+    podcast,
+  );
+
+  await env.POSTS_KV.put(PODCASTS_KEY, JSON.stringify(nextPodcasts));
+  await deletePodcastVideos(env, stalePodcasts);
+
+  return {
+    podcast,
+    nextPodcasts,
+  };
+}
+
+async function normalizePodcast(message, env, rawText = "") {
+  const chat = message.chat || {};
+  const postId = `${chat.id}:${message.message_id}`;
+  const details = parsePodcastDetails(rawText || message.caption || message.text || "");
+  const video = pickPodcastVideo(message);
+  const savedVideo = video ? await saveTelegramPodcastVideo(env, postId, video) : null;
+  const videoStatus = video ? savedVideo?.status || "error" : "none";
+
+  return {
+    id: postId,
+    messageId: message.message_id,
+    chatId: chat.id,
+    chatTitle: chat.title || "",
+    chatUsername: chat.username || "",
+    authorId: message.from?.id || null,
+    authorName: [message.from?.first_name, message.from?.last_name].filter(Boolean).join(" "),
+    date: message.date || Math.floor(Date.now() / 1000),
+    editedDate: message.edit_date || null,
+    title: details.title,
+    description: details.description,
+    text: details.description,
+    link: chat.username ? `https://t.me/${chat.username}/${message.message_id}` : "",
+    mediaType: "video",
+    videoUrl: savedVideo?.url || "",
+    videoKey: savedVideo?.key || "",
+    videoStatus,
+    videoError: savedVideo?.error || "",
+    videoSize: video?.file_size || null,
+    videoDuration: video?.duration || null,
+    videoWidth: video?.width || null,
+    videoHeight: video?.height || null,
+    receivedAt: new Date().toISOString(),
+  };
+}
+
+function parsePodcastDetails(text) {
+  const body = String(text || "")
+    .replace(/^\/podcast(?:@\w+)?/i, "")
+    .replace(/(^|\s)#podcast\b/gi, " ")
+    .trim();
+  const lines = body
+    .split(/\n+/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+  const title = lines.shift() || "Недельный выпуск";
+  const description = lines.join("\n").trim();
+
+  return {
+    title: title.slice(0, 120),
+    description: description.slice(0, 1200),
+  };
+}
+
+function isPodcastPost(message) {
+  const text = message.text || message.caption || "";
+
+  return Boolean(
+    pickPodcastVideo(message) &&
+      (isCommand(text, "podcast") || /(^|\s)#podcast\b/i.test(text)),
+  );
+}
+
 function detectMediaType(message) {
   if (message.photo) {
     return "photo";
@@ -300,11 +496,26 @@ function upsertPost(posts, post) {
     .slice(0, MAX_POSTS);
 }
 
+function upsertPodcast(podcasts, podcast) {
+  const withoutCurrent = podcasts.filter((item) => item.id !== podcast.id);
+
+  return [podcast, ...withoutCurrent]
+    .sort((left, right) => (right.date || 0) - (left.date || 0))
+    .slice(0, MAX_PODCASTS);
+}
+
 function findPost(posts, message) {
   const chatId = message.chat?.id;
   const messageId = message.message_id;
 
   return posts.find((post) => String(post.id) === `${chatId}:${messageId}`) || null;
+}
+
+function findPodcast(podcasts, message) {
+  const chatId = message.chat?.id;
+  const messageId = message.message_id;
+
+  return podcasts.find((podcast) => String(podcast.id) === `${chatId}:${messageId}`) || null;
 }
 
 function collectStaleImagePosts(posts, nextPosts, previousPost, nextPost) {
@@ -316,6 +527,17 @@ function collectStaleImagePosts(posts, nextPosts, previousPost, nextPost) {
   }
 
   return removedPosts;
+}
+
+function collectStaleVideoPodcasts(podcasts, nextPodcasts, previousPodcast, nextPodcast) {
+  const nextIds = new Set(nextPodcasts.map((podcast) => podcast.id));
+  const removedPodcasts = podcasts.filter((podcast) => !nextIds.has(podcast.id));
+
+  if (previousPodcast?.videoKey && previousPodcast.videoKey !== nextPodcast.videoKey) {
+    removedPodcasts.push(previousPodcast);
+  }
+
+  return removedPodcasts;
 }
 
 function pickPhoto(photos = []) {
@@ -331,6 +553,30 @@ function pickPhoto(photos = []) {
   });
 
   return sorted.find((photo) => Number(photo.file_size || 0) <= MAX_IMAGE_BYTES) || sorted.at(-1);
+}
+
+function pickPodcastVideo(message) {
+  if (message.video?.file_id) {
+    return {
+      ...message.video,
+      source: "video",
+      mime_type: message.video.mime_type || "video/mp4",
+    };
+  }
+
+  const document = message.document;
+
+  if (document?.file_id && String(document.mime_type || "").startsWith("video/")) {
+    return {
+      file_id: document.file_id,
+      file_size: document.file_size || null,
+      file_name: document.file_name || "",
+      mime_type: document.mime_type || "video/mp4",
+      source: "document",
+    };
+  }
+
+  return null;
 }
 
 async function saveTelegramPhoto(env, postId, photo) {
@@ -399,6 +645,83 @@ async function saveTelegramPhoto(env, postId, photo) {
   };
 }
 
+async function saveTelegramPodcastVideo(env, podcastId, video) {
+  if (!video?.file_id || !env.TELEGRAM_BOT_TOKEN) {
+    return {
+      status: "error",
+      error: "TELEGRAM_BOT_TOKEN не настроен",
+    };
+  }
+
+  if (Number(video.file_size || 0) > MAX_PODCAST_VIDEO_BYTES) {
+    return {
+      status: "error",
+      error: "Видео больше лимита 20 МБ",
+    };
+  }
+
+  const file = await callTelegram(env, "getFile", {
+    file_id: video.file_id,
+  });
+
+  if (!file.ok || !file.result?.file_path) {
+    return {
+      status: "error",
+      error: file.description || "Telegram не вернул путь к файлу",
+    };
+  }
+
+  const fileResponse = await fetch(
+    `https://api.telegram.org/file/bot${env.TELEGRAM_BOT_TOKEN}/${file.result.file_path}`,
+  );
+
+  if (!fileResponse.ok) {
+    return {
+      status: "error",
+      error: `Telegram file API error ${fileResponse.status}`,
+    };
+  }
+
+  const videoBytes = await fileResponse.arrayBuffer();
+
+  if (!videoBytes.byteLength) {
+    return {
+      status: "error",
+      error: "Telegram вернул пустой файл",
+    };
+  }
+
+  if (videoBytes.byteLength > MAX_PODCAST_VIDEO_BYTES) {
+    return {
+      status: "error",
+      error: "Видео больше лимита 20 МБ",
+    };
+  }
+
+  const videoKey = `${PODCAST_VIDEO_KEY_PREFIX}${podcastId}`;
+  const contentType =
+    video.mime_type ||
+    fileResponse.headers.get("Content-Type") ||
+    inferVideoContentType(file.result.file_path);
+
+  await env.POSTS_KV.put(videoKey, videoBytes, {
+    metadata: {
+      contentType,
+      filePath: file.result.file_path,
+      fileName: video.file_name || "",
+      duration: video.duration || null,
+      width: video.width || null,
+      height: video.height || null,
+    },
+  });
+
+  return {
+    status: "saved",
+    key: videoKey,
+    url: `/api/podcast-video?key=${encodeURIComponent(videoKey)}`,
+  };
+}
+
 function inferImageContentType(filePath = "") {
   const path = String(filePath).toLowerCase();
 
@@ -413,16 +736,42 @@ function inferImageContentType(filePath = "") {
   return "image/jpeg";
 }
 
+function inferVideoContentType(filePath = "") {
+  const path = String(filePath).toLowerCase();
+
+  if (path.endsWith(".webm")) {
+    return "video/webm";
+  }
+
+  if (path.endsWith(".mov")) {
+    return "video/quicktime";
+  }
+
+  return "video/mp4";
+}
+
 async function deletePostImages(env, posts) {
   const imageKeys = [...new Set(posts.map((post) => post.imageKey).filter(Boolean))];
 
   await Promise.all(imageKeys.map((imageKey) => env.POSTS_KV.delete(imageKey).catch(() => {})));
 }
 
+async function deletePodcastVideos(env, podcasts) {
+  const videoKeys = [...new Set(podcasts.map((podcast) => podcast.videoKey).filter(Boolean))];
+
+  await Promise.all(videoKeys.map((videoKey) => env.POSTS_KV.delete(videoKey).catch(() => {})));
+}
+
 function filterVisiblePosts(posts, env) {
   const resetAt = getFeedResetAt(env);
 
   return posts.filter((post) => Number(post.date || 0) >= resetAt);
+}
+
+function filterVisiblePodcasts(podcasts, env) {
+  const resetAt = Number(env.TELEGRAM_PODCAST_RESET_AT || 0) || 0;
+
+  return podcasts.filter((podcast) => Number(podcast.date || 0) >= resetAt);
 }
 
 function getFeedResetAt(env) {
@@ -437,6 +786,10 @@ function removePost(posts, messageId) {
 
     return !String(post.link || "").match(new RegExp(`/${messageId}(?:\\?.*)?$`));
   });
+}
+
+function removePodcast(podcasts, messageId) {
+  return podcasts.filter((podcast) => Number(podcast.messageId) !== Number(messageId));
 }
 
 function normalizeUsername(username) {

@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Недельные подкасты журналистского агентства Миллиардар."
+    />
+    <title>Подкасты - Миллиардар</title>
+    <link rel="icon" href="assets/logo-favicon.png" type="image/png" />
+    <link rel="stylesheet" href="styles.css?v=20260528-podcasts" />
+  </head>
+  <body class="podcasts-page">
+    <header class="site-header">
+      <a class="brand" href="index.html" aria-label="Миллиардар - главная">
+        <img class="brand-mark" src="assets/logo.png" alt="" aria-hidden="true" />
+        <span class="brand-name">Миллиардар</span>
+      </a>
+
+      <nav class="site-nav" aria-label="Основная навигация">
+        <a href="index.html#about">О нас</a>
+        <a href="index.html">Лента</a>
+        <a href="podcasts.html" aria-current="page">Подкасты</a>
+        <a href="index.html#team">Команда</a>
+        <a href="index.html#contacts">Контакты</a>
+      </nav>
+    </header>
+
+    <main id="top">
+      <section class="podcasts-hero section reveal">
+        <p class="eyebrow">Недельные подкасты</p>
+        <h1 class="podcasts-title">Разговоры, которые можно дослушать.</h1>
+        <p class="hero-text">
+          Здесь будут выходить видео-выпуски «Миллиардара»: редакционные обсуждения,
+          интервью и короткие разговоры о темах недели.
+        </p>
+      </section>
+
+      <section class="section podcasts-board reveal" aria-labelledby="podcasts-list-title">
+        <div class="section-head podcasts-head">
+          <div>
+            <p class="eyebrow">Архив</p>
+            <h2 id="podcasts-list-title">Выпуски.</h2>
+          </div>
+          <p class="podcasts-status" data-podcast-status>Проверяем новые выпуски.</p>
+        </div>
+
+        <div class="podcast-grid" data-podcast-list>
+          <article class="podcast-empty">
+            <span>00</span>
+            <h3>Пока без выпусков.</h3>
+            <p>Когда первый подкаст загрузят через Telegram-бота, он появится здесь.</p>
+          </article>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <span>© 2026 Миллиардар</span>
+      <a href="#top">Наверх</a>
+    </footer>
+
+    <script src="podcasts.js?v=20260528-podcasts"></script>
+  </body>
+</html>
