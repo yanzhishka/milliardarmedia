@@ -1241,7 +1241,7 @@ body.is-feed-open {
 
 .podcast-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 1fr);
   gap: 18px;
 }
 
@@ -1257,30 +1257,39 @@ body.is-feed-open {
 
 .podcast-card {
   display: grid;
-  grid-template-columns: 58px minmax(0, 1fr);
-  gap: 16px 20px;
-  padding: clamp(18px, 2.5vw, 28px);
+  grid-template-areas:
+    "video number"
+    "video meta"
+    "video title"
+    "video text";
+  grid-template-columns: minmax(0, 0.64fr) minmax(260px, 0.36fr);
+  gap: 14px clamp(24px, 4vw, 48px);
+  align-items: start;
+  padding: clamp(20px, 3.4vw, 44px);
 }
 
 .podcast-number {
-  grid-row: 1 / span 4;
+  grid-area: number;
   color: var(--accent-blue);
   font-family: var(--mono);
-  font-size: 0.86rem;
+  font-size: clamp(1.2rem, 2.4vw, 2rem);
   font-weight: 850;
+  line-height: 1;
 }
 
 .podcast-video {
   position: relative;
-  grid-column: 2;
+  grid-area: video;
   aspect-ratio: 16 / 9;
-  border: 1px solid var(--line-strong);
+  width: 100%;
+  border: 2px solid var(--ink);
   overflow: hidden;
   background:
-    linear-gradient(90deg, rgba(17, 17, 17, 0.08) 1px, transparent 1px),
-    linear-gradient(rgba(17, 17, 17, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.1) 1px, transparent 1px),
+    linear-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px),
     #0d0d0d;
-  background-size: 34px 34px, 34px 34px, auto;
+  background-size: 44px 44px, 44px 44px, auto;
+  box-shadow: 12px 12px 0 rgba(141, 31, 31, 0.1);
 }
 
 .podcast-video video {
@@ -1288,6 +1297,7 @@ body.is-feed-open {
   width: 100%;
   height: 100%;
   background: #050505;
+  object-fit: contain;
 }
 
 .podcast-video.is-missing {
@@ -1304,7 +1314,7 @@ body.is-feed-open {
 }
 
 .podcast-card time {
-  grid-column: 2;
+  grid-area: meta;
   color: var(--accent);
   font-family: var(--mono);
   font-size: 0.74rem;
@@ -1314,18 +1324,18 @@ body.is-feed-open {
 }
 
 .podcast-card h3 {
-  grid-column: 2;
-  font-size: clamp(1.85rem, 3.4vw, 3rem);
-  line-height: 0.95;
+  grid-area: title;
+  font-size: clamp(2.5rem, 4.8vw, 5rem);
+  line-height: 0.86;
 }
 
 .podcast-card p {
-  grid-column: 2;
+  grid-area: text;
   margin: 0;
   color: var(--ink-soft);
   font-family: var(--serif);
-  font-size: 1.05rem;
-  line-height: 1.55;
+  font-size: clamp(1.08rem, 1.8vw, 1.28rem);
+  line-height: 1.5;
   white-space: pre-line;
 }
 
@@ -1880,16 +1890,17 @@ body.is-sixty-seven .sixty-seven-badge {
   }
 
   .podcast-card {
+    grid-template-areas:
+      "number"
+      "video"
+      "meta"
+      "title"
+      "text";
     grid-template-columns: 1fr;
   }
 
-  .podcast-number,
-  .podcast-video,
-  .podcast-card time,
-  .podcast-card h3,
-  .podcast-card p {
-    grid-column: auto;
-    grid-row: auto;
+  .podcast-video {
+    box-shadow: 8px 8px 0 rgba(141, 31, 31, 0.1);
   }
 
   .team-grid,
