@@ -27,6 +27,9 @@
 /feed.js
   Cache-Control: public, max-age=31536000, immutable
 
+/navigation.js
+  Cache-Control: public, max-age=31536000, immutable
+
 /podcasts.js
   Cache-Control: public, max-age=31536000, immutable
 
