@@ -49,24 +49,11 @@ function initSideNav() {
 
 function createSideNav() {
   const shell = document.createElement("aside");
-  const brand = document.createElement("a");
-  const brandImage = document.createElement("img");
-  const brandLabel = document.createElement("span");
   const nav = document.createElement("nav");
-  const headerBrandImage = siteHeader.querySelector(".brand-mark");
 
   shell.className = "side-nav-shell";
   shell.setAttribute("aria-label", "Быстрая навигация");
   shell.setAttribute("aria-hidden", "true");
-
-  brand.className = "side-nav-brand";
-  brand.href = "/";
-  brand.setAttribute("aria-label", "Миллиардар - главная");
-  brandImage.src = headerBrandImage?.currentSrc || headerBrandImage?.src || "/assets/logo.png";
-  brandImage.alt = "";
-  brandImage.setAttribute("aria-hidden", "true");
-  brandLabel.textContent = "Меню";
-  brand.append(brandImage, brandLabel);
 
   nav.className = "side-nav";
   nav.setAttribute("aria-label", "Навигация при прокрутке");
@@ -75,7 +62,7 @@ function createSideNav() {
     nav.append(link.cloneNode(true));
   });
 
-  shell.append(brand, nav);
+  shell.append(nav);
 
   return shell;
 }

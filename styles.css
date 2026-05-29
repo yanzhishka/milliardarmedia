@@ -267,11 +267,10 @@ button {
 .side-nav-shell {
   position: fixed;
   top: 50%;
-  left: max(8px, calc((100vw - var(--max)) / 2 - 104px));
+  left: max(8px, calc((100vw - var(--max)) / 2 - 98px));
   z-index: 28;
   display: grid;
-  width: 96px;
-  gap: 10px;
+  width: 90px;
   padding: 10px;
   border: 1px solid var(--line-strong);
   background:
@@ -294,34 +293,9 @@ button {
   content: "";
 }
 
-.side-nav-brand {
-  display: grid;
-  justify-items: center;
-  gap: 4px;
-  min-width: 0;
-  padding: 2px 4px 10px 10px;
-  border-bottom: 1px solid var(--line);
-}
-
-.side-nav-brand img {
-  width: 40px;
-  height: 46px;
-  object-fit: contain;
-}
-
-.side-nav-brand span {
-  color: var(--ink-soft);
-  font-family: var(--mono);
-  font-size: 0.58rem;
-  font-weight: 850;
-  letter-spacing: 0.08em;
-  line-height: 1;
-  text-transform: uppercase;
-}
-
 .side-nav {
   display: grid;
-  gap: 2px;
+  gap: 4px;
 }
 
 .side-nav a {
@@ -1881,7 +1855,7 @@ body.is-sixty-seven .sixty-seven-badge {
 
   .site-nav {
     display: grid;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     justify-content: stretch;
   }
 
