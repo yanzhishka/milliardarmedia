@@ -177,6 +177,8 @@ button {
   height: 3px;
   background:
     linear-gradient(90deg, var(--ink) 0 34%, transparent 34% 36%, var(--accent) 36% 54%, transparent 54% 56%, var(--accent-blue) 56% 100%);
+  background-position: 0 0;
+  background-size: 160% 100%;
   content: "";
 }
 
@@ -264,8 +266,7 @@ button {
 }
 
 .top-feed {
-  position: sticky;
-  top: 104px;
+  position: relative;
   z-index: 19;
   width: min(calc(100% - 32px), var(--max));
   margin: 8px auto 0;
@@ -1633,6 +1634,20 @@ body.is-sixty-seven .sixty-seven-badge {
   }
 }
 
+@supports (animation-timeline: scroll()) {
+  .site-header::after {
+    animation: nav-line-slide linear both;
+    animation-range: 0px 620px;
+    animation-timeline: scroll();
+  }
+}
+
+@keyframes nav-line-slide {
+  to {
+    background-position: -72% 0;
+  }
+}
+
 @keyframes print-shift {
   0%,
   100% {
@@ -1781,7 +1796,6 @@ body.is-sixty-seven .sixty-seven-badge {
   }
 
   .top-feed {
-    top: 136px;
     width: min(calc(100% - 24px), var(--max));
   }
 
@@ -1929,6 +1943,10 @@ body.is-sixty-seven .sixty-seven-badge {
 
   .cursor-sticker {
     display: none;
+  }
+
+  .site-header::after {
+    animation: none !important;
   }
 }
 
