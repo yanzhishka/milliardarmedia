@@ -10,18 +10,12 @@ const commandForm = document.querySelector("#command-console");
 const commandInput = document.querySelector("#command-input");
 const consoleOutput = document.querySelector(".console-output");
 const lazyPortraits = document.querySelectorAll(".portrait[data-src]");
-const feedList = document.querySelector("[data-feed-list]");
-const feedStatus = document.querySelector("[data-feed-status]");
 const feedTicker = document.querySelector("[data-feed-ticker]");
-const feedPanel = document.querySelector("#feed-panel");
-const feedOpenTriggers = document.querySelectorAll("[data-feed-open]");
-const feedCloseTriggers = document.querySelectorAll("[data-feed-close]");
 const canAnimateCursor =
   window.matchMedia("(pointer: fine)").matches &&
   !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 const FEED_REFRESH_INTERVAL = 30000;
 const TICKER_REPEAT_COUNT = 3;
-let latestFeedPosts = [];
 let sixtySevenTimer;
 
 const revealObserver = new IntersectionObserver(
@@ -48,22 +42,7 @@ if (canAnimateCursor) {
   initCursorSticker();
 }
 
-feedOpenTriggers.forEach((trigger) => {
-  trigger.addEventListener("click", (event) => {
-    event.preventDefault();
-    openFeedPanel();
-  });
-});
-
-feedCloseTriggers.forEach((trigger) => {
-  trigger.addEventListener("click", closeFeedPanel);
-});
-
 document.querySelectorAll('a[href^="#"]').forEach((link) => {
-  if (link.matches("[data-feed-open]")) {
-    return;
-  }
-
   link.addEventListener("click", (event) => {
     const target = document.querySelector(link.getAttribute("href"));
 
@@ -128,33 +107,7 @@ document.addEventListener("keydown", (event) => {
   if (event.key === "Escape" && rickrollModal.classList.contains("is-open")) {
     closeRickroll();
   }
-
-  if (event.key === "Escape" && feedPanel?.classList.contains("is-open")) {
-    closeFeedPanel();
-  }
 });
-
-function openFeedPanel() {
-  if (!feedPanel) {
-    return;
-  }
-
-  renderFeedPanel(latestFeedPosts);
-  feedPanel.classList.add("is-open");
-  feedPanel.setAttribute("aria-hidden", "false");
-  document.body.classList.add("is-feed-open");
-  feedPanel.querySelector(".feed-panel-close")?.focus();
-}
-
-function closeFeedPanel() {
-  if (!feedPanel) {
-    return;
-  }
-
-  feedPanel.classList.remove("is-open");
-  feedPanel.setAttribute("aria-hidden", "true");
-  document.body.classList.remove("is-feed-open");
-}
 
 function openRickroll() {
   rickrollModal.classList.add("is-open");
@@ -271,7 +224,7 @@ function initLazyPortraits() {
 }
 
 async function initTelegramFeed() {
-  if (!feedTicker && (!feedList || !feedStatus)) {
+  if (!feedTicker) {
     return;
   }
 
@@ -297,16 +250,12 @@ async function loadTelegramFeed() {
 
     renderFeed(posts);
   } catch (error) {
-    feedStatus.textContent =
-      "Лента появится здесь после подключения Telegram webhook в Cloudflare.";
-    feedList.replaceChildren();
+    renderFeedTicker([]);
   }
 }
 
 function renderFeed(posts) {
-  latestFeedPosts = posts;
   renderFeedTicker(posts);
-  renderFeedPanel(posts);
 }
 
 function renderFeedTicker(posts) {
@@ -326,21 +275,6 @@ function renderFeedTicker(posts) {
   feedTicker.replaceChildren(...tickerPosts.map(createTickerItem));
 }
 
-function renderFeedPanel(posts) {
-  if (!feedList || !feedStatus) {
-    return;
-  }
-
-  feedList.replaceChildren(...posts.map(createFeedCard));
-
-  if (!posts.length) {
-    feedStatus.textContent = "Ждём первые публикации из Telegram.";
-    return;
-  }
-
-  feedStatus.textContent = `Всего ${posts.length} публикаций из Telegram.`;
-}
-
 function createTickerItem(post) {
   const item = document.createElement("span");
   const time = document.createElement("span");
@@ -355,75 +289,6 @@ function createTickerItem(post) {
   item.append(time, text);
 
   return item;
-}
-
-function createFeedCard(post, index = 0) {
-  const card = document.createElement("article");
-  const copy = document.createElement("div");
-  const time = document.createElement("time");
-  const text = document.createElement("p");
-  const link = document.createElement("a");
-  const date = post.date ? new Date(post.date * 1000) : new Date();
-  const media = createFeedMedia(post);
-
-  card.className = "feed-card";
-  copy.className = "feed-copy";
-  card.classList.toggle("has-media", Boolean(media));
-  card.classList.toggle("is-featured", index === 0);
-  time.dateTime = date.toISOString();
-  time.textContent = formatFeedDate(date);
-  text.textContent = getFeedText(post);
-  link.href = post.link || "https://t.me/milliardarmedia";
-  link.target = "_blank";
-  link.rel = "noopener";
-  link.textContent = "Открыть в Telegram";
-
-  copy.append(time, text, link);
-  card.append(copy);
-
-  if (media) {
-    card.append(media);
-  }
-
-  return card;
-}
-
-function createFeedMedia(post) {
-  if (post.imageUrl) {
-    const figure = document.createElement("figure");
-    const image = document.createElement("img");
-
-    figure.className = "feed-media";
-    image.src = post.imageUrl;
-    image.alt = post.text
-      ? `Изображение к публикации: ${post.text.slice(0, 90)}`
-      : "Изображение из Telegram";
-    image.loading = "lazy";
-    image.decoding = "async";
-
-    if (post.imageWidth) {
-      image.width = post.imageWidth;
-    }
-
-    if (post.imageHeight) {
-      image.height = post.imageHeight;
-    }
-
-    figure.append(image);
-
-    return figure;
-  }
-
-  if (post.mediaType && post.mediaType !== "text") {
-    const placeholder = document.createElement("div");
-
-    placeholder.className = "feed-media feed-media-placeholder";
-    placeholder.textContent = post.mediaType === "photo" ? "Фото в Telegram" : "Медиа в Telegram";
-
-    return placeholder;
-  }
-
-  return null;
 }
 
 function getFeedText(post) {

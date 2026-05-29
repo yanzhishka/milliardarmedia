@@ -284,6 +284,7 @@ button {
   cursor: pointer;
   overflow: hidden;
   text-align: left;
+  text-decoration: none;
   box-shadow: 8px 8px 0 rgba(141, 31, 31, 0.12);
 }
 
@@ -789,7 +790,6 @@ h3 {
 }
 
 .person,
-.feed-panel-shell,
 .contact-form {
   border: 1px solid var(--line-strong);
   background:
@@ -950,113 +950,6 @@ h3 {
   line-height: 1.6;
 }
 
-.feed-panel {
-  position: fixed;
-  inset: 0;
-  z-index: 60;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 220ms ease;
-}
-
-.feed-panel.is-open {
-  opacity: 1;
-  pointer-events: auto;
-}
-
-body.is-feed-open {
-  overflow: hidden;
-}
-
-.feed-panel-backdrop {
-  position: absolute;
-  inset: 0;
-  border: 0;
-  background: rgba(17, 17, 17, 0.42);
-  cursor: pointer;
-}
-
-.feed-panel-shell {
-  position: absolute;
-  top: 18px;
-  right: 18px;
-  bottom: 18px;
-  display: grid;
-  width: min(calc(100% - 36px), 1080px);
-  min-width: 0;
-  grid-template-columns: minmax(0, 1fr);
-  grid-template-rows: auto auto 1fr;
-  overflow: hidden;
-  transform: translateX(34px);
-  transition: transform 260ms ease;
-}
-
-.feed-panel.is-open .feed-panel-shell {
-  transform: translateX(0);
-}
-
-.feed-panel-header {
-  display: flex;
-  align-items: start;
-  justify-content: space-between;
-  gap: 18px;
-  padding: clamp(22px, 4vw, 42px);
-  border-bottom: 1px solid var(--line-strong);
-}
-
-.feed-panel-kicker {
-  margin: 0 0 12px;
-  color: var(--accent);
-  font-family: var(--mono);
-  font-size: 0.74rem;
-  font-weight: 850;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.feed-panel-close {
-  display: grid;
-  width: 46px;
-  height: 46px;
-  flex: 0 0 auto;
-  place-items: center;
-  border: 1px solid var(--ink);
-  border-radius: 50%;
-  background: transparent;
-  color: var(--ink);
-  cursor: pointer;
-  font-size: 1.7rem;
-  font-weight: 850;
-  line-height: 1;
-  transition: background 180ms ease, color 180ms ease, transform 180ms ease;
-}
-
-.feed-panel-close:hover {
-  background: var(--ink);
-  color: var(--paper-warm);
-  transform: rotate(8deg);
-}
-
-.feed-panel-toolbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 18px;
-  padding: 18px clamp(18px, 3vw, 34px);
-  border-bottom: 1px solid var(--line-strong);
-}
-
-.feed-panel-toolbar a {
-  flex: 0 0 auto;
-  padding-bottom: 3px;
-  border-bottom: 1px solid currentColor;
-  color: var(--ink);
-  font-size: 0.76rem;
-  font-weight: 850;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
 .feed-status {
   color: var(--ink-soft);
   font-family: var(--mono);
@@ -1197,6 +1090,87 @@ body.is-feed-open {
 
 .feed-copy p {
   overflow-wrap: break-word;
+}
+
+.feed-page .site-header {
+  margin-bottom: 0;
+}
+
+.feed-hero {
+  min-height: auto;
+  padding-top: clamp(84px, 12vw, 150px);
+  padding-bottom: clamp(70px, 10vw, 120px);
+  border-bottom: 1px solid var(--line-strong);
+}
+
+.feed-title {
+  max-width: 980px;
+  font-size: clamp(3.6rem, 9vw, 8.2rem);
+}
+
+.feed-board {
+  padding-top: clamp(70px, 8vw, 112px);
+}
+
+.feed-head {
+  align-items: start;
+  border-bottom: 2px solid var(--ink);
+  padding-bottom: 28px;
+}
+
+.feed-actions {
+  display: grid;
+  justify-items: end;
+  gap: 12px;
+}
+
+.feed-actions a {
+  padding-bottom: 3px;
+  border-bottom: 1px solid currentColor;
+  color: var(--ink);
+  font-size: 0.76rem;
+  font-weight: 850;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.feed-page-list {
+  overflow: visible;
+  padding: 0;
+}
+
+.feed-empty {
+  display: grid;
+  gap: 14px;
+  min-height: 280px;
+  place-items: center;
+  padding: clamp(24px, 6vw, 72px);
+  border: 1px solid var(--line-strong);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.5), transparent 42%),
+    var(--paper-warm);
+  box-shadow: var(--shadow);
+  text-align: center;
+}
+
+.feed-empty span {
+  color: var(--accent-blue);
+  font-family: var(--mono);
+  font-size: 0.9rem;
+  font-weight: 850;
+}
+
+.feed-empty h3 {
+  font-size: clamp(2.2rem, 5vw, 4.5rem);
+}
+
+.feed-empty p {
+  max-width: 520px;
+  margin: 0;
+  color: var(--ink-soft);
+  font-family: var(--serif);
+  font-size: 1.18rem;
+  line-height: 1.55;
 }
 
 .podcasts-page .site-header {
@@ -1888,6 +1862,11 @@ body.is-sixty-seven .sixty-seven-badge {
     text-align: left;
   }
 
+  .feed-actions {
+    justify-items: start;
+    margin-top: 16px;
+  }
+
   .podcast-card {
     grid-template-areas:
       "number"
@@ -1905,22 +1884,6 @@ body.is-sixty-seven .sixty-seven-badge {
   .team-grid,
   .feed-panel-list {
     grid-template-columns: minmax(0, 1fr);
-  }
-
-  .feed-panel-shell {
-    inset: 0;
-    width: 100%;
-    transform: translateY(28px);
-  }
-
-  .feed-panel-header {
-    padding: 22px 16px;
-  }
-
-  .feed-panel-toolbar {
-    align-items: flex-start;
-    flex-direction: column;
-    padding: 14px 16px;
   }
 
   .feed-panel-list {

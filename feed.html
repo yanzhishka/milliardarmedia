@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Лента публикаций журналистского агентства Миллиардар."
+    />
+    <title>Лента - Миллиардар</title>
+    <link rel="icon" href="assets/logo-favicon.png?v=20260529-logo" type="image/png" />
+    <link rel="stylesheet" href="styles.css?v=20260529-feedpage" />
+  </head>
+  <body class="feed-page">
+    <header class="site-header">
+      <a class="brand" href="index.html" aria-label="Миллиардар - главная">
+        <img class="brand-mark" src="assets/logo.png?v=20260529-logo" alt="" aria-hidden="true" />
+        <span class="brand-name">Миллиардар</span>
+      </a>
+
+      <nav class="site-nav" aria-label="Основная навигация">
+        <a href="index.html#about">О нас</a>
+        <a href="feed.html" aria-current="page">Лента</a>
+        <a href="podcasts.html">Подкасты</a>
+        <a href="index.html#team">Команда</a>
+        <a href="index.html#contacts">Контакты</a>
+      </nav>
+    </header>
+
+    <main id="top">
+      <section class="feed-hero section reveal">
+        <p class="eyebrow">Telegram / архив</p>
+        <h1 class="feed-title">Все публикации.</h1>
+        <p class="hero-text">
+          Здесь собираются свежие заметки, новости и короткие материалы из Telegram-канала
+          «Миллиардар».
+        </p>
+      </section>
+
+      <section class="section feed-board reveal" aria-labelledby="feed-list-title">
+        <div class="section-head feed-head">
+          <div>
+            <p class="eyebrow">Лента</p>
+            <h2 id="feed-list-title">Архив.</h2>
+          </div>
+          <div class="feed-actions">
+            <p class="feed-status" data-feed-status>Подключаем редакционную ленту.</p>
+            <a href="https://t.me/milliardarmedia" target="_blank" rel="noopener">Открыть Telegram</a>
+          </div>
+        </div>
+
+        <div class="feed-panel-list feed-page-list" data-feed-list>
+          <article class="feed-empty">
+            <span>00</span>
+            <h3>Пока без публикаций.</h3>
+            <p>Когда в Telegram появятся новые записи, они соберутся здесь.</p>
+          </article>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <span>© 2026 Миллиардар</span>
+      <a href="#top">Наверх</a>
+    </footer>
+
+    <script src="feed.js?v=20260529-feedpage"></script>
+  </body>
+</html>
