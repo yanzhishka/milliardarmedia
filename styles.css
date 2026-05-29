@@ -188,19 +188,18 @@ button {
 }
 
 .brand-mark {
-  width: 46px;
-  height: 46px;
+  width: 48px;
+  height: 54px;
   flex: 0 0 auto;
-  border: 1px solid var(--line-strong);
-  border-radius: 50%;
-  object-fit: cover;
-  background: var(--paper-warm);
-  filter: grayscale(1) contrast(1.14);
-  transition: filter 240ms ease, transform 240ms ease;
+  border: 0;
+  border-radius: 0;
+  object-fit: contain;
+  background: transparent;
+  filter: none;
+  transition: transform 240ms ease;
 }
 
 .brand:hover .brand-mark {
-  filter: grayscale(0) contrast(1.05);
   transform: rotate(-6deg) scale(1.04);
 }
 
