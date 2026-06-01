@@ -110,6 +110,28 @@ function createFeedCard(post, index = 0) {
 }
 
 function createFeedMedia(post) {
+  const images = getPostImages(post);
+
+  if (images.length > 1) {
+    const figure = document.createElement("figure");
+
+    figure.className = "feed-media feed-gallery";
+    images.forEach((postImage, index) => {
+      figure.append(createFeedImage(postImage, post, index));
+    });
+
+    return figure;
+  }
+
+  if (images.length === 1) {
+    const figure = document.createElement("figure");
+
+    figure.className = "feed-media";
+    figure.append(createFeedImage(images[0], post, 0));
+
+    return figure;
+  }
+
   if (post.imageUrl) {
     const figure = document.createElement("figure");
     const image = document.createElement("img");
@@ -147,6 +169,51 @@ function createFeedMedia(post) {
   return null;
 }
 
+function createFeedImage(postImage, post, index) {
+  const image = document.createElement("img");
+
+  image.src = postImage.url;
+  image.alt = post.text
+    ? `Изображение ${index + 1} к публикации: ${post.text.slice(0, 90)}`
+    : `Изображение ${index + 1} из Telegram`;
+  image.loading = "lazy";
+  image.decoding = "async";
+
+  if (postImage.width) {
+    image.width = postImage.width;
+  }
+
+  if (postImage.height) {
+    image.height = postImage.height;
+  }
+
+  return image;
+}
+
+function getPostImages(post) {
+  if (Array.isArray(post.images) && post.images.length) {
+    return post.images
+      .map((image) => ({
+        url: image.url || "",
+        width: image.width || null,
+        height: image.height || null,
+      }))
+      .filter((image) => image.url);
+  }
+
+  if (post.imageUrl) {
+    return [
+      {
+        url: post.imageUrl,
+        width: post.imageWidth || null,
+        height: post.imageHeight || null,
+      },
+    ];
+  }
+
+  return [];
+}
+
 function createEmptyState() {
   const empty = document.createElement("article");
   const number = document.createElement("span");
@@ -168,7 +235,7 @@ function getFeedText(post) {
     return post.text || post.caption;
   }
 
-  if (post.imageUrl || post.mediaType === "photo") {
+  if (post.imageUrl || post.mediaType === "photo" || post.images?.length) {
     return "Фото из Telegram.";
   }
 

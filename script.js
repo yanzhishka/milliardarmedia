@@ -296,7 +296,7 @@ function getFeedText(post) {
     return post.text || post.caption;
   }
 
-  if (post.imageUrl || post.mediaType === "photo") {
+  if (post.imageUrl || post.mediaType === "photo" || post.images?.length) {
     return "Фото из Telegram.";
   }
 
