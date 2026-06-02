@@ -464,7 +464,7 @@ body.has-side-nav .side-nav-shell {
   align-items: center;
   gap: 28px;
   padding-inline: 24px;
-  animation: feed-marquee 42s linear infinite;
+  animation: feed-marquee 84s linear infinite;
   white-space: nowrap;
 }
 
