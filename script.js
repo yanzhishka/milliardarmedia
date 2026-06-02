@@ -16,6 +16,10 @@ const canAnimateCursor =
   !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 const FEED_REFRESH_INTERVAL = 30000;
 const TICKER_REPEAT_COUNT = 3;
+const TICKER_VISIBLE_POSTS = 6;
+const TICKER_TEXT_LIMIT = 135;
+const TICKER_PIXELS_PER_SECOND = 14;
+const TICKER_MIN_DURATION = 140;
 let sixtySevenTimer;
 
 const revealObserver = new IntersectionObserver(
@@ -266,13 +270,16 @@ function renderFeedTicker(posts) {
   if (!posts.length) {
     feedTicker.classList.add("is-empty");
     feedTicker.replaceChildren(createTickerItem({ text: "Ждём первые публикации из Telegram" }));
+    feedTicker.style.removeProperty("--ticker-duration");
     return;
   }
 
   feedTicker.classList.remove("is-empty");
 
-  const tickerPosts = Array.from({ length: TICKER_REPEAT_COUNT }, () => posts).flat();
+  const visiblePosts = posts.slice(0, TICKER_VISIBLE_POSTS);
+  const tickerPosts = Array.from({ length: TICKER_REPEAT_COUNT }, () => visiblePosts).flat();
   feedTicker.replaceChildren(...tickerPosts.map(createTickerItem));
+  window.requestAnimationFrame(updateTickerSpeed);
 }
 
 function createTickerItem(post) {
@@ -284,11 +291,32 @@ function createTickerItem(post) {
   item.className = "top-feed-item";
   time.className = "top-feed-time";
   time.textContent = date ? formatFeedDate(date) : "Live";
-  text.textContent = getFeedText(post);
+  text.textContent = getTickerText(post);
 
   item.append(time, text);
 
   return item;
+}
+
+function updateTickerSpeed() {
+  if (!feedTicker || feedTicker.classList.contains("is-empty")) {
+    return;
+  }
+
+  const distance = feedTicker.scrollWidth / TICKER_REPEAT_COUNT;
+  const duration = Math.max(TICKER_MIN_DURATION, Math.round(distance / TICKER_PIXELS_PER_SECOND));
+
+  feedTicker.style.setProperty("--ticker-duration", `${duration}s`);
+}
+
+function getTickerText(post) {
+  const text = getFeedText(post).replace(/\s+/g, " ").trim();
+
+  if (text.length <= TICKER_TEXT_LIMIT) {
+    return text;
+  }
+
+  return `${text.slice(0, TICKER_TEXT_LIMIT).trim()}...`;
 }
 
 function getFeedText(post) {
