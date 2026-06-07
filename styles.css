@@ -34,10 +34,7 @@ body {
   min-width: 320px;
   margin: 0;
   color: var(--ink);
-  background:
-    linear-gradient(90deg, rgba(8, 8, 8, 0.035) 1px, transparent 1px),
-    var(--paper);
-  background-size: 72px 72px, auto;
+  background: var(--paper);
   font-family: var(--sans);
   letter-spacing: 0;
 }
@@ -136,9 +133,10 @@ h3 {
   width: 100%;
   margin: 0;
   padding: 12px max(18px, calc((100vw - var(--max)) / 2));
-  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  border-bottom: 0;
   background: rgba(8, 8, 8, 0.92);
   color: #fff;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.12);
   backdrop-filter: blur(18px);
   transition: opacity 220ms ease, transform 220ms ease;
 }
@@ -146,13 +144,21 @@ h3 {
 .site-header::after {
   position: absolute;
   right: max(18px, calc((100vw - var(--max)) / 2));
-  bottom: -1px;
+  bottom: -9px;
   left: max(18px, calc((100vw - var(--max)) / 2));
-  height: 1px;
+  height: 18px;
+  border-radius: 999px;
   background:
-    linear-gradient(90deg, transparent, var(--accent), var(--accent-2), transparent);
+    radial-gradient(circle at 0% 50%, var(--accent-3) 0 5px, transparent 5.5px),
+    radial-gradient(circle at 38% 50%, var(--accent) 0 4px, transparent 4.5px),
+    radial-gradient(circle at 68% 50%, var(--accent-2) 0 4px, transparent 4.5px),
+    radial-gradient(circle at 100% 50%, #fff 0 5px, transparent 5.5px),
+    linear-gradient(90deg, transparent 0, rgba(255, 255, 255, 0.5) 8%, var(--accent) 36%, var(--accent-2) 66%, rgba(255, 255, 255, 0.72) 92%, transparent 100%);
   content: "";
-  opacity: 0.84;
+  opacity: 0.9;
+  pointer-events: none;
+  clip-path: polygon(0 44%, 18% 44%, 21% 12%, 24% 88%, 28% 44%, 56% 44%, 59% 18%, 63% 82%, 67% 44%, 100% 44%, 100% 56%, 68% 56%, 63% 100%, 58% 56%, 28% 56%, 24% 100%, 20% 56%, 0 56%);
+  filter: drop-shadow(0 8px 16px rgba(49, 87, 255, 0.18));
 }
 
 .brand {
@@ -186,33 +192,117 @@ h3 {
 }
 
 .site-nav {
+  position: relative;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   justify-content: flex-end;
-  gap: 6px;
+  gap: 14px;
+  isolation: isolate;
+}
+
+.site-nav::before,
+.site-nav::after {
+  position: absolute;
+  right: 10px;
+  left: 10px;
+  pointer-events: none;
+  content: "";
+}
+
+.site-nav::before {
+  bottom: -14px;
+  z-index: -1;
+  height: 2px;
+  border-radius: 999px;
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0.24) 12%, var(--accent) 36%, var(--accent-2) 64%, var(--accent-3) 88%, rgba(255, 255, 255, 0));
+  opacity: 0.92;
+}
+
+.site-nav::after {
+  right: auto;
+  bottom: -18px;
+  left: 8px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--accent-3);
+  box-shadow:
+    0 0 0 7px rgba(215, 255, 53, 0.12),
+    0 0 24px rgba(215, 255, 53, 0.58);
+  animation: nav-signal 5.6s cubic-bezier(0.65, 0, 0.35, 1) infinite;
 }
 
 .site-nav a {
   position: relative;
   display: inline-flex;
-  min-height: 36px;
+  min-height: 38px;
   align-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: 999px;
-  padding: 0 13px;
+  padding: 0 14px;
+  background: rgba(255, 255, 255, 0.045);
   color: rgba(255, 255, 255, 0.72);
   font-size: 0.74rem;
   font-weight: 850;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  transition: color 180ms ease, background 180ms ease, transform 180ms ease;
+  transition: color 180ms ease, background 180ms ease, border-color 180ms ease, transform 180ms ease, box-shadow 180ms ease;
+}
+
+.site-nav a::before,
+.site-nav a::after {
+  position: absolute;
+  left: 50%;
+  pointer-events: none;
+  content: "";
+  transform: translateX(-50%);
+}
+
+.site-nav a::before {
+  bottom: -18px;
+  width: 9px;
+  height: 9px;
+  border: 2px solid rgba(8, 8, 8, 0.9);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.58);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.22);
+  transition: background 180ms ease, box-shadow 180ms ease, transform 180ms ease;
+}
+
+.site-nav a::after {
+  bottom: -11px;
+  width: 1px;
+  height: 10px;
+  background: currentColor;
+  opacity: 0;
+  transition: opacity 180ms ease, transform 180ms ease;
 }
 
 .site-nav a:hover,
 .site-nav a[aria-current="page"] {
+  border-color: transparent;
   background: #fff;
   color: var(--ink);
-  transform: translateY(-1px);
+  transform: translateY(-3px);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.24);
+}
+
+.site-nav a:hover::before,
+.site-nav a[aria-current="page"]::before {
+  background: var(--accent-3);
+  box-shadow:
+    0 0 0 1px rgba(215, 255, 53, 0.8),
+    0 0 0 8px rgba(215, 255, 53, 0.12),
+    0 0 22px rgba(215, 255, 53, 0.5);
+  transform: translateX(-50%) scale(1.14);
+}
+
+.site-nav a:hover::after,
+.site-nav a[aria-current="page"]::after {
+  opacity: 0.74;
+  transform: translateX(-50%) translateY(-2px);
 }
 
 .top-feed {
@@ -325,12 +415,9 @@ h3 {
   overflow: hidden;
   border-bottom: 0;
   background:
-    linear-gradient(90deg, rgba(255, 255, 255, 0.06) 1px, transparent 1px),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.06) 1px, transparent 1px),
     radial-gradient(circle at 78% 32%, rgba(255, 79, 46, 0.18), transparent 26rem),
     radial-gradient(circle at 22% 74%, rgba(49, 87, 255, 0.2), transparent 28rem),
     #090909;
-  background-size: 74px 74px, 74px 74px, auto, auto, auto;
   color: #fff;
 }
 
@@ -492,10 +579,7 @@ h3 {
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: var(--radius);
   background:
-    linear-gradient(90deg, rgba(255, 255, 255, 0.08) 1px, transparent 1px),
-    linear-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px),
     linear-gradient(145deg, #151515, #0a0a0a 60%, #222);
-  background-size: 54px 54px, 54px 54px, auto;
   box-shadow: 0 36px 90px rgba(0, 0, 0, 0.36);
   isolation: isolate;
 }
@@ -868,10 +952,8 @@ h3 {
   padding: clamp(82px, 10vw, 148px) max(20px, calc((100vw - var(--max)) / 2));
   overflow: hidden;
   background:
-    linear-gradient(90deg, rgba(255, 255, 255, 0.06) 1px, transparent 1px),
     radial-gradient(circle at 78% 30%, rgba(255, 79, 46, 0.2), transparent 28rem),
     #090909;
-  background-size: 72px 72px, auto, auto;
   color: #fff;
 }
 
@@ -1163,10 +1245,7 @@ h3 {
   border-radius: var(--radius);
   overflow: hidden;
   background:
-    linear-gradient(90deg, rgba(255, 255, 255, 0.08) 1px, transparent 1px),
-    linear-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px),
     #101010;
-  background-size: 42px 42px, 42px 42px, auto;
 }
 
 .podcast-video video {
@@ -1648,6 +1727,31 @@ body.is-sixty-seven .sixty-seven-badge {
 .reveal.is-visible {
   opacity: 1;
   transform: translateY(0);
+}
+
+@keyframes nav-signal {
+  0% {
+    transform: translateX(0) scale(0.82);
+    opacity: 0;
+  }
+
+  12% {
+    opacity: 1;
+  }
+
+  48% {
+    transform: translateX(calc(100% - 10px)) scale(1);
+    opacity: 1;
+  }
+
+  54% {
+    opacity: 0;
+  }
+
+  100% {
+    transform: translateX(0) scale(0.82);
+    opacity: 0;
+  }
 }
 
 @keyframes feed-marquee {
