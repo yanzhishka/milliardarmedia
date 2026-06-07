@@ -205,6 +205,11 @@ h3 {
     linear-gradient(180deg, #5f9ed7 0%, #78b2e8 46%, #eaf6ff 72%, #ffffff 100%);
 }
 
+.feed-page .sky-hero {
+  min-height: auto;
+  padding: clamp(86px, 8vw, 118px) 0 clamp(22px, 3vw, 42px);
+}
+
 .sky-hero::before {
   position: absolute;
   inset: 0;
@@ -966,6 +971,16 @@ h3 {
   padding-left: max(24px, calc((100vw - var(--max)) / 2));
 }
 
+.feed-page .page-hero {
+  min-height: auto;
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+.feed-page .page-hero-copy {
+  padding-top: 0;
+}
+
 .page-hero .hero-specs {
   grid-column: 1 / -1;
   width: 100%;
@@ -1007,7 +1022,12 @@ h3 {
 }
 
 .archive-section {
+  padding-top: clamp(42px, 5vw, 82px);
   background: var(--white);
+}
+
+.feed-page .archive-section {
+  padding-top: clamp(24px, 3vw, 46px);
 }
 
 .archive-layout {
