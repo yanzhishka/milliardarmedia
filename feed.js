@@ -2,6 +2,8 @@ const feedList = document.querySelector("[data-feed-list]");
 const feedStatus = document.querySelector("[data-feed-status]");
 const revealItems = document.querySelectorAll(".reveal");
 const FEED_REFRESH_INTERVAL = 30000;
+const FEED_CACHE_KEY = "milliardar-feed-posts-v1";
+const FEED_REQUEST_TIMEOUT = 8000;
 
 initReveal();
 initFeed();
@@ -41,14 +43,19 @@ async function initFeed() {
     return;
   }
 
+  renderCachedFeed();
   await loadFeed();
   window.setInterval(loadFeed, FEED_REFRESH_INTERVAL);
 }
 
 async function loadFeed() {
+  const controller = new AbortController();
+  const timeoutId = window.setTimeout(() => controller.abort(), FEED_REQUEST_TIMEOUT);
+
   try {
-    const response = await fetch("/api/posts", {
+    const response = await fetch(`/api/posts?t=${Date.now()}`, {
       cache: "no-store",
+      signal: controller.signal,
       headers: {
         Accept: "application/json",
       },
@@ -62,20 +69,61 @@ async function loadFeed() {
     const posts = Array.isArray(data.posts) ? data.posts : [];
 
     renderFeed(posts);
+    saveCachedPosts(posts);
   } catch (error) {
-    renderFeed([], "Лента появится здесь после подключения Telegram webhook в Cloudflare.");
+    if (feedList.querySelector(".feed-card")) {
+      feedStatus.textContent = "Показываем последние загруженные публикации. Обновление ещё пробует подключиться.";
+      return;
+    }
+
+    renderFeed([], "Лента подключается дольше обычного. Попробуйте обновить страницу через несколько секунд.");
+  } finally {
+    window.clearTimeout(timeoutId);
   }
 }
 
-function renderFeed(posts, emptyStatus = "Ждём первые публикации из Telegram.") {
+function renderCachedFeed() {
+  const cachedPosts = readCachedPosts();
+
+  if (!cachedPosts.length) {
+    return;
+  }
+
+  renderFeed(cachedPosts, "Показываем последние загруженные публикации. Обновляем ленту...");
+}
+
+function renderFeed(posts, statusText = "") {
   if (!posts.length) {
-    feedStatus.textContent = emptyStatus;
+    feedStatus.textContent = statusText || "Ждём первые публикации из Telegram.";
     feedList.replaceChildren(createEmptyState());
     return;
   }
 
-  feedStatus.textContent = `Всего ${posts.length} публикаций из Telegram.`;
+  feedStatus.textContent = statusText || `Всего ${posts.length} публикаций из Telegram.`;
   feedList.replaceChildren(...posts.map(createFeedCard));
+}
+
+function readCachedPosts() {
+  try {
+    const cached = window.localStorage.getItem(FEED_CACHE_KEY);
+    const posts = cached ? JSON.parse(cached) : [];
+
+    return Array.isArray(posts) ? posts : [];
+  } catch (error) {
+    return [];
+  }
+}
+
+function saveCachedPosts(posts) {
+  if (!posts.length) {
+    return;
+  }
+
+  try {
+    window.localStorage.setItem(FEED_CACHE_KEY, JSON.stringify(posts));
+  } catch (error) {
+    // Ignore private mode and storage quota limits.
+  }
 }
 
 function createFeedCard(post, index = 0) {
