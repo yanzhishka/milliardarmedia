@@ -9,53 +9,101 @@
     />
     <title>Подкасты - Миллиардар</title>
     <link rel="icon" href="/assets/logo-favicon.png?v=20260529-logo" type="image/png" />
-    <link rel="stylesheet" href="/styles.css?v=20260607-editorial-redesign" />
+    <link rel="stylesheet" href="/styles.css?v=20260607-superjet-direction" />
   </head>
   <body class="podcasts-page">
     <header class="site-header">
-      <a class="brand" href="/" aria-label="Миллиардар - главная">
-        <img class="brand-mark" src="/assets/logo.png?v=20260529-logo" alt="" aria-hidden="true" />
-        <span class="brand-name">Миллиардар</span>
-      </a>
+      <div class="header-inner">
+        <a class="brand" href="/" aria-label="Миллиардар - главная">
+          <img class="brand-mark" src="/assets/logo.png?v=20260529-logo" alt="" aria-hidden="true" />
+          <span class="brand-name">Миллиардар</span>
+        </a>
 
-      <nav class="site-nav" aria-label="Основная навигация">
-        <a href="/feed">Лента</a>
-        <a href="/podcasts" aria-current="page">Подкасты</a>
-        <a href="/#team">Команда</a>
-      </nav>
+        <nav class="site-nav" aria-label="Основная навигация">
+          <a href="/feed">Лента</a>
+          <a href="/podcasts" aria-current="page">Подкасты</a>
+          <a href="/#team">Команда</a>
+        </nav>
+
+        <a class="header-cta" href="/feed">Лента</a>
+      </div>
     </header>
 
     <main id="top">
-      <section class="podcasts-hero section reveal">
-        <p class="eyebrow">Недельные подкасты</p>
-        <h1 class="podcasts-title">Разговоры, которые можно дослушать.</h1>
-        <p class="hero-text">
-          Здесь будут выходить видео-выпуски «Миллиардара»: редакционные обсуждения,
-          интервью и короткие разговоры о темах недели.
-        </p>
-      </section>
+      <section class="sky-hero page-hero podcasts-hero reveal">
+        <div class="sky-cloud sky-cloud-center" aria-hidden="true"></div>
+        <div class="sky-cloud sky-cloud-right" aria-hidden="true"></div>
 
-      <section class="section podcasts-board reveal" aria-labelledby="podcasts-list-title">
-        <div class="section-head podcasts-head">
-          <div>
-            <p class="eyebrow">Архив</p>
-            <h2 id="podcasts-list-title">Выпуски.</h2>
+        <div class="page-hero-copy">
+          <p class="hero-kicker">Видео / переговоры</p>
+          <h1 class="podcasts-title">
+            Разговоры<br />
+            на<br />
+            крейсерской<br />
+            высоте.
+          </h1>
+          <p class="hero-lead">
+            Недельные видео-выпуски «Миллиардара»: редакционные обсуждения,
+            интервью и короткие разговоры о темах недели.
+          </p>
+          <div class="hero-actions">
+            <a class="button button-primary" href="https://t.me/milliardarmedia" target="_blank" rel="noopener">
+              Telegram
+            </a>
+            <a class="button button-glass" href="/feed">Читать ленту</a>
           </div>
-          <p class="podcasts-status" data-podcast-status>Проверяем новые выпуски.</p>
         </div>
 
-        <div class="podcast-grid" data-podcast-list>
-          <article class="podcast-empty">
-            <span>00</span>
-            <h3>Пока без выпусков.</h3>
-            <p>Когда первый подкаст загрузят через Telegram-бота, он появится здесь.</p>
-          </article>
+        <div class="page-hero-visual page-hero-video" aria-hidden="true">
+          <span class="visual-route visual-route-two"></span>
+          <img src="/assets/logo-generated-full.png?v=20260529-logo" alt="" />
+        </div>
+
+        <dl class="hero-specs" aria-label="Параметры подкастов">
+          <div>
+            <dt>Формат</dt>
+            <dd>Video</dd>
+          </div>
+          <div>
+            <dt>Темп</dt>
+            <dd>Week</dd>
+          </div>
+          <div>
+            <dt>Подача</dt>
+            <dd>Talk</dd>
+          </div>
+        </dl>
+      </section>
+
+      <section class="section archive-section podcasts-board reveal" aria-labelledby="podcasts-list-title">
+        <div class="archive-layout">
+          <header class="archive-head">
+            <p class="section-kicker">Видеосалон</p>
+            <h2 id="podcasts-list-title">Выпуски.</h2>
+            <p class="podcasts-status" data-podcast-status>Проверяем новые выпуски.</p>
+          </header>
+
+          <div class="podcast-grid" data-podcast-list>
+            <article class="podcast-empty">
+              <span>00</span>
+              <h3>Пока без выпусков.</h3>
+              <p>Когда первый подкаст загрузят через Telegram-бота, он появится здесь.</p>
+            </article>
+          </div>
         </div>
       </section>
     </main>
 
     <footer class="site-footer">
-      <span>© 2026 Миллиардар</span>
+      <div>
+        <strong>Миллиардар</strong>
+        <span>Недельные подкасты</span>
+      </div>
+      <nav aria-label="Навигация в подвале">
+        <a href="/">Главная</a>
+        <a href="/feed">Лента</a>
+        <a href="/#team">Команда</a>
+      </nav>
       <a href="#top">Наверх</a>
     </footer>
 

@@ -9,77 +9,151 @@
     />
     <title>Миллиардар - журналистское агентство</title>
     <link rel="icon" href="/assets/logo-favicon.png?v=20260529-logo" type="image/png" />
-    <link rel="stylesheet" href="/styles.css?v=20260607-editorial-redesign" />
+    <link rel="stylesheet" href="/styles.css?v=20260607-superjet-direction" />
   </head>
-  <body>
+  <body class="home-page">
     <header class="site-header">
-      <a class="brand" href="#top" aria-label="Миллиардар - главная">
-        <img class="brand-mark" src="/assets/logo.png?v=20260529-logo" alt="" aria-hidden="true" />
-        <span class="brand-name">Миллиардар</span>
-      </a>
+      <div class="header-inner">
+        <a class="brand" href="#top" aria-label="Миллиардар - главная">
+          <img class="brand-mark" src="/assets/logo.png?v=20260529-logo" alt="" aria-hidden="true" />
+          <span class="brand-name">Миллиардар</span>
+        </a>
 
-      <nav class="site-nav" aria-label="Основная навигация">
-        <a href="/feed">Лента</a>
-        <a href="/podcasts">Подкасты</a>
-        <a href="#team">Команда</a>
-      </nav>
+        <nav class="site-nav" aria-label="Основная навигация">
+          <a href="/feed">Лента</a>
+          <a href="/podcasts">Подкасты</a>
+          <a href="#formats">Преимущества</a>
+          <a href="#team">Команда</a>
+        </nav>
+
+        <a class="header-cta" href="#contact-form">Предложить тему</a>
+      </div>
     </header>
 
-    <section class="top-feed" aria-label="Живая лента публикаций">
-      <a class="top-feed-button" href="/feed">
-        <span class="top-feed-label">Сейчас</span>
-        <span class="top-feed-marquee" aria-hidden="true">
-          <span class="top-feed-track" data-feed-ticker>
-            <span class="top-feed-item">Подключаем Telegram-ленту</span>
-          </span>
-        </span>
-        <span class="top-feed-action">Все посты</span>
-      </a>
-    </section>
-
     <main id="top">
-      <section class="hero section reveal">
-        <div class="hero-copy">
-          <p class="eyebrow">Журналистское агентство</p>
-          <h1 class="hero-title">
-            <span>Материалы</span>
-            <span>Интервью</span>
-            <span>Видео</span>
-          </h1>
-          <p class="hero-text">
-            Собираем факты, задаём вопросы и превращаем идеи в понятные истории.
-          </p>
-          <div class="hero-actions">
-            <a class="button primary" href="#contact-form">Написать</a>
-            <a class="button ghost" href="#team">Команда</a>
+      <section class="sky-hero home-hero reveal" aria-labelledby="home-title">
+        <div class="sky-cloud sky-cloud-left" aria-hidden="true"></div>
+        <div class="sky-cloud sky-cloud-center" aria-hidden="true"></div>
+        <div class="sky-cloud sky-cloud-right" aria-hidden="true"></div>
+
+        <div class="sky-hero-main">
+          <div class="hero-copy">
+            <p class="hero-kicker">Журналистское агентство нового маршрута</p>
+            <h1 id="home-title" class="hero-title">
+              Собирая<br />
+              новые<br />
+              поводы
+            </h1>
+            <p class="hero-lead">
+              Мы превращаем факты, разговоры и видео в ясные материалы без шума.
+              Быстро, аккуратно и с человеческим голосом.
+            </p>
+            <div class="hero-actions">
+              <a class="button button-primary" href="/feed">Открыть ленту</a>
+              <a class="button button-glass" href="/podcasts">Смотреть выпуски</a>
+            </div>
+          </div>
+
+          <div class="sky-visual" aria-label="Визуальный знак Миллиардара">
+            <span class="visual-route visual-route-one" aria-hidden="true"></span>
+            <span class="visual-route visual-route-two" aria-hidden="true"></span>
+            <img class="hero-art" src="/assets/logo.png?v=20260529-logo" alt="" aria-hidden="true" />
+            <div class="hero-callout">
+              <span>media speed</span>
+              <strong>24/7</strong>
+              <p>Telegram, интервью, видео и редакционные заметки в одном потоке.</p>
+            </div>
           </div>
         </div>
 
-        <div class="hero-visual" aria-hidden="true">
-          <div class="chrome-word">Миллиардар</div>
-          <div class="spark spark-one"></div>
-          <div class="spark spark-two"></div>
-          <div class="spark spark-three"></div>
-          <div class="drip drip-one"></div>
-          <div class="drip drip-two"></div>
-          <div class="drip drip-three"></div>
-          <div class="ticker">
-            <span>Факт</span>
-            <span>Голос</span>
-            <span>Тема</span>
+        <dl class="hero-specs" aria-label="Характеристики редакции">
+          <div>
+            <dt>Форматы</dt>
+            <dd>3</dd>
           </div>
+          <div>
+            <dt>Редакция</dt>
+            <dd>4</dd>
+          </div>
+          <div>
+            <dt>Поток</dt>
+            <dd>Live</dd>
+          </div>
+        </dl>
+      </section>
+
+      <section class="top-feed reveal" aria-label="Живая лента публикаций">
+        <a class="top-feed-button" href="/feed">
+          <span class="top-feed-label">Сейчас</span>
+          <span class="top-feed-marquee" aria-hidden="true">
+            <span class="top-feed-track" data-feed-ticker>
+              <span class="top-feed-item">Подключаем Telegram-ленту</span>
+            </span>
+          </span>
+          <span class="top-feed-action">Все посты</span>
+        </a>
+      </section>
+
+      <section id="formats" class="section altitude-section reveal" aria-labelledby="formats-title">
+        <div class="section-lead">
+          <p class="section-kicker">Преимущества</p>
+          <h2 id="formats-title">Редакция, которая держит высоту.</h2>
+          <p>
+            Вместо одинаковых карточек - три рабочих режима агентства: быстрый поток,
+            разговоры с героями и видео, которое можно смотреть как выпуск.
+          </p>
+        </div>
+
+        <div class="altitude-grid">
+          <article class="altitude-card">
+            <span>01</span>
+            <h3>Лента</h3>
+            <p>Короткие публикации, новости и заметки из Telegram собираются в единый архив.</p>
+            <a href="/feed">Перейти к ленте</a>
+          </article>
+          <article class="altitude-card altitude-card-dark">
+            <span>02</span>
+            <h3>Подкасты</h3>
+            <p>Недельные видео-выпуски, редакционные обсуждения и интервью в спокойном темпе.</p>
+            <a href="/podcasts">Открыть выпуски</a>
+          </article>
+          <article class="altitude-card">
+            <span>03</span>
+            <h3>Команда</h3>
+            <p>У каждого участника есть свой маршрут: фактура, съёмка, редактура и подача.</p>
+            <a href="#team">Познакомиться</a>
+          </article>
         </div>
       </section>
 
-      <section id="team" class="section reveal">
-        <div class="section-head">
-          <p class="eyebrow">Команда</p>
-          <h2>Редакция в четыре человека.</h2>
+      <section class="section efficiency-section reveal" aria-labelledby="efficiency-title">
+        <div class="wide-media">
+          <img src="/assets/logo-generated-full.png?v=20260529-logo" alt="" aria-hidden="true" />
+        </div>
+        <div class="efficiency-copy">
+          <p class="section-kicker">Эффективность</p>
+          <h2 id="efficiency-title">Меньше шума. Больше траектории.</h2>
+          <p>
+            Контент сайта теперь читается как презентация проекта: большой первый экран,
+            технические показатели, сильный визуальный объект и понятная посадка к форме.
+          </p>
+        </div>
+      </section>
+
+      <section id="team" class="section crew-section reveal" aria-labelledby="team-title">
+        <div class="section-lead">
+          <p class="section-kicker">Экипаж</p>
+          <h2 id="team-title">Четыре человека в редакционном рейсе.</h2>
+          <p>
+            Карточки команды стали не списком анкет, а кабиной экипажа: крупные портреты,
+            роли, номера и раскрывающиеся биографии без потери текущей логики.
+          </p>
         </div>
 
         <div class="team-grid">
           <details class="person">
             <summary class="person-summary">
+              <span class="person-number">01</span>
               <span class="portrait-shell">
                 <img
                   class="portrait portrait-konstantin"
@@ -109,6 +183,7 @@
 
           <details class="person">
             <summary class="person-summary">
+              <span class="person-number">02</span>
               <span class="portrait-shell">
                 <img
                   class="portrait portrait-atemiy"
@@ -138,6 +213,7 @@
 
           <details class="person">
             <summary class="person-summary">
+              <span class="person-number">03</span>
               <span class="portrait-shell">
                 <img
                   class="portrait portrait-mikhail"
@@ -166,6 +242,7 @@
 
           <details class="person">
             <summary class="person-summary">
+              <span class="person-number">04</span>
               <span class="portrait-shell">
                 <img
                   class="portrait portrait-anna"
@@ -195,10 +272,14 @@
         </div>
       </section>
 
-      <section id="contacts" class="section contact reveal">
-        <div class="contact-copy">
-          <p class="eyebrow">Контакты</p>
+      <section id="contacts" class="section leasing-section reveal">
+        <div class="leasing-copy">
+          <p class="section-kicker">Связаться</p>
           <h2>Предложите тему или проект.</h2>
+          <p>
+            Отправьте короткое описание. Редакция посмотрит сообщение и вернётся
+            с вопросами, если тема подходит для материала, интервью или выпуска.
+          </p>
           <ul class="contact-list">
             <li>
               <span>Email</span>
@@ -240,7 +321,7 @@
             <span>Сообщение</span>
             <textarea name="message" rows="5" required></textarea>
           </label>
-          <button class="button primary" type="submit">Отправить</button>
+          <button class="button button-primary" type="submit">Отправить</button>
           <p class="form-note" aria-live="polite"></p>
         </form>
       </section>
@@ -263,7 +344,15 @@
     </section>
 
     <footer class="site-footer">
-      <span>© 2026 Миллиардар</span>
+      <div>
+        <strong>Миллиардар</strong>
+        <span>Журналистское агентство</span>
+      </div>
+      <nav aria-label="Навигация в подвале">
+        <a href="/feed">Лента</a>
+        <a href="/podcasts">Подкасты</a>
+        <a href="#team">Команда</a>
+      </nav>
       <a href="#top">Наверх</a>
     </footer>
 
