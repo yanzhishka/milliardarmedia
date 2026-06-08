@@ -1030,6 +1030,10 @@ h3 {
   padding-top: clamp(24px, 3vw, 46px);
 }
 
+.feed-page .archive-layout {
+  grid-template-columns: minmax(0, 1fr);
+}
+
 .archive-layout {
   display: grid;
   grid-template-columns: minmax(240px, 0.34fr) minmax(0, 1fr);
@@ -1044,8 +1048,18 @@ h3 {
   align-self: start;
 }
 
+.feed-page .archive-head {
+  position: static;
+  max-width: 900px;
+  min-width: 0;
+}
+
 .archive-head h2 {
   margin-bottom: 24px;
+}
+
+.feed-page .archive-head h2 {
+  max-width: 100%;
 }
 
 .feed-status,
@@ -1068,6 +1082,10 @@ h3 {
   color: rgba(255, 255, 255, 0.82);
 }
 
+.feed-page .feed-actions {
+  grid-column: 1;
+}
+
 .feed-actions span {
   font-size: 0.9rem;
   font-weight: 700;
@@ -1086,6 +1104,10 @@ h3 {
   display: grid;
   grid-column: 2;
   gap: 18px;
+}
+
+.feed-page .feed-panel-list {
+  grid-column: 1;
 }
 
 .feed-card,
