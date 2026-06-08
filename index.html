@@ -9,7 +9,7 @@
     />
     <title>Миллиардар - журналистское агентство</title>
     <link rel="icon" href="/assets/logo-favicon.png?v=20260529-logo" type="image/png" />
-    <link rel="stylesheet" href="/styles.css?v=20260607-superjet-direction" />
+    <link rel="stylesheet" href="/styles.css?v=20260608-nav-ticker" />
   </head>
   <body class="home-page">
     <header class="site-header">
@@ -28,6 +28,18 @@
 
         <a class="header-cta" href="#contact-form">Предложить тему</a>
       </div>
+
+      <section class="top-feed" aria-label="Живая лента публикаций">
+        <a class="top-feed-button" href="/feed">
+          <span class="top-feed-label">Сейчас</span>
+          <span class="top-feed-marquee" aria-hidden="true">
+            <span class="top-feed-track" data-feed-ticker>
+              <span class="top-feed-item">Подключаем Telegram-ленту</span>
+            </span>
+          </span>
+          <span class="top-feed-action">Все посты</span>
+        </a>
+      </section>
     </header>
 
     <main id="top">
@@ -80,18 +92,6 @@
             <dd>Live</dd>
           </div>
         </dl>
-      </section>
-
-      <section class="top-feed reveal" aria-label="Живая лента публикаций">
-        <a class="top-feed-button" href="/feed">
-          <span class="top-feed-label">Сейчас</span>
-          <span class="top-feed-marquee" aria-hidden="true">
-            <span class="top-feed-track" data-feed-ticker>
-              <span class="top-feed-item">Подключаем Telegram-ленту</span>
-            </span>
-          </span>
-          <span class="top-feed-action">Все посты</span>
-        </a>
       </section>
 
       <section id="formats" class="section altitude-section reveal" aria-labelledby="formats-title">

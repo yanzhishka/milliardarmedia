@@ -205,9 +205,14 @@ h3 {
     linear-gradient(180deg, #5f9ed7 0%, #78b2e8 46%, #eaf6ff 72%, #ffffff 100%);
 }
 
-.feed-page .sky-hero {
+.home-page .sky-hero {
+  padding-top: 204px;
+}
+
+.feed-page .sky-hero,
+.podcasts-page .sky-hero {
   min-height: auto;
-  padding: clamp(86px, 8vw, 118px) 0 clamp(22px, 3vw, 42px);
+  padding: clamp(104px, 9vw, 136px) 0 clamp(22px, 3vw, 42px);
 }
 
 .sky-hero::before {
@@ -476,21 +481,24 @@ h3 {
 }
 
 .top-feed {
-  position: sticky;
-  top: 0;
+  position: static;
   z-index: 40;
-  background: var(--blue-950);
+  width: min(calc(100% - 48px), var(--max));
+  margin: 4px auto 0;
+  background: transparent;
   color: var(--white);
 }
 
 .top-feed-button {
   display: grid;
-  width: min(100%, var(--max));
+  width: 100%;
   min-height: 56px;
   grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
   margin: 0 auto;
   overflow: hidden;
+  background: var(--blue-950);
+  box-shadow: 0 18px 34px rgba(6, 35, 90, 0.16);
 }
 
 .top-feed-label,
@@ -869,8 +877,8 @@ h3 {
   gap: clamp(30px, 6vw, 88px);
   align-items: start;
   width: 100%;
-  padding-right: max(24px, calc((100vw - var(--max)) / 2));
-  padding-left: max(24px, calc((100vw - var(--max)) / 2));
+  padding-right: max(24px, calc(50vw - 590px));
+  padding-left: max(24px, calc(50vw - 590px));
   background: var(--blue-950);
   color: var(--white);
 }
@@ -966,19 +974,24 @@ h3 {
   grid-template-columns: minmax(0, 0.88fr) minmax(320px, 0.72fr);
   gap: clamp(30px, 5vw, 70px);
   align-items: center;
+  width: min(calc(100% - 48px), var(--max));
   min-height: 82vh;
-  padding-right: max(24px, calc((100vw - var(--max)) / 2));
-  padding-left: max(24px, calc((100vw - var(--max)) / 2));
+  margin: 0 auto;
 }
 
-.feed-page .page-hero {
+.feed-page .page-hero,
+.podcasts-page .page-hero {
+  grid-template-columns: minmax(0, 1fr) minmax(150px, 260px);
+  gap: clamp(24px, 4vw, 48px);
   min-height: auto;
   padding-top: 0;
   padding-bottom: 0;
 }
 
-.feed-page .page-hero-copy {
-  padding-top: 0;
+.feed-page .page-hero-copy,
+.podcasts-page .page-hero-copy {
+  max-width: 720px;
+  padding-top: clamp(16px, 2vw, 34px);
 }
 
 .page-hero .hero-specs {
@@ -996,9 +1009,26 @@ h3 {
 .feed-title,
 .podcasts-title {
   color: var(--blue-950);
-  font-size: clamp(4rem, 8vw, 8rem);
+  font-size: clamp(4rem, 7.4vw, 7rem);
   line-height: 0.92;
   text-transform: uppercase;
+}
+
+.feed-page .hero-lead,
+.podcasts-page .hero-lead {
+  max-width: 620px;
+  margin-top: 22px;
+}
+
+.feed-page .page-hero-visual,
+.podcasts-page .page-hero-visual {
+  min-height: 220px;
+}
+
+.feed-page .page-hero-visual .visual-route,
+.podcasts-page .page-hero-visual .visual-route {
+  width: min(30vw, 320px);
+  opacity: 0.46;
 }
 
 .page-hero-visual img {
@@ -1006,6 +1036,14 @@ h3 {
   min-width: 300px;
   transform: rotate(-12deg);
   filter: drop-shadow(0 30px 45px rgba(6, 35, 90, 0.22));
+}
+
+.feed-page .page-hero-visual img,
+.podcasts-page .page-hero-visual img {
+  width: min(18vw, 210px);
+  min-width: 150px;
+  transform: none;
+  filter: drop-shadow(0 18px 24px rgba(6, 35, 90, 0.16));
 }
 
 .page-hero-video {
@@ -1019,6 +1057,13 @@ h3 {
   background: #030712;
   box-shadow: var(--shadow);
   transform: rotate(4deg);
+}
+
+.podcasts-page .page-hero-video img {
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  transform: none;
 }
 
 .archive-section {
@@ -1264,7 +1309,7 @@ h3 {
 .command-console {
   display: grid;
   gap: 8px;
-  padding: 18px max(24px, calc((100vw - var(--max)) / 2));
+  padding: 18px max(24px, calc(50vw - 590px));
   background: #031336;
   color: rgba(255, 255, 255, 0.78);
 }
@@ -1301,7 +1346,7 @@ h3 {
   grid-template-columns: minmax(0, 1fr) auto auto;
   gap: 28px;
   align-items: center;
-  padding: 34px max(24px, calc((100vw - var(--max)) / 2));
+  padding: 34px max(24px, calc(50vw - 590px));
   background: var(--white);
   color: var(--blue-950);
 }
@@ -1618,6 +1663,15 @@ body.is-sixty-seven .sixty-seven-badge {
       linear-gradient(180deg, #5f9ed7 0 280px, #ffffff 280px 100%);
   }
 
+  .home-page .sky-hero {
+    padding-top: 190px;
+  }
+
+  .feed-page .sky-hero,
+  .podcasts-page .sky-hero {
+    padding-top: 118px;
+  }
+
   .sky-hero-main,
   .page-hero {
     width: min(calc(100% - 28px), var(--max));
@@ -1670,6 +1724,24 @@ body.is-sixty-seven .sixty-seven-badge {
     border-width: 7px;
   }
 
+  .feed-page .page-hero,
+  .podcasts-page .page-hero {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  .feed-page .page-hero-visual,
+  .podcasts-page .page-hero-visual {
+    min-height: 120px;
+    place-items: start;
+  }
+
+  .feed-page .page-hero-visual img,
+  .podcasts-page .page-hero-visual img {
+    width: 112px;
+    min-width: 0;
+  }
+
   .hero-callout {
     right: auto;
     bottom: 0;
@@ -1695,6 +1767,11 @@ body.is-sixty-seven .sixty-seven-badge {
   .top-feed-button {
     min-height: 48px;
     grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .top-feed {
+    width: min(calc(100% - 28px), var(--max));
+    margin-top: 8px;
   }
 
   .top-feed-label {
