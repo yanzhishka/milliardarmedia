@@ -1,8 +1,7 @@
 const siteHeader = document.querySelector(".site-header");
 const siteNav = document.querySelector(".site-nav");
-const SIDE_NAV_SCROLL_OFFSET = 150;
 const BACK_TO_TOP_SCROLL_OFFSET = 260;
-const SIDE_NAV_QUERY = "(min-width: 1060px)";
+const SIDE_NAV_QUERY = "(min-width: 1500px)";
 
 initSideNav();
 initBackToTop();
@@ -14,36 +13,24 @@ function initSideNav() {
 
   const sideNav = createSideNav();
   const desktopQuery = window.matchMedia(SIDE_NAV_QUERY);
-  let ticking = false;
 
   document.body.append(sideNav);
   setSideNavInert(sideNav, true);
 
   const update = () => {
-    const shouldShow = desktopQuery.matches && window.scrollY > SIDE_NAV_SCROLL_OFFSET;
+    const shouldShow = desktopQuery.matches;
 
     document.body.classList.toggle("has-side-nav", shouldShow);
     sideNav.setAttribute("aria-hidden", String(!shouldShow));
     setSideNavInert(sideNav, !shouldShow);
-    ticking = false;
   };
 
-  const requestUpdate = () => {
-    if (ticking) {
-      return;
-    }
-
-    ticking = true;
-    window.requestAnimationFrame(update);
-  };
-
-  window.addEventListener("scroll", requestUpdate, { passive: true });
-  window.addEventListener("resize", requestUpdate);
+  window.addEventListener("resize", update);
 
   if ("addEventListener" in desktopQuery) {
-    desktopQuery.addEventListener("change", requestUpdate);
+    desktopQuery.addEventListener("change", update);
   } else {
-    desktopQuery.addListener(requestUpdate);
+    desktopQuery.addListener(update);
   }
 
   update();
