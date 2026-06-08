@@ -104,6 +104,10 @@ async function handleBotMessage(message, env) {
     return handleDeletePodcastCommand(message, env, text);
   }
 
+  if (isCommand(text, "deletesite")) {
+    return handleDeleteSiteCommand(message, env, text);
+  }
+
   if (isCommand(text, "status")) {
     return handleStatusCommand(message, env);
   }
@@ -137,13 +141,16 @@ async function handleHelpCommand(message, env) {
     "/delete — подготовить удаление последнего поста из Telegram и с сайта.",
     "/delete 123 — подготовить удаление поста по номеру сообщения.",
     "/delete ссылка — подготовить удаление поста по ссылке Telegram.",
+    "/deletesite 123 — подготовить удаление поста только с сайта.",
+    "/deletesite ссылка — подготовить удаление поста по ссылке только с сайта.",
     "/deletepodcast — подготовить удаление последнего выпуска со страницы подкастов.",
     "/deletepodcast 123 — подготовить удаление выпуска по номеру сообщения.",
     "/confirmdelete — запасное подтверждение, если кнопка не сработала.",
     "/canceldelete — отменить подготовленное удаление, если кнопка потерялась.",
     "/podcast Название — отправьте видео с этой подписью, чтобы добавить выпуск.",
     "",
-    "После /delete и /deletepodcast бот пришлёт кнопки подтверждения.",
+    "После /delete, /deletesite и /deletepodcast бот пришлёт кнопки подтверждения.",
+    "Важно: /deletesite чистит пост и файлы только на сайте, но оставляет сообщение в Telegram.",
     "Важно: /deletepodcast чистит карточку и файл на сайте, но не удаляет сообщение в Telegram.",
   ];
 
@@ -159,7 +166,7 @@ async function handleDeleteCommand(message, env, text) {
   }
 
   const posts = await readPosts(env);
-  const deleteTarget = parseDeleteTarget(text);
+  const deleteTarget = parseDeleteTarget(text, "delete");
   let messageId = deleteTarget.messageId;
 
   if (!deleteTarget.raw && posts.length) {
@@ -204,6 +211,55 @@ async function handleDeleteCommand(message, env, text) {
   return jsonResponse({ ok: true, command: "delete", pending: true, messageId });
 }
 
+async function handleDeleteSiteCommand(message, env, text) {
+  if (!isAdminMessage(message, env)) {
+    await replyToBotMessage(env, message, "Команда доступна только администраторам ленты.");
+    return jsonResponse({ ok: true, command: "deletesite", denied: true });
+  }
+
+  const posts = await readPosts(env);
+  const deleteTarget = parseDeleteTarget(text, "deletesite");
+  const messageId = deleteTarget.messageId;
+
+  if (!posts.length) {
+    await replyToBotMessage(env, message, "В ленте сайта пока нет постов.");
+    return jsonResponse({ ok: true, command: "deletesite", empty: true });
+  }
+
+  if (!deleteTarget.raw || !messageId) {
+    await replyToBotMessage(
+      env,
+      message,
+      "Формат: /deletesite 123 или /deletesite https://t.me/milliardarmedia/123",
+    );
+    return jsonResponse({ ok: true, command: "deletesite", error: "missing_message_id" });
+  }
+
+  const action = await savePendingAction(env, message, {
+    type: "delete_site_post",
+    messageId,
+  });
+
+  if (!action) {
+    await replyToBotMessage(env, message, "Не смог сохранить подтверждение. Попробуйте ещё раз.");
+    return jsonResponse({ ok: true, command: "deletesite", error: "pending_action_failed" });
+  }
+
+  await replyToBotMessage(
+    env,
+    message,
+    [
+      `Пост ${messageId} подготовлен к удалению только с сайта.`,
+      "В Telegram сообщение останется.",
+      "Подтвердите действие кнопкой ниже.",
+      "Команда действует 10 минут.",
+    ].join("\n"),
+    { reply_markup: buildDeleteKeyboard(action.actionId) },
+  );
+
+  return jsonResponse({ ok: true, command: "deletesite", pending: true, messageId });
+}
+
 async function executeDeletePost(message, env, messageId) {
   const posts = await readPosts(env);
   const chatId = getChannelChatId(env);
@@ -231,6 +287,31 @@ async function executeDeletePost(message, env, messageId) {
   });
 }
 
+async function executeDeleteSitePost(message, env, messageId) {
+  const posts = await readPosts(env);
+  const nextPosts = removePost(posts, messageId);
+  const deletedPosts = posts.filter((post) => !nextPosts.some((nextPost) => nextPost.id === post.id));
+  const siteDeleted = posts.length !== nextPosts.length;
+
+  await env.POSTS_KV.put(POSTS_KEY, JSON.stringify(nextPosts));
+  await deletePostImages(env, deletedPosts);
+  await replyToBotMessage(
+    env,
+    message,
+    siteDeleted
+      ? `Пост ${messageId} удалён только с сайта. В Telegram он остался.`
+      : `Пост ${messageId} не найден в ленте сайта.`,
+  );
+
+  return jsonResponse({
+    ok: true,
+    command: "confirmdelete",
+    action: "deletesite",
+    messageId,
+    siteDeleted,
+  });
+}
+
 async function handleConfirmDeleteCommand(message, env) {
   if (!isAdminMessage(message, env)) {
     await replyToBotMessage(env, message, "Команда доступна только администраторам.");
@@ -240,7 +321,11 @@ async function handleConfirmDeleteCommand(message, env) {
   const action = await readPendingAction(env, message);
 
   if (!action) {
-    await replyToBotMessage(env, message, "Нет удаления для подтверждения. Сначала используйте /delete.");
+    await replyToBotMessage(
+      env,
+      message,
+      "Нет удаления для подтверждения. Сначала используйте /delete, /deletesite или /deletepodcast.",
+    );
     return jsonResponse({ ok: true, command: "confirmdelete", empty: true });
   }
 
@@ -249,6 +334,8 @@ async function handleConfirmDeleteCommand(message, env) {
   try {
     if (action.type === "delete_post") {
       response = await executeDeletePost(message, env, action.messageId);
+    } else if (action.type === "delete_site_post") {
+      response = await executeDeleteSitePost(message, env, action.messageId);
     } else if (action.type === "delete_podcast") {
       response = await executeDeletePodcast(message, env, action.messageId);
     } else {
@@ -301,6 +388,8 @@ async function handleCallbackQuery(query, env) {
   try {
     if (action.type === "delete_post") {
       response = await executeDeletePost(message, env, action.messageId);
+    } else if (action.type === "delete_site_post") {
+      response = await executeDeleteSitePost(message, env, action.messageId);
     } else if (action.type === "delete_podcast") {
       response = await executeDeletePodcast(message, env, action.messageId);
     } else {
@@ -457,7 +546,7 @@ async function handleDeletePodcastCommand(message, env, text) {
   }
 
   const podcasts = await readPodcasts(env);
-  const deleteTarget = parseDeleteTarget(text.replace(/^\/deletepodcast(?:@\w+)?/i, "/delete"));
+  const deleteTarget = parseDeleteTarget(text, "deletepodcast");
   let messageId = deleteTarget.messageId;
 
   if (!deleteTarget.raw && podcasts.length) {
@@ -606,8 +695,9 @@ function isAdminMessage(message, env) {
   return adminIds.includes(String(message.from?.id || ""));
 }
 
-function parseDeleteTarget(text) {
-  const target = text.replace(/^\/delete(?:@\w+)?/i, "").trim();
+function parseDeleteTarget(text, command = "delete") {
+  const commandPattern = new RegExp(`^/${command}(?:@\\w+)?`, "i");
+  const target = text.replace(commandPattern, "").trim();
 
   if (!target) {
     return {
