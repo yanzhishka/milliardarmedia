@@ -9,9 +9,23 @@
     />
     <title>Миллиардар - журналистское агентство</title>
     <link rel="icon" href="/assets/logo-favicon.png?v=20260529-logo" type="image/png" />
-    <link rel="stylesheet" href="/styles.css?v=20260609-mobile-hub-fix" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500..900;1,500..900&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/styles.css?v=20260614-glass3d" />
   </head>
   <body class="home-page">
+    <svg width="0" height="0" style="position: absolute" aria-hidden="true" focusable="false">
+      <filter id="liquidGlass" x="-20%" y="-20%" width="140%" height="140%">
+        <feTurbulence type="fractalNoise" baseFrequency="0.006 0.01" numOctaves="2" seed="7" result="noise" />
+        <feGaussianBlur in="noise" stdDeviation="1.4" result="soft" />
+        <feDisplacementMap in="SourceGraphic" in2="soft" scale="22" xChannelSelector="R" yChannelSelector="G" />
+      </filter>
+    </svg>
+
     <header class="site-header">
       <div class="header-inner">
         <a class="brand" href="#top" aria-label="Миллиардар - главная">
@@ -43,34 +57,33 @@
     </header>
 
     <main id="top">
-      <section class="sky-hero home-hero reveal" aria-labelledby="home-title">
-        <div class="sky-cloud sky-cloud-left" aria-hidden="true"></div>
-        <div class="sky-cloud sky-cloud-center" aria-hidden="true"></div>
-        <div class="sky-cloud sky-cloud-right" aria-hidden="true"></div>
+      <section class="hero3d on-ink" aria-labelledby="home-title" data-pointer-scene>
+        <div class="hero3d-orb orb-red" data-depth="26" aria-hidden="true"></div>
+        <div class="hero3d-orb orb-deep" data-depth="16" aria-hidden="true"></div>
+        <div class="hero3d-orb orb-paper" data-depth="38" aria-hidden="true"></div>
+        <div class="hero3d-grid" aria-hidden="true"></div>
 
-        <div class="sky-hero-main">
-          <div class="hero-copy">
-            <p class="hero-kicker">Журналистское агентство нового маршрута</p>
-            <h1 id="home-title" class="hero-title">
-              Собирая<br />
-              новые<br />
-              поводы
+        <div class="hero3d-main">
+          <div class="hero3d-copy">
+            <p class="hero-kicker reveal">Журналистское агентство нового маршрута</p>
+            <h1 id="home-title" class="hero-title" data-split>
+              Собирая новые <em>поводы</em>
             </h1>
-            <p class="hero-lead">
+            <p class="hero-lead reveal">
               Мы превращаем факты, разговоры и видео в ясные материалы без шума.
               Быстро, аккуратно и с человеческим голосом.
             </p>
-            <div class="hero-actions">
+            <div class="hero-actions reveal">
               <a class="button button-primary" href="/feed">Открыть ленту</a>
               <a class="button button-glass" href="/podcasts">Смотреть выпуски</a>
             </div>
           </div>
 
-          <div class="sky-visual" aria-label="Визуальный знак Миллиардара">
-            <span class="visual-route visual-route-one" aria-hidden="true"></span>
-            <span class="visual-route visual-route-two" aria-hidden="true"></span>
-            <img class="hero-art" src="/assets/logo.png?v=20260529-logo" alt="" aria-hidden="true" />
-            <div class="hero-callout">
+          <div class="hero-glass glass glass-dark glass-liquid tilt reveal" data-tilt aria-label="Визуальный знак Миллиардара">
+            <div class="hero-glass-logo" data-z style="--z: 50px">
+              <img src="/assets/logo.png?v=20260529-logo" alt="" aria-hidden="true" />
+            </div>
+            <div class="hero-glass-meta" data-z style="--z: 26px">
               <span>media speed</span>
               <strong>24/7</strong>
               <p>Telegram, интервью, видео и редакционные заметки в одном потоке.</p>
@@ -78,65 +91,62 @@
           </div>
         </div>
 
-        <dl class="hero-specs" aria-label="Характеристики редакции">
-          <div>
-            <dt>Форматы</dt>
-            <dd>3</dd>
-          </div>
-          <div>
-            <dt>Редакция</dt>
-            <dd>4</dd>
-          </div>
-          <div>
-            <dt>Поток</dt>
-            <dd>Live</dd>
-          </div>
-        </dl>
+        <div class="hero3d-scroll" aria-hidden="true">Листай</div>
       </section>
 
-      <section id="formats" class="section altitude-section reveal" aria-labelledby="formats-title">
-        <div class="section-lead">
-          <p class="section-kicker">Преимущества</p>
-          <h2 id="formats-title">Редакция, которая держит высоту.</h2>
-          <p>
-            Вместо одинаковых карточек - три рабочих режима агентства: быстрый поток,
-            разговоры с героями и видео, которое можно смотреть как выпуск.
-          </p>
+      <section id="formats" class="bento-section" aria-labelledby="bento-title">
+        <div class="bento-head reveal">
+          <p class="section-kicker">Редакция · пульт</p>
+          <h2 id="bento-title">Весь поток на одном экране.</h2>
         </div>
 
-        <div class="altitude-grid">
-          <article class="altitude-card">
-            <span>01</span>
-            <h3>Лента</h3>
-            <p>Короткие публикации, новости и заметки из Telegram собираются в единый архив.</p>
-            <a href="/feed">Перейти к ленте</a>
+        <div class="bento" data-stagger>
+          <article class="bento-tile tile-feed glass glass-sheen tilt" data-tilt>
+            <div class="tile-feed-head">
+              <span class="tile-feed-live">В эфире</span>
+              <a class="tile-arrow" href="/feed">Вся лента</a>
+            </div>
+            <ul class="home-feed-list" data-home-feed>
+              <li class="home-feed-item">
+                <time>Live</time>
+                <p>Подключаем редакционную ленту из Telegram…</p>
+              </li>
+            </ul>
           </article>
-          <article class="altitude-card altitude-card-dark">
-            <span>02</span>
-            <h3>Подкасты</h3>
-            <p>Недельные видео-выпуски, редакционные обсуждения и интервью в спокойном темпе.</p>
-            <a href="/podcasts">Открыть выпуски</a>
-          </article>
-          <article class="altitude-card">
-            <span>03</span>
-            <h3>Команда</h3>
-            <p>У каждого участника есть свой маршрут: фактура, съёмка, редактура и подача.</p>
-            <a href="#team">Познакомиться</a>
-          </article>
-        </div>
-      </section>
 
-      <section class="section efficiency-section reveal" aria-labelledby="efficiency-title">
-        <div class="wide-media">
-          <img src="/assets/logo-generated-full.png?v=20260529-logo" alt="" aria-hidden="true" />
-        </div>
-        <div class="efficiency-copy">
-          <p class="section-kicker">Эффективность</p>
-          <h2 id="efficiency-title">Меньше шума. Больше траектории.</h2>
-          <p>
-            Контент сайта теперь читается как презентация проекта: большой первый экран,
-            технические показатели, сильный визуальный объект и понятная посадка к форме.
-          </p>
+          <a class="bento-tile tile-manifesto glass glass-dark glass-sheen tilt" data-tilt href="/podcasts">
+            <p class="tile-kicker">Манифест</p>
+            <h3>Меньше шума. Больше траектории.</h3>
+            <span class="tile-arrow">Что мы делаем</span>
+          </a>
+
+          <a class="bento-tile tile-podcasts glass glass-sheen tilt" data-tilt href="/podcasts">
+            <p class="tile-kicker">Видеосалон</p>
+            <h3>Недельные подкасты.</h3>
+            <span class="tile-arrow">Смотреть выпуски</span>
+          </a>
+
+          <a class="bento-tile tile-team glass glass-sheen tilt" data-tilt href="#team">
+            <p class="tile-kicker">Экипаж · 4</p>
+            <div class="tile-team-people" aria-hidden="true">
+              <img src="/assets/konstantin-sazonov-color.jpg" alt="" loading="lazy" />
+              <img src="/assets/prokhorenko-atemiy-color.jpg" alt="" loading="lazy" />
+              <img src="/assets/mikhail-nazarov-color.jpg" alt="" loading="lazy" />
+              <img src="/assets/anna-dryazgova-color.jpg" alt="" loading="lazy" />
+            </div>
+            <span class="tile-arrow">Познакомиться</span>
+          </a>
+
+          <div class="bento-tile tile-stats glass glass-sheen tilt" data-tilt>
+            <p class="tile-kicker">Форматы</p>
+            <p class="tile-stat-value">3</p>
+          </div>
+
+          <a class="bento-tile tile-contact glass glass-sheen tilt" data-tilt href="#contact-form">
+            <p class="tile-kicker">Связаться</p>
+            <h3>Предложить тему</h3>
+            <span class="tile-arrow">Написать</span>
+          </a>
         </div>
       </section>
 
@@ -150,7 +160,7 @@
           </p>
         </div>
 
-        <div class="team-grid">
+        <div class="team-grid" data-stagger>
           <details class="person">
             <summary class="person-summary">
               <span class="person-number">01</span>
@@ -369,7 +379,8 @@
       </div>
     </div>
 
-    <script src="/navigation.js?v=20260608-passport-hub"></script>
-    <script src="/script.js?v=20260602-readable-ticker"></script>
+    <script src="/motion.js?v=20260614-glass3d"></script>
+    <script src="/navigation.js?v=20260614-editorial"></script>
+    <script src="/script.js?v=20260614-glass3d"></script>
   </body>
 </html>

@@ -1,4 +1,3 @@
-const revealItems = document.querySelectorAll(".reveal");
 const form = document.querySelector("#contact-form");
 const formNote = document.querySelector(".form-note");
 const submitButton = form.querySelector('button[type="submit"]');
@@ -11,6 +10,7 @@ const commandInput = document.querySelector("#command-input");
 const consoleOutput = document.querySelector(".console-output");
 const lazyPortraits = document.querySelectorAll(".portrait[data-src]");
 const feedTicker = document.querySelector("[data-feed-ticker]");
+const homeFeedList = document.querySelector("[data-home-feed]");
 const canAnimateCursor =
   window.matchMedia("(pointer: fine)").matches &&
   !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -21,23 +21,9 @@ const TICKER_TEXT_LIMIT = 135;
 const TICKER_PIXELS_PER_SECOND = 14;
 const TICKER_MIN_DURATION = 140;
 let sixtySevenTimer;
-
-const revealObserver = new IntersectionObserver(
-  (entries) => {
-    entries.forEach((entry) => {
-      if (entry.isIntersecting) {
-        entry.target.classList.add("is-visible");
-        revealObserver.unobserve(entry.target);
-      }
-    });
-  },
-  {
-    threshold: 0.16,
-    rootMargin: "0px 0px -8% 0px",
-  },
-);
-
-revealItems.forEach((item) => revealObserver.observe(item));
+let lastTickerSignature = "";
+let lastHomeFeedSignature = "";
+const HOME_FEED_VISIBLE = 4;
 
 initLazyPortraits();
 initTelegramFeed();
@@ -260,12 +246,58 @@ async function loadTelegramFeed() {
 
 function renderFeed(posts) {
   renderFeedTicker(posts);
+  renderHomeFeed(posts);
+}
+
+function renderHomeFeed(posts) {
+  if (!homeFeedList) {
+    return;
+  }
+
+  const visible = posts.slice(0, HOME_FEED_VISIBLE);
+  const signature = visible.map((post) => `${post.id || ""}:${post.date || ""}`).join("|");
+
+  if (signature === lastHomeFeedSignature) {
+    return;
+  }
+
+  lastHomeFeedSignature = signature;
+
+  if (!visible.length) {
+    homeFeedList.replaceChildren(createHomeFeedItem({ text: "Скоро здесь появятся первые публикации из Telegram." }));
+    return;
+  }
+
+  homeFeedList.replaceChildren(...visible.map(createHomeFeedItem));
+}
+
+function createHomeFeedItem(post) {
+  const item = document.createElement("li");
+  const time = document.createElement("time");
+  const text = document.createElement("p");
+  const date = post.date ? new Date(post.date * 1000) : null;
+
+  item.className = "home-feed-item";
+  time.textContent = date ? formatFeedDate(date) : "Live";
+  text.textContent = getFeedText(post).replace(/\s+/g, " ").trim();
+
+  item.append(time, text);
+
+  return item;
 }
 
 function renderFeedTicker(posts) {
   if (!feedTicker) {
     return;
   }
+
+  const signature = posts.map((post) => `${post.id || ""}:${post.date || ""}`).join("|");
+
+  if (signature === lastTickerSignature) {
+    return;
+  }
+
+  lastTickerSignature = signature;
 
   if (!posts.length) {
     feedTicker.classList.add("is-empty");

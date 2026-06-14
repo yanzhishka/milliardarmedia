@@ -1,40 +1,9 @@
 const podcastList = document.querySelector("[data-podcast-list]");
 const podcastStatus = document.querySelector("[data-podcast-status]");
-const revealItems = document.querySelectorAll(".reveal");
 const PODCAST_REFRESH_INTERVAL = 45000;
+let lastPodcastSignature = "";
 
-initReveal();
 initPodcasts();
-
-function initReveal() {
-  if (!revealItems.length) {
-    return;
-  }
-
-  if (!("IntersectionObserver" in window)) {
-    revealItems.forEach((item) => item.classList.add("is-visible"));
-    return;
-  }
-
-  const observer = new IntersectionObserver(
-    (entries) => {
-      entries.forEach((entry) => {
-        if (!entry.isIntersecting) {
-          return;
-        }
-
-        entry.target.classList.add("is-visible");
-        observer.unobserve(entry.target);
-      });
-    },
-    {
-      threshold: 0.12,
-      rootMargin: "0px 0px -8% 0px",
-    },
-  );
-
-  revealItems.forEach((item) => observer.observe(item));
-}
 
 async function initPodcasts() {
   if (!podcastList || !podcastStatus) {
@@ -70,12 +39,38 @@ async function loadPodcasts() {
 function renderPodcasts(podcasts, emptyStatus = "Пока нет выпусков.") {
   if (!podcasts.length) {
     podcastStatus.textContent = emptyStatus;
-    podcastList.replaceChildren(createEmptyState());
+
+    if (lastPodcastSignature !== "empty") {
+      lastPodcastSignature = "empty";
+      podcastList.replaceChildren(createEmptyState());
+    }
+
     return;
   }
 
   podcastStatus.textContent = `Всего ${podcasts.length} выпусков.`;
-  podcastList.replaceChildren(...podcasts.map(createPodcastCard));
+
+  const signature = podcasts.map((podcast) => `${podcast.id || ""}:${podcast.videoUrl || ""}`).join("|");
+
+  if (signature === lastPodcastSignature) {
+    return;
+  }
+
+  lastPodcastSignature = signature;
+
+  const cards = podcasts.map(createPodcastCard);
+  podcastList.replaceChildren(...cards);
+
+  if (typeof window.observeReveal === "function") {
+    cards.forEach((card, index) => {
+      card.style.setProperty("--reveal-delay", `${Math.min(index, 6) * 80}ms`);
+    });
+    window.observeReveal(cards);
+
+    if (typeof window.attachTilt === "function") {
+      window.attachTilt(cards);
+    }
+  }
 }
 
 function createPodcastCard(podcast, index) {
@@ -87,7 +82,8 @@ function createPodcastCard(podcast, index) {
   const videoWrap = document.createElement("div");
   const video = document.createElement("video");
 
-  card.className = "podcast-card";
+  card.className = "podcast-card glass tilt";
+  card.dataset.tilt = "4";
   number.className = "podcast-number";
   videoWrap.className = "podcast-video";
   number.textContent = String(index + 1).padStart(2, "0");

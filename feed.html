@@ -9,9 +9,23 @@
     />
     <title>Лента - Миллиардар</title>
     <link rel="icon" href="/assets/logo-favicon.png?v=20260529-logo" type="image/png" />
-    <link rel="stylesheet" href="/styles.css?v=20260609-mobile-hub-fix" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500..900;1,500..900&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/styles.css?v=20260614-glass3d" />
   </head>
   <body class="feed-page">
+    <svg width="0" height="0" style="position: absolute" aria-hidden="true" focusable="false">
+      <filter id="liquidGlass" x="-20%" y="-20%" width="140%" height="140%">
+        <feTurbulence type="fractalNoise" baseFrequency="0.006 0.01" numOctaves="2" seed="7" result="noise" />
+        <feGaussianBlur in="noise" stdDeviation="1.4" result="soft" />
+        <feDisplacementMap in="SourceGraphic" in2="soft" scale="22" xChannelSelector="R" yChannelSelector="G" />
+      </filter>
+    </svg>
+
     <header class="site-header">
       <div class="header-inner">
         <a class="brand" href="/" aria-label="Миллиардар - главная">
@@ -32,31 +46,39 @@
     </header>
 
     <main id="top">
-      <section class="sky-hero page-hero feed-hero reveal">
-        <div class="sky-cloud sky-cloud-left" aria-hidden="true"></div>
-        <div class="sky-cloud sky-cloud-right" aria-hidden="true"></div>
+      <section class="hero3d hero3d-compact on-ink" aria-labelledby="feed-title" data-pointer-scene>
+        <div class="hero3d-orb orb-red" data-depth="24" aria-hidden="true"></div>
+        <div class="hero3d-orb orb-deep" data-depth="16" aria-hidden="true"></div>
+        <div class="hero3d-orb orb-paper" data-depth="36" aria-hidden="true"></div>
+        <div class="hero3d-grid" aria-hidden="true"></div>
 
-        <div class="page-hero-copy">
-          <h1 class="feed-title">Лента.</h1>
-          <p class="hero-lead">
-            Короткие публикации, новости и заметки агентства из Telegram-канала
-            собираются здесь в один редакционный поток.
-          </p>
-          <div class="hero-actions">
-            <a class="button button-primary" href="https://t.me/milliardarmedia" target="_blank" rel="noopener">
-              Открыть Telegram
-            </a>
-            <a class="button button-glass" href="/podcasts">Подкасты</a>
+        <div class="hero3d-main">
+          <div class="hero3d-copy">
+            <p class="hero-kicker reveal">Бортовой журнал · live</p>
+            <h1 id="feed-title" class="hero-title" data-split>Лента<em>.</em></h1>
+            <p class="hero-lead reveal">
+              Короткие публикации, новости и заметки агентства из Telegram-канала
+              собираются здесь в один редакционный поток.
+            </p>
+            <div class="hero-actions reveal">
+              <a class="button button-primary" href="https://t.me/milliardarmedia" target="_blank" rel="noopener">
+                Открыть Telegram
+              </a>
+              <a class="button button-glass" href="/podcasts">Подкасты</a>
+            </div>
           </div>
-        </div>
 
-        <div class="page-hero-visual" aria-hidden="true">
-          <span class="visual-route visual-route-one"></span>
-          <img src="/assets/logo.png?v=20260529-logo" alt="" />
+          <div class="hero-glass glass glass-dark glass-liquid tilt reveal" data-tilt aria-hidden="true">
+            <div class="hero-glass-meta" data-z style="--z: 30px">
+              <span>в эфире</span>
+              <strong>Live</strong>
+              <p>Канал @milliardarmedia обновляет ленту автоматически — посты появляются здесь.</p>
+            </div>
+          </div>
         </div>
       </section>
 
-      <section class="section archive-section" aria-labelledby="feed-list-title">
+      <section class="section archive-section reveal" aria-labelledby="feed-list-title">
         <div class="archive-layout">
           <header class="archive-head">
             <p class="section-kicker">Бортовой журнал</p>
@@ -93,7 +115,8 @@
       <a href="#top">Наверх</a>
     </footer>
 
-    <script src="/navigation.js?v=20260608-passport-hub"></script>
-    <script src="/feed.js?v=20260607-fast-feed"></script>
+    <script src="/motion.js?v=20260614-glass3d"></script>
+    <script src="/navigation.js?v=20260614-glass3d"></script>
+    <script src="/feed.js?v=20260614-glass3d"></script>
   </body>
 </html>

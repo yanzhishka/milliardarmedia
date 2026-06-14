@@ -1,42 +1,11 @@
 const feedList = document.querySelector("[data-feed-list]");
 const feedStatus = document.querySelector("[data-feed-status]");
-const revealItems = document.querySelectorAll(".reveal");
 const FEED_REFRESH_INTERVAL = 30000;
 const FEED_CACHE_KEY = "milliardar-feed-posts-v1";
 const FEED_REQUEST_TIMEOUT = 8000;
+let lastFeedSignature = "";
 
-initReveal();
 initFeed();
-
-function initReveal() {
-  if (!revealItems.length) {
-    return;
-  }
-
-  if (!("IntersectionObserver" in window)) {
-    revealItems.forEach((item) => item.classList.add("is-visible"));
-    return;
-  }
-
-  const observer = new IntersectionObserver(
-    (entries) => {
-      entries.forEach((entry) => {
-        if (!entry.isIntersecting) {
-          return;
-        }
-
-        entry.target.classList.add("is-visible");
-        observer.unobserve(entry.target);
-      });
-    },
-    {
-      threshold: 0.12,
-      rootMargin: "0px 0px -8% 0px",
-    },
-  );
-
-  revealItems.forEach((item) => observer.observe(item));
-}
 
 async function initFeed() {
   if (!feedList || !feedStatus) {
@@ -95,12 +64,44 @@ function renderCachedFeed() {
 function renderFeed(posts, statusText = "") {
   if (!posts.length) {
     feedStatus.textContent = statusText || "Ждём первые публикации из Telegram.";
-    feedList.replaceChildren(createEmptyState());
+
+    if (lastFeedSignature !== "empty") {
+      lastFeedSignature = "empty";
+      feedList.replaceChildren(createEmptyState());
+    }
+
     return;
   }
 
   feedStatus.textContent = statusText || `Всего ${posts.length} публикаций из Telegram.`;
-  feedList.replaceChildren(...posts.map(createFeedCard));
+
+  const signature = posts.map((post) => `${post.id || ""}:${post.date || ""}:${post.editedDate || ""}`).join("|");
+
+  if (signature === lastFeedSignature) {
+    return;
+  }
+
+  lastFeedSignature = signature;
+
+  const cards = posts.map(createFeedCard);
+  feedList.replaceChildren(...cards);
+  registerReveal(cards);
+}
+
+function registerReveal(cards) {
+  if (typeof window.observeReveal !== "function") {
+    return;
+  }
+
+  cards.forEach((card, index) => {
+    card.style.setProperty("--reveal-delay", `${Math.min(index, 6) * 80}ms`);
+  });
+
+  window.observeReveal(cards);
+
+  if (typeof window.attachTilt === "function") {
+    window.attachTilt(cards);
+  }
 }
 
 function readCachedPosts() {
@@ -135,7 +136,8 @@ function createFeedCard(post, index = 0) {
   const date = post.date ? new Date(post.date * 1000) : new Date();
   const media = createFeedMedia(post);
 
-  card.className = "feed-card";
+  card.className = "feed-card glass tilt";
+  card.dataset.tilt = "4";
   copy.className = "feed-copy";
   card.classList.toggle("has-media", Boolean(media));
   card.classList.toggle("is-featured", index === 0);
