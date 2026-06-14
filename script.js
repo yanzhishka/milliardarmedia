@@ -415,11 +415,6 @@ function initNewsSearch() {
     return;
   }
 
-  newsSearchInput.closest("form").addEventListener("submit", (event) => {
-    event.preventDefault();
-    window.location.href = "/feed";
-  });
-
   newsSearchInput.addEventListener("input", () => {
     const query = newsSearchInput.value.trim().toLowerCase();
 

@@ -4,9 +4,11 @@ const FEED_REFRESH_INTERVAL = 30000;
 const FEED_CACHE_KEY = "milliardar-feed-posts-v1";
 const FEED_REQUEST_TIMEOUT = 8000;
 const FEED_PAGE_SIZE = 6;
+const feedSearchInput = document.querySelector("[data-feed-search] input");
 let lastFeedSignature = "";
 let allPosts = [];
 let visibleCount = FEED_PAGE_SIZE;
+let searchQuery = (new URLSearchParams(window.location.search).get("q") || "").trim();
 
 initFeed();
 
@@ -14,6 +16,8 @@ async function initFeed() {
   if (!feedList || !feedStatus) {
     return;
   }
+
+  initFeedSearch();
 
   if (readCachedPosts().length) {
     renderCachedFeed();
@@ -117,26 +121,47 @@ function renderFeed(posts, statusText = "") {
 
   lastFeedSignature = signature;
   allPosts = posts;
-  visibleCount = Math.min(Math.max(visibleCount, FEED_PAGE_SIZE), posts.length);
+  visibleCount = Math.max(visibleCount, FEED_PAGE_SIZE);
   paintFeed();
 }
 
+function getDisplayPosts() {
+  if (!searchQuery) {
+    return allPosts;
+  }
+
+  const query = searchQuery.toLowerCase();
+
+  return allPosts.filter((post) => `${post.text || post.caption || ""}`.toLowerCase().includes(query));
+}
+
 function paintFeed() {
-  const cards = allPosts.slice(0, visibleCount).map(createFeedCard);
+  const display = getDisplayPosts();
+
+  if (searchQuery && !display.length) {
+    feedStatus.textContent = `По запросу «${searchQuery}» ничего не найдено.`;
+    feedList.replaceChildren(createNoResults());
+    return;
+  }
+
+  feedStatus.textContent = searchQuery
+    ? `Результаты по запросу «${searchQuery}»: ${display.length}.`
+    : `Всего ${allPosts.length} публикаций из Telegram.`;
+
+  const cards = display.slice(0, visibleCount).map(createFeedCard);
 
   feedList.replaceChildren(...cards);
 
-  if (allPosts.length > visibleCount) {
-    feedList.append(buildLoadMore());
+  if (display.length > visibleCount) {
+    feedList.append(buildLoadMore(display.length - visibleCount));
   }
 
   registerReveal(cards);
 }
 
-function buildLoadMore() {
+function buildLoadMore(remaining) {
   const wrap = document.createElement("div");
   const button = document.createElement("button");
-  const remaining = allPosts.length - visibleCount;
 
   wrap.className = "feed-more";
   button.type = "button";
@@ -150,6 +175,53 @@ function buildLoadMore() {
   wrap.append(button);
 
   return wrap;
+}
+
+function createNoResults() {
+  const empty = document.createElement("article");
+  const number = document.createElement("span");
+  const title = document.createElement("h3");
+  const text = document.createElement("p");
+
+  empty.className = "feed-empty";
+  number.textContent = "00";
+  title.textContent = "Ничего не найдено.";
+  text.textContent = "Попробуйте другой запрос или откройте всю ленту.";
+  empty.append(number, title, text);
+
+  return empty;
+}
+
+function initFeedSearch() {
+  if (!feedSearchInput) {
+    return;
+  }
+
+  feedSearchInput.value = searchQuery;
+
+  feedSearchInput.closest("form").addEventListener("submit", (event) => {
+    event.preventDefault();
+    feedSearchInput.blur();
+  });
+
+  feedSearchInput.addEventListener("input", () => {
+    searchQuery = feedSearchInput.value.trim();
+    visibleCount = FEED_PAGE_SIZE;
+
+    const url = new URL(window.location.href);
+
+    if (searchQuery) {
+      url.searchParams.set("q", searchQuery);
+    } else {
+      url.searchParams.delete("q");
+    }
+
+    window.history.replaceState(null, "", url);
+
+    if (allPosts.length) {
+      paintFeed();
+    }
+  });
 }
 
 function registerReveal(cards) {

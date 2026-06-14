@@ -9,13 +9,25 @@
     />
     <title>Лента - Миллиардар</title>
     <link rel="icon" href="/assets/logo-favicon.png?v=20260529-logo" type="image/png" />
+    <link rel="canonical" href="https://milliardarmedia.ru/feed" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Миллиардар" />
+    <meta property="og:title" content="Лента — Миллиардар" />
+    <meta property="og:description" content="Короткие публикации, новости и заметки агентства «Миллиардар» из Telegram-канала." />
+    <meta property="og:url" content="https://milliardarmedia.ru/feed" />
+    <meta property="og:image" content="https://milliardarmedia.ru/assets/logo-generated-full.png" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Лента — Миллиардар" />
+    <meta name="twitter:description" content="Короткие публикации, новости и заметки агентства «Миллиардар» из Telegram." />
+    <meta name="twitter:image" content="https://milliardarmedia.ru/assets/logo-generated-full.png" />
+    <link rel="alternate" type="application/rss+xml" title="Миллиардар — лента" href="/rss.xml" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
       href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500..900;1,500..900&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="/styles.css?v=20260615-orbit" />
+    <link rel="stylesheet" href="/styles.css?v=20260615-search" />
   </head>
   <body class="feed-page">
     <svg width="0" height="0" style="position: absolute" aria-hidden="true" focusable="false">
@@ -32,6 +44,14 @@
           <img class="brand-mark" src="/assets/logo.png?v=20260529-logo" alt="" aria-hidden="true" />
           <span class="brand-name">Миллиардар</span>
         </a>
+
+        <form class="nav-search" role="search" action="/feed" method="get" data-feed-search>
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" aria-hidden="true">
+            <circle cx="11" cy="11" r="7" /><path d="m21 21-4.3-4.3" />
+          </svg>
+          <label class="visually-hidden" for="feed-search-input">Поиск по ленте</label>
+          <input id="feed-search-input" name="q" type="search" autocomplete="off" placeholder="Поиск по ленте" />
+        </form>
 
         <nav class="site-nav" aria-label="Основная навигация">
           <a href="/feed" aria-current="page">Лента</a>
@@ -115,8 +135,8 @@
       <a href="#top">Наверх</a>
     </footer>
 
-    <script src="/motion.js?v=20260615-orbit"></script>
-    <script src="/navigation.js?v=20260615-orbit"></script>
-    <script src="/feed.js?v=20260615-orbit"></script>
+    <script src="/motion.js?v=20260615-search"></script>
+    <script src="/navigation.js?v=20260615-search"></script>
+    <script src="/feed.js?v=20260615-search"></script>
   </body>
 </html>
