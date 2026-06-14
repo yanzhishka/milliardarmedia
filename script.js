@@ -22,7 +22,7 @@ const TICKER_PIXELS_PER_SECOND = 14;
 const TICKER_MIN_DURATION = 140;
 let sixtySevenTimer;
 let lastTickerSignature = "";
-let lastHomeFeedSignature = "";
+let lastHomeFeedSignature = "init";
 const HOME_FEED_VISIBLE = 4;
 
 initLazyPortraits();
@@ -218,8 +218,28 @@ async function initTelegramFeed() {
     return;
   }
 
+  renderHomeFeedSkeletons();
   await loadTelegramFeed();
   window.setInterval(loadTelegramFeed, FEED_REFRESH_INTERVAL);
+}
+
+function renderHomeFeedSkeletons() {
+  if (!homeFeedList) {
+    return;
+  }
+
+  const items = Array.from({ length: HOME_FEED_VISIBLE }, () => {
+    const li = document.createElement("li");
+
+    li.className = "home-feed-item skeleton";
+    li.innerHTML =
+      '<span class="skel skel-line is-kicker"></span>' +
+      '<span class="skel skel-line w-90"></span>';
+
+    return li;
+  });
+
+  homeFeedList.replaceChildren(...items);
 }
 
 async function loadTelegramFeed() {
@@ -241,6 +261,7 @@ async function loadTelegramFeed() {
     renderFeed(posts);
   } catch (error) {
     renderFeedTicker([]);
+    renderHomeFeed([]);
   }
 }
 

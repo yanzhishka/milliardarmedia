@@ -10,8 +10,35 @@ async function initPodcasts() {
     return;
   }
 
+  renderPodcastSkeletons();
+  podcastStatus.textContent = "Загружаем выпуски…";
   await loadPodcasts();
   window.setInterval(loadPodcasts, PODCAST_REFRESH_INTERVAL);
+}
+
+function renderPodcastSkeletons(count = 2) {
+  const items = Array.from({ length: count }, () => {
+    const card = document.createElement("article");
+    const video = document.createElement("div");
+    const media = document.createElement("span");
+    const kicker = document.createElement("span");
+    const title = document.createElement("span");
+    const text = document.createElement("span");
+
+    card.className = "podcast-card glass skeleton";
+    video.className = "podcast-video";
+    media.className = "skel";
+    media.style.cssText = "position:absolute;inset:0;border-radius:inherit";
+    video.append(media);
+    kicker.className = "skel skel-line is-kicker";
+    title.className = "skel skel-line is-lg";
+    text.className = "skel skel-line w-90";
+    card.append(video, kicker, title, text);
+
+    return card;
+  });
+
+  podcastList.replaceChildren(...items);
 }
 
 async function loadPodcasts() {

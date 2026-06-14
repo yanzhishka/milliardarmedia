@@ -1,6 +1,6 @@
 const POSTS_KEY = "telegram_posts";
 const DEFAULT_FEED_RESET_AT = 1779913144;
-const MAX_POSTS = 30;
+const MAX_POSTS = 90;
 
 export async function onRequestGet({ env }) {
   const posts = await readPosts(env);

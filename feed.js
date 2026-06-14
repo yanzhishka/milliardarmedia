@@ -3,7 +3,10 @@ const feedStatus = document.querySelector("[data-feed-status]");
 const FEED_REFRESH_INTERVAL = 30000;
 const FEED_CACHE_KEY = "milliardar-feed-posts-v1";
 const FEED_REQUEST_TIMEOUT = 8000;
+const FEED_PAGE_SIZE = 6;
 let lastFeedSignature = "";
+let allPosts = [];
+let visibleCount = FEED_PAGE_SIZE;
 
 initFeed();
 
@@ -12,9 +15,40 @@ async function initFeed() {
     return;
   }
 
-  renderCachedFeed();
+  if (readCachedPosts().length) {
+    renderCachedFeed();
+  } else {
+    renderFeedSkeletons();
+    feedStatus.textContent = "Загружаем ленту…";
+  }
+
   await loadFeed();
   window.setInterval(loadFeed, FEED_REFRESH_INTERVAL);
+}
+
+function renderFeedSkeletons(count = 4) {
+  const items = Array.from({ length: count }, (unused, index) => {
+    const card = document.createElement("article");
+    const copy = document.createElement("div");
+    const figure = document.createElement("figure");
+    const media = document.createElement("span");
+
+    card.className = "feed-card glass skeleton has-media" + (index === 0 ? " is-featured" : "");
+    copy.className = "feed-copy";
+    copy.innerHTML =
+      '<span class="skel skel-line is-kicker"></span>' +
+      '<span class="skel skel-line is-lg"></span>' +
+      '<span class="skel skel-line w-90"></span>' +
+      '<span class="skel skel-line w-50"></span>';
+    figure.className = "feed-media";
+    media.className = "skel skel-media";
+    figure.append(media);
+    card.append(copy, figure);
+
+    return card;
+  });
+
+  feedList.replaceChildren(...items);
 }
 
 async function loadFeed() {
@@ -40,7 +74,7 @@ async function loadFeed() {
     renderFeed(posts);
     saveCachedPosts(posts);
   } catch (error) {
-    if (feedList.querySelector(".feed-card")) {
+    if (feedList.querySelector(".feed-card:not(.skeleton)")) {
       feedStatus.textContent = "Показываем последние загруженные публикации. Обновление ещё пробует подключиться.";
       return;
     }
@@ -82,10 +116,40 @@ function renderFeed(posts, statusText = "") {
   }
 
   lastFeedSignature = signature;
+  allPosts = posts;
+  visibleCount = Math.min(Math.max(visibleCount, FEED_PAGE_SIZE), posts.length);
+  paintFeed();
+}
 
-  const cards = posts.map(createFeedCard);
+function paintFeed() {
+  const cards = allPosts.slice(0, visibleCount).map(createFeedCard);
+
   feedList.replaceChildren(...cards);
+
+  if (allPosts.length > visibleCount) {
+    feedList.append(buildLoadMore());
+  }
+
   registerReveal(cards);
+}
+
+function buildLoadMore() {
+  const wrap = document.createElement("div");
+  const button = document.createElement("button");
+  const remaining = allPosts.length - visibleCount;
+
+  wrap.className = "feed-more";
+  button.type = "button";
+  button.className = "button button-glass";
+  button.textContent = `Показать ещё (${remaining})`;
+  button.addEventListener("click", () => {
+    visibleCount += FEED_PAGE_SIZE;
+    paintFeed();
+  });
+
+  wrap.append(button);
+
+  return wrap;
 }
 
 function registerReveal(cards) {
@@ -144,10 +208,16 @@ function createFeedCard(post, index = 0) {
   time.dateTime = date.toISOString();
   time.textContent = formatFeedDate(date);
   text.textContent = getFeedText(post);
-  link.href = post.link || "https://t.me/milliardarmedia";
-  link.target = "_blank";
-  link.rel = "noopener";
-  link.textContent = "Открыть в Telegram";
+
+  if (post.messageId) {
+    link.href = `/post/${post.messageId}`;
+    link.textContent = "Читать материал";
+  } else {
+    link.href = post.link || "https://t.me/milliardarmedia";
+    link.target = "_blank";
+    link.rel = "noopener";
+    link.textContent = "Открыть в Telegram";
+  }
 
   copy.append(time, text, link);
   card.append(copy);

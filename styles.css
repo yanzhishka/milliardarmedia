@@ -1,24 +1,32 @@
 /* ============================================================
-   МИЛЛИАРДАР — «Издание» (editorial redesign)
-   Newsprint paper · ink · editorial red · serif masthead
+   МИЛЛИАРДАР — «Издание» (monochrome dark)
+   Black & white · dark by default · serif masthead · glass
    ============================================================ */
 
 :root {
-  --paper: #f6f2e9;
-  --paper-2: #efe9dc;
-  --paper-3: #e7e0cf;
-  --ink: #16130d;
-  --ink-2: #211d15;
-  --ink-soft: #3c372d;
-  --text: #443f34;
-  --muted: #8a8170;
-  --line: rgba(22, 19, 13, 0.16);
-  --line-soft: rgba(22, 19, 13, 0.09);
-  --line-on-ink: rgba(246, 242, 233, 0.22);
-  --red: #d2362a;
-  --red-deep: #aa2118;
-  --paper-on-ink: #f3eee3;
-  --muted-on-ink: rgba(243, 238, 227, 0.62);
+  /* page + surfaces (dark) */
+  --paper: #09090b;
+  --paper-2: #141417;
+  --paper-3: #1e1e22;
+  --panel: #141417;
+
+  /* foreground (light) — name kept; now light for dark theme */
+  --ink: #f4f4f5;
+  --ink-2: #e7e7ea;
+  --ink-soft: #cfcfd4;
+  --text: #b2b2b8;
+  --muted: #7c7c83;
+
+  --line: rgba(255, 255, 255, 0.13);
+  --line-soft: rgba(255, 255, 255, 0.06);
+  --line-on-ink: rgba(255, 255, 255, 0.13);
+
+  /* accent → pure white (monochrome highlight) */
+  --red: #ffffff;
+  --red-deep: #d4d4d8;
+
+  --paper-on-ink: #f4f4f5;
+  --muted-on-ink: rgba(244, 244, 245, 0.58);
 
   --serif: "Playfair Display", "Times New Roman", Georgia, serif;
   --sans: HelveticaNeueCyr, "Helvetica Neue", "Inter", Arial, sans-serif;
@@ -28,7 +36,8 @@
   --wide: 1440px;
   --ease: cubic-bezier(0.22, 1, 0.36, 1);
   --ease-soft: cubic-bezier(0.4, 0, 0.2, 1);
-  --shadow: 0 30px 70px rgba(22, 19, 13, 0.14);
+  --shadow: 0 30px 70px rgba(0, 0, 0, 0.5);
+  color-scheme: dark;
 }
 
 * {
@@ -64,8 +73,8 @@ body::before {
   pointer-events: none;
   opacity: 0.5;
   background-image:
-    radial-gradient(rgba(22, 19, 13, 0.04) 1px, transparent 1px),
-    radial-gradient(rgba(22, 19, 13, 0.03) 1px, transparent 1px);
+    radial-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+    radial-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px);
   background-size: 28px 28px, 23px 23px;
   background-position: 0 0, 11px 9px;
 }
@@ -488,7 +497,7 @@ h3 {
 .home-hero {
   min-height: 100vh;
   padding: 200px 0 80px;
-  background: var(--ink);
+  background: var(--paper);
   color: var(--paper-on-ink);
 }
 
@@ -498,7 +507,7 @@ h3 {
   z-index: -2;
   content: "";
   background:
-    radial-gradient(120% 90% at 85% 0%, rgba(210, 54, 42, 0.22), transparent 55%),
+    radial-gradient(120% 90% at 85% 0%, rgba(255, 255, 255, 0.06), transparent 55%),
     radial-gradient(100% 80% at 0% 100%, rgba(246, 242, 233, 0.05), transparent 60%);
 }
 
@@ -812,7 +821,7 @@ h3 {
 }
 
 .altitude-card-dark {
-  background: var(--ink);
+  background: var(--panel);
 }
 
 .altitude-card-dark h3 {
@@ -844,7 +853,7 @@ h3 {
   position: relative;
   overflow: hidden;
   aspect-ratio: 4 / 3;
-  background: var(--ink);
+  background: var(--panel);
 }
 
 .wide-media img {
@@ -1275,7 +1284,7 @@ h3 {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  filter: grayscale(0.15);
+  filter: grayscale(1) contrast(1.04);
   transition: transform 700ms var(--ease), filter 500ms var(--ease);
 }
 
@@ -1349,7 +1358,7 @@ h3 {
   position: relative;
   overflow: hidden;
   aspect-ratio: 16 / 9;
-  background: var(--ink);
+  background: #000;
   order: 2;
 }
 
@@ -1907,14 +1916,14 @@ body.is-sixty-seven .sixty-seven-badge {
   position: relative;
   overflow: hidden;
   border-radius: 28px;
-  border: 1px solid rgba(255, 255, 255, 0.55);
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.16));
-  -webkit-backdrop-filter: blur(16px) saturate(150%);
-  backdrop-filter: blur(16px) saturate(150%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.02));
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+  backdrop-filter: blur(18px) saturate(140%);
   box-shadow:
-    0 18px 50px rgba(22, 19, 13, 0.14),
-    inset 0 1px 0 rgba(255, 255, 255, 0.8),
-    inset 0 -16px 40px rgba(255, 255, 255, 0.12);
+    0 22px 60px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.16),
+    inset 0 -16px 40px rgba(255, 255, 255, 0.03);
 }
 
 /* cursor-following specular highlight */
@@ -1925,8 +1934,8 @@ body.is-sixty-seven .sixty-seven-badge {
   content: "";
   pointer-events: none;
   background:
-    radial-gradient(160px 160px at var(--mx, 24%) var(--my, 8%), rgba(255, 255, 255, 0.7), transparent 60%),
-    radial-gradient(140% 90% at 0% 0%, rgba(255, 255, 255, 0.4), transparent 44%);
+    radial-gradient(170px 170px at var(--mx, 24%) var(--my, 8%), rgba(255, 255, 255, 0.22), transparent 60%),
+    radial-gradient(140% 90% at 0% 0%, rgba(255, 255, 255, 0.1), transparent 46%);
   opacity: 0.9;
   transition: background 120ms linear;
 }
@@ -1963,10 +1972,10 @@ body.is-sixty-seven .sixty-seven-badge {
 
 .tilt.glass:hover {
   box-shadow:
-    0 26px 70px rgba(22, 19, 13, 0.2),
-    0 0 40px rgba(210, 54, 42, 0.18),
-    inset 0 1px 0 rgba(255, 255, 255, 0.85),
-    inset 0 -16px 40px rgba(255, 255, 255, 0.14);
+    0 26px 70px rgba(0, 0, 0, 0.5),
+    0 0 44px rgba(255, 255, 255, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.28),
+    inset 0 -16px 40px rgba(255, 255, 255, 0.05);
 }
 
 /* glass on dark (hero) */
@@ -1987,9 +1996,9 @@ body.is-sixty-seven .sixty-seven-badge {
 
 .tilt.glass-dark:hover {
   box-shadow:
-    0 30px 80px rgba(0, 0, 0, 0.42),
-    0 0 50px rgba(210, 54, 42, 0.28),
-    inset 0 1px 0 rgba(255, 255, 255, 0.38),
+    0 30px 80px rgba(0, 0, 0, 0.55),
+    0 0 50px rgba(255, 255, 255, 0.14),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3),
     inset 0 -16px 40px rgba(255, 255, 255, 0.06);
 }
 
@@ -2016,7 +2025,7 @@ body.is-sixty-seven .sixty-seven-badge {
   min-height: 100vh;
   overflow: hidden;
   padding: clamp(170px, 18vw, 230px) 0 90px;
-  background: var(--ink);
+  background: var(--paper);
   color: var(--paper-on-ink);
   perspective: 1400px;
 }
@@ -2038,7 +2047,7 @@ body.is-sixty-seven .sixty-seven-badge {
   height: 46vw;
   max-width: 620px;
   max-height: 620px;
-  background: radial-gradient(circle at 30% 30%, rgba(210, 54, 42, 0.9), rgba(170, 33, 24, 0.1) 70%);
+  background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0) 70%);
   animation: orb-pulse 9s var(--ease-soft) infinite;
 }
 
@@ -2064,7 +2073,7 @@ body.is-sixty-seven .sixty-seven-badge {
   height: 30vw;
   max-width: 380px;
   max-height: 380px;
-  background: radial-gradient(circle at 50% 50%, rgba(99, 40, 200, 0.22), transparent 70%);
+  background: radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.07), transparent 70%);
 }
 
 .hero3d-grid {
@@ -2225,7 +2234,7 @@ body.is-sixty-seven .sixty-seven-badge {
   content: "";
   pointer-events: none;
   background:
-    radial-gradient(40% 40% at 82% 8%, rgba(210, 54, 42, 0.16), transparent 70%),
+    radial-gradient(40% 40% at 82% 8%, rgba(255, 255, 255, 0.05), transparent 70%),
     radial-gradient(46% 46% at 6% 92%, rgba(22, 19, 13, 0.1), transparent 70%);
 }
 
@@ -2306,7 +2315,7 @@ body.is-sixty-seven .sixty-seven-badge {
 
 .tile-manifesto {
   grid-column: span 2;
-  background: var(--ink) !important;
+  background: var(--paper-2) !important;
   color: var(--paper-on-ink);
   border-color: rgba(255, 255, 255, 0.12);
 }
@@ -2511,11 +2520,11 @@ body.is-sixty-seven .sixty-seven-badge {
 /* graceful fallback when backdrop-filter is unsupported */
 @supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
   .glass {
-    background: rgba(246, 242, 233, 0.92);
+    background: rgba(22, 22, 26, 0.92);
   }
 
   .glass-dark {
-    background: rgba(33, 29, 21, 0.82);
+    background: rgba(16, 16, 19, 0.9);
   }
 }
 
@@ -2560,7 +2569,7 @@ body.is-sixty-seven .sixty-seven-badge {
   content: "";
   pointer-events: none;
   background:
-    radial-gradient(38% 38% at 88% 4%, rgba(210, 54, 42, 0.14), transparent 70%),
+    radial-gradient(38% 38% at 88% 4%, rgba(255, 255, 255, 0.05), transparent 70%),
     radial-gradient(42% 42% at 4% 96%, rgba(22, 19, 13, 0.08), transparent 70%);
 }
 
@@ -2624,4 +2633,233 @@ body.is-sixty-seven .sixty-seven-badge {
 
 .podcast-card.glass .podcast-video {
   border-radius: 14px;
+}
+
+/* ============================================================
+   #10 CROSS-DOCUMENT VIEW TRANSITIONS
+   ============================================================ */
+@view-transition {
+  navigation: auto;
+}
+
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 420ms;
+  animation-timing-function: var(--ease);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+}
+
+/* ============================================================
+   #7 SKELETON LOADING (glass shimmer)
+   ============================================================ */
+.skeleton {
+  pointer-events: none;
+}
+
+.skel {
+  position: relative;
+  overflow: hidden;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.skel::after {
+  position: absolute;
+  inset: 0;
+  content: "";
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.09) 45%,
+    rgba(255, 255, 255, 0.14) 50%,
+    rgba(255, 255, 255, 0.09) 55%,
+    transparent
+  );
+  transform: translateX(-100%);
+  animation: shimmer 1.5s var(--ease-soft) infinite;
+}
+
+.skel-media {
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  border-radius: 14px;
+}
+
+.skel-line {
+  height: 12px;
+  margin-top: 10px;
+}
+
+.skel-line.is-kicker {
+  width: 38%;
+  height: 9px;
+  margin-top: 0;
+}
+
+.skel-line.is-lg {
+  height: 22px;
+  width: 86%;
+}
+
+.skel-line.w-70 { width: 70%; }
+.skel-line.w-90 { width: 90%; }
+.skel-line.w-50 { width: 50%; }
+
+.home-feed-item.skeleton {
+  display: grid;
+  gap: 8px;
+}
+
+.feed-more {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: center;
+  padding-top: 14px;
+}
+
+/* ============================================================
+   #1 SINGLE POST PAGE
+   ============================================================ */
+.post-main {
+  width: min(calc(100% - 56px), 820px);
+  margin: 0 auto;
+  padding: clamp(140px, 14vw, 190px) 0 clamp(60px, 8vw, 100px);
+}
+
+.post-article {
+  padding: clamp(28px, 4vw, 52px);
+  border-radius: 28px;
+}
+
+.post-back {
+  display: inline-flex;
+  font-family: var(--mono);
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted-on-ink);
+  transition: color 220ms var(--ease);
+}
+
+.post-back:hover {
+  color: var(--ink);
+}
+
+.post-date {
+  display: block;
+  margin: 22px 0 18px;
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--red);
+}
+
+.post-body p {
+  margin-bottom: 18px;
+  font-size: clamp(1.15rem, 1.7vw, 1.5rem);
+  line-height: 1.5;
+  color: var(--ink);
+  font-family: var(--serif);
+  font-weight: 500;
+}
+
+.post-body p:first-child::first-letter {
+  float: left;
+  margin: 0.05em 0.1em 0 0;
+  font-size: 3.1em;
+  font-weight: 800;
+  line-height: 0.74;
+  color: var(--red);
+}
+
+.post-muted {
+  color: var(--muted);
+}
+
+.post-media {
+  margin: 28px 0 8px;
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.post-media img {
+  width: 100%;
+  border-radius: 16px;
+}
+
+.post-gallery {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+
+.post-gallery img:first-child:nth-last-child(odd) {
+  grid-column: 1 / -1;
+}
+
+.post-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-top: 30px;
+}
+
+.post-404-title {
+  margin: 16px 0;
+  font-size: clamp(2.2rem, 5vw, 3.6rem);
+}
+
+/* ============================================================
+   #13 MOBILE PERFORMANCE
+   - backdrop-filter blur + SVG refraction are GPU-heavy; on small
+     screens fall back to solid translucent surfaces.
+   - content-visibility skips off-screen layout/paint work.
+   ============================================================ */
+.bento-tile,
+.feed-card,
+.podcast-card,
+.person {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 320px;
+}
+
+@media (max-width: 760px) {
+  .glass,
+  .glass-dark,
+  .glass-liquid {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    background: rgba(20, 20, 24, 0.94);
+  }
+
+  .glass::after {
+    display: none;
+  }
+
+  .hero3d-orb {
+    filter: blur(28px);
+  }
+
+  .tilt {
+    transform: none !important;
+  }
+}
+
+@keyframes shimmer {
+  100% { transform: translateX(100%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skel::after {
+    animation: none;
+  }
 }
