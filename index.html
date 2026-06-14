@@ -15,7 +15,7 @@
       href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500..900;1,500..900&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="/styles.css?v=20260615-vivid" />
+    <link rel="stylesheet" href="/styles.css?v=20260615-orbit" />
   </head>
   <body class="home-page">
     <svg width="0" height="0" style="position: absolute" aria-hidden="true" focusable="false">
@@ -33,6 +33,14 @@
           <span class="brand-name">Миллиардар</span>
         </a>
 
+        <form class="nav-search" role="search" data-news-search>
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" aria-hidden="true">
+            <circle cx="11" cy="11" r="7" /><path d="m21 21-4.3-4.3" />
+          </svg>
+          <label class="visually-hidden" for="news-search-input">Поиск по ленте</label>
+          <input id="news-search-input" type="search" autocomplete="off" placeholder="Поиск по ленте" />
+        </form>
+
         <nav class="site-nav" aria-label="Основная навигация">
           <a href="/feed">Лента</a>
           <a href="/podcasts">Подкасты</a>
@@ -42,26 +50,15 @@
 
         <a class="header-cta" href="#contact-form">Предложить тему</a>
       </div>
-
-      <section class="top-feed" aria-label="Живая лента публикаций">
-        <a class="top-feed-button" href="/feed">
-          <span class="top-feed-label">Сейчас</span>
-          <span class="top-feed-marquee" aria-hidden="true">
-            <span class="top-feed-track" data-feed-ticker>
-              <span class="top-feed-item">Подключаем Telegram-ленту</span>
-            </span>
-          </span>
-          <span class="top-feed-action">Все посты</span>
-        </a>
-      </section>
     </header>
 
     <main id="top">
-      <section class="hero3d on-ink" aria-labelledby="home-title" data-pointer-scene>
+      <section class="hero3d hero3d-news on-ink" aria-labelledby="home-title" data-pointer-scene>
         <div class="hero3d-orb orb-red" data-depth="26" aria-hidden="true"></div>
         <div class="hero3d-orb orb-deep" data-depth="16" aria-hidden="true"></div>
         <div class="hero3d-orb orb-paper" data-depth="38" aria-hidden="true"></div>
         <div class="hero3d-grid" aria-hidden="true"></div>
+        <div class="news-field hero-news" data-news-orbit aria-label="Новости в эфире"></div>
 
         <div class="hero3d-main">
           <div class="hero3d-copy">
@@ -76,17 +73,6 @@
             <div class="hero-actions reveal">
               <a class="button button-primary" href="/feed">Открыть ленту</a>
               <a class="button button-glass" href="/podcasts">Смотреть выпуски</a>
-            </div>
-          </div>
-
-          <div class="hero-glass glass glass-dark glass-liquid tilt reveal" data-tilt aria-label="Визуальный знак Миллиардара">
-            <div class="hero-glass-logo" data-z style="--z: 50px">
-              <img src="/assets/logo.png?v=20260529-logo" alt="" aria-hidden="true" />
-            </div>
-            <div class="hero-glass-meta" data-z style="--z: 26px">
-              <span>media speed</span>
-              <strong>24/7</strong>
-              <p>Telegram, интервью, видео и редакционные заметки в одном потоке.</p>
             </div>
           </div>
         </div>
@@ -379,8 +365,8 @@
       </div>
     </div>
 
-    <script src="/motion.js?v=20260615-vivid"></script>
-    <script src="/navigation.js?v=20260615-vivid"></script>
-    <script src="/script.js?v=20260615-vivid"></script>
+    <script src="/motion.js?v=20260615-orbit"></script>
+    <script src="/navigation.js?v=20260615-orbit"></script>
+    <script src="/script.js?v=20260615-orbit"></script>
   </body>
 </html>

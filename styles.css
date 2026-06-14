@@ -274,9 +274,9 @@ h3 {
 
 .header-inner {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-columns: auto minmax(160px, 340px) 1fr auto;
   align-items: center;
-  gap: 30px;
+  gap: 22px 28px;
   width: min(calc(100% - 56px), var(--wide));
   margin: 0 auto;
   padding: 26px 0 20px;
@@ -1786,6 +1786,11 @@ body.is-sixty-seven .sixty-seven-badge {
     gap: 16px 24px;
   }
 
+  .nav-search {
+    grid-column: 1 / -1;
+    order: 3;
+  }
+
   .site-nav {
     grid-column: 1 / -1;
     justify-content: flex-start;
@@ -2818,6 +2823,260 @@ body.is-sixty-seven .sixty-seven-badge {
 .post-404-title {
   margin: 16px 0;
   font-size: clamp(2.2rem, 5vw, 3.6rem);
+}
+
+/* ============================================================
+   NAV SEARCH (festival-style pill, dark/glass)
+   ============================================================ */
+.nav-search {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.nav-search svg {
+  position: absolute;
+  left: 16px;
+  width: 17px;
+  height: 17px;
+  stroke: var(--muted);
+  pointer-events: none;
+}
+
+.nav-search input {
+  width: 100%;
+  min-width: 0;
+  height: 46px;
+  padding: 0 18px 0 42px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.05);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  color: var(--ink);
+  font-family: var(--mono);
+  font-size: 0.82rem;
+  letter-spacing: 0.02em;
+  transition: border-color 220ms var(--ease), background 220ms var(--ease);
+}
+
+.nav-search input::placeholder {
+  color: var(--muted);
+  text-transform: none;
+}
+
+.nav-search input:focus {
+  outline: none;
+  border-color: var(--red);
+  background: rgba(124, 107, 255, 0.08);
+}
+
+.header-cta {
+  border-radius: 999px;
+  background: var(--red);
+  border-color: var(--red);
+  color: #fff;
+}
+
+.header-cta:hover {
+  background: var(--accent-3);
+  border-color: var(--accent-3);
+  color: #fff;
+}
+
+/* ============================================================
+   NEWS ORBIT — floating news bubbles (replaces top ticker)
+   ============================================================ */
+.news-orbit {
+  position: relative;
+  width: min(calc(100% - 56px), var(--wide));
+  margin: 0 auto;
+  padding: clamp(150px, 16vw, 198px) 0 20px;
+}
+
+.news-orbit-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 16px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--line);
+}
+
+.news-field {
+  position: relative;
+  height: clamp(380px, 56vh, 600px);
+}
+
+/* bubbles merged into the hero as a full-bleed layer behind the copy */
+.hero-news {
+  position: absolute;
+  inset: clamp(150px, 16vw, 200px) 0 60px 0;
+  z-index: 1;
+  height: auto;
+  pointer-events: none;
+}
+
+.hero-news .news-bubble {
+  pointer-events: auto;
+}
+
+.hero3d-news .hero3d-main {
+  grid-template-columns: 1fr;
+}
+
+.hero3d-news .hero3d-copy {
+  max-width: 620px;
+}
+
+.news-spark {
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  background: var(--ink);
+  clip-path: polygon(50% 0, 58% 42%, 100% 50%, 58% 58%, 50% 100%, 42% 58%, 0 50%, 42% 42%);
+  opacity: 0.6;
+  animation: spark-twinkle 3.4s var(--ease-soft) infinite;
+}
+
+.news-bubble {
+  position: absolute;
+  display: block;
+  border-radius: 50%;
+  animation: bubble-float var(--dur, 8s) var(--ease-soft) var(--delay, 0s) infinite alternate;
+  will-change: transform;
+}
+
+.news-bubble-inner {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.05);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  cursor: pointer;
+  transition: transform 360ms var(--ease), box-shadow 360ms var(--ease), border-color 360ms var(--ease);
+}
+
+.news-bubble:hover {
+  z-index: 6;
+}
+
+.news-bubble:hover .news-bubble-inner {
+  transform: scale(1.1);
+  border-color: var(--red);
+  box-shadow: 0 0 44px rgba(124, 107, 255, 0.5);
+}
+
+.news-bubble img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.news-bubble.is-text .news-bubble-inner {
+  padding: 14%;
+  text-align: center;
+}
+
+.news-bubble.is-text p {
+  font-family: var(--serif);
+  font-weight: 600;
+  line-height: 1.14;
+  color: var(--ink);
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-size: clamp(0.72rem, 1vw, 0.95rem);
+}
+
+.news-bubble.is-text .news-bubble-time {
+  display: none;
+}
+
+.news-bubble .news-bubble-time {
+  position: absolute;
+  bottom: 8%;
+  font-family: var(--mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--red);
+}
+
+.news-bubble.has-image::after {
+  position: absolute;
+  inset: 0;
+  content: "";
+  border-radius: 50%;
+  background: linear-gradient(180deg, transparent 55%, rgba(10, 10, 16, 0.7));
+  pointer-events: none;
+}
+
+.news-bubble .news-bubble-cap {
+  position: absolute;
+  left: 50%;
+  bottom: -26px;
+  transform: translateX(-50%);
+  max-width: 200px;
+  padding: 5px 11px;
+  border-radius: 999px;
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  font-family: var(--mono);
+  font-size: 0.66rem;
+  letter-spacing: 0.04em;
+  color: var(--ink-soft);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 220ms var(--ease);
+}
+
+.news-bubble:hover .news-bubble-cap {
+  opacity: 1;
+}
+
+.news-bubble.is-dim {
+  opacity: 0.18;
+  filter: grayscale(0.6);
+}
+
+@keyframes bubble-float {
+  from { transform: translate(0, 0); }
+  to { transform: translate(var(--dx, 0), var(--dy, -22px)); }
+}
+
+@keyframes spark-twinkle {
+  0%, 100% { opacity: 0.2; transform: scale(0.7) rotate(0deg); }
+  50% { opacity: 0.8; transform: scale(1) rotate(20deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .news-bubble,
+  .news-spark {
+    animation: none;
+  }
+}
+
+@media (max-width: 760px) {
+  .news-bubble-inner {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    background: rgba(22, 22, 31, 0.9);
+  }
+
+  .news-field {
+    height: clamp(420px, 80vw, 520px);
+  }
 }
 
 /* ============================================================
