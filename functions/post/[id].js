@@ -1,6 +1,6 @@
 const POSTS_KEY = "telegram_posts";
 const DEFAULT_FEED_RESET_AT = 1779913144;
-const ASSET_VERSION = "20260615-news";
+const ASSET_VERSION = "20260615-nyt";
 
 export async function onRequestGet({ params, request, env }) {
   const origin = new URL(request.url).origin;
@@ -131,6 +131,7 @@ function renderPost(post, images, origin, optimize) {
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script>(function(){try{var t=localStorage.getItem("theme")||"light";document.documentElement.dataset.theme=t;}catch(e){document.documentElement.dataset.theme="light";}})();</script>
     <title>${escapeHtml(title)}</title>
     <meta name="description" content="${escapeAttr(description)}" />
     <link rel="canonical" href="${escapeAttr(canonical)}" />
@@ -150,23 +151,29 @@ function renderPost(post, images, origin, optimize) {
     <link rel="icon" href="/assets/logo-favicon.png?v=20260529-logo" type="image/png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500..900;1,500..900&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=PT+Serif:ital,wght@0,400;0,700;1,400;1,700&family=PT+Sans:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="/styles.css?v=${ASSET_VERSION}" />
   </head>
-  <body class="post-page feed-page">
+  <body class="post-page">
     <header class="site-header">
-      <div class="header-inner">
-        <a class="brand" href="/" aria-label="Миллиардар - главная">
-          <img class="brand-mark" src="/assets/logo.png?v=20260529-logo" alt="" aria-hidden="true" />
-          <span class="brand-name">Миллиардар</span>
-        </a>
-        <nav class="site-nav" aria-label="Основная навигация">
-          <a href="/feed">Лента</a>
-          <a href="/podcasts">Подкасты</a>
-          <a href="/about">О нас</a>
-        </nav>
-        <a class="header-cta" href="/feed">Вся лента</a>
+      <div class="masthead-top">
+        <span class="masthead-date" data-date></span>
+        <div class="masthead-tools">
+          <a class="header-cta" href="/feed">Вся лента</a>
+          <button class="theme-toggle" type="button" data-theme-toggle aria-label="Переключить тему" aria-pressed="false">
+            <svg class="icon-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8Z" /></svg>
+            <svg class="icon-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M4 12H2M22 12h-2M5 5l1.5 1.5M17.5 17.5 19 19M19 5l-1.5 1.5M6.5 17.5 5 19" /></svg>
+          </button>
+        </div>
       </div>
+      <a class="brand" href="/" aria-label="Миллиардар - главная">
+        <span class="brand-name">Миллиардар</span>
+      </a>
+      <nav class="site-nav" aria-label="Разделы">
+        <a href="/feed">Лента</a>
+        <a href="/podcasts">Подкасты</a>
+        <a href="/about">О нас</a>
+      </nav>
     </header>
 
     <main id="top" class="post-main">
@@ -207,15 +214,16 @@ function renderNotFound(origin) {
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script>(function(){try{var t=localStorage.getItem("theme")||"light";document.documentElement.dataset.theme=t;}catch(e){document.documentElement.dataset.theme="light";}})();</script>
     <title>Публикация не найдена — Миллиардар</title>
     <meta name="robots" content="noindex" />
     <link rel="icon" href="/assets/logo-favicon.png?v=20260529-logo" type="image/png" />
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500..900;1,500..900&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=PT+Serif:ital,wght@0,400;0,700;1,400;1,700&family=PT+Sans:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="/styles.css?v=${ASSET_VERSION}" />
   </head>
-  <body class="post-page feed-page">
+  <body class="post-page">
     <main id="top" class="post-main">
-      <article class="post-article glass glass-dark">
+      <article class="post-article">
         <p class="section-kicker">Ошибка 404</p>
         <h1 class="post-404-title">Публикация не найдена.</h1>
         <p class="post-muted">Возможно, запись удалена или ещё не загружена в ленту.</p>

@@ -1,65 +1,43 @@
-const siteHeader = document.querySelector(".site-header");
-const siteNav = document.querySelector(".site-nav");
-const BACK_TO_TOP_SCROLL_OFFSET = 260;
-const SIDE_NAV_QUERY = "(min-width: 1500px)";
+const BACK_TO_TOP_SCROLL_OFFSET = 320;
 
-initSideNav();
+initMastheadDate();
+initThemeToggle();
 initBackToTop();
 
-function initSideNav() {
-  if (!siteHeader || !siteNav) {
+function initMastheadDate() {
+  const dateEl = document.querySelector("[data-date]");
+
+  if (!dateEl) {
     return;
   }
 
-  const sideNav = createSideNav();
-  const desktopQuery = window.matchMedia(SIDE_NAV_QUERY);
-
-  document.body.append(sideNav);
-  setSideNavInert(sideNav, true);
-
-  const update = () => {
-    const shouldShow = desktopQuery.matches;
-
-    document.body.classList.toggle("has-side-nav", shouldShow);
-    sideNav.setAttribute("aria-hidden", String(!shouldShow));
-    setSideNavInert(sideNav, !shouldShow);
-  };
-
-  window.addEventListener("resize", update);
-
-  if ("addEventListener" in desktopQuery) {
-    desktopQuery.addEventListener("change", update);
-  } else {
-    desktopQuery.addListener(update);
-  }
-
-  update();
+  dateEl.textContent = new Intl.DateTimeFormat("ru-RU", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  }).format(new Date());
 }
 
-function createSideNav() {
-  const shell = document.createElement("aside");
-  const nav = document.createElement("nav");
+function initThemeToggle() {
+  const toggle = document.querySelector("[data-theme-toggle]");
 
-  shell.className = "side-nav-shell";
-  shell.setAttribute("aria-label", "Быстрая навигация");
-  shell.setAttribute("aria-hidden", "true");
+  if (!toggle) {
+    return;
+  }
 
-  nav.className = "side-nav";
-  nav.setAttribute("aria-label", "Навигация при прокрутке");
+  toggle.addEventListener("click", () => {
+    const next = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
 
-  siteNav.querySelectorAll("a").forEach((link) => {
-    nav.append(link.cloneNode(true));
+    document.documentElement.dataset.theme = next;
+    toggle.setAttribute("aria-pressed", String(next === "dark"));
+
+    try {
+      window.localStorage.setItem("theme", next);
+    } catch (error) {
+      // Ignore storage limits / private mode.
+    }
   });
-
-  shell.append(nav);
-
-  return shell;
-}
-
-function setSideNavInert(sideNav, isInert) {
-  if ("inert" in sideNav) {
-    sideNav.inert = isInert;
-  }
 }
 
 function initBackToTop() {
@@ -71,7 +49,6 @@ function initBackToTop() {
   button.textContent = "Наверх";
   button.setAttribute("aria-label", "Вернуться наверх");
   button.setAttribute("aria-hidden", "true");
-  setSideNavInert(button, true);
   document.body.append(button);
 
   const update = () => {
@@ -79,17 +56,7 @@ function initBackToTop() {
 
     button.classList.toggle("is-visible", shouldShow);
     button.setAttribute("aria-hidden", String(!shouldShow));
-    setSideNavInert(button, !shouldShow);
     ticking = false;
-  };
-
-  const requestUpdate = () => {
-    if (ticking) {
-      return;
-    }
-
-    ticking = true;
-    window.requestAnimationFrame(update);
   };
 
   button.addEventListener("click", () => {
@@ -99,8 +66,18 @@ function initBackToTop() {
     });
   });
 
-  window.addEventListener("scroll", requestUpdate, { passive: true });
-  window.addEventListener("resize", requestUpdate);
+  window.addEventListener(
+    "scroll",
+    () => {
+      if (ticking) {
+        return;
+      }
+
+      ticking = true;
+      window.requestAnimationFrame(update);
+    },
+    { passive: true },
+  );
 
   update();
 }

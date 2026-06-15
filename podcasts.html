@@ -3,11 +3,18 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta
-      name="description"
-      content="Недельные подкасты журналистского агентства Миллиардар."
-    />
-    <title>Подкасты - Миллиардар</title>
+    <script>
+      (function () {
+        try {
+          var t = localStorage.getItem("theme") || "light";
+          document.documentElement.dataset.theme = t;
+        } catch (e) {
+          document.documentElement.dataset.theme = "light";
+        }
+      })();
+    </script>
+    <meta name="description" content="Недельные подкасты журналистского агентства Миллиардар." />
+    <title>Подкасты — Миллиардар</title>
     <link rel="icon" href="/assets/logo-favicon.png?v=20260529-logo" type="image/png" />
     <link rel="canonical" href="https://milliardarmedia.ru/podcasts" />
     <meta property="og:type" content="website" />
@@ -24,93 +31,65 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500..900;1,500..900&display=swap"
+      href="https://fonts.googleapis.com/css2?family=PT+Serif:ital,wght@0,400;0,700;1,400;1,700&family=PT+Sans:ital,wght@0,400;0,700;1,400;1,700&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="/styles.css?v=20260615-news" />
+    <link rel="stylesheet" href="/styles.css?v=20260615-nyt" />
   </head>
   <body class="podcasts-page">
-    <svg width="0" height="0" style="position: absolute" aria-hidden="true" focusable="false">
-      <filter id="liquidGlass" x="-20%" y="-20%" width="140%" height="140%">
-        <feTurbulence type="fractalNoise" baseFrequency="0.006 0.01" numOctaves="2" seed="7" result="noise" />
-        <feGaussianBlur in="noise" stdDeviation="1.4" result="soft" />
-        <feDisplacementMap in="SourceGraphic" in2="soft" scale="22" xChannelSelector="R" yChannelSelector="G" />
-      </filter>
-    </svg>
-
     <header class="site-header">
-      <div class="header-inner">
-        <a class="brand" href="/" aria-label="Миллиардар - главная">
-          <img class="brand-mark" src="/assets/logo.png?v=20260529-logo" alt="" aria-hidden="true" />
-          <span class="brand-name">Миллиардар</span>
-        </a>
-
-        <form class="nav-search" role="search" action="/feed" method="get">
-          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" aria-hidden="true">
-            <circle cx="11" cy="11" r="7" /><path d="m21 21-4.3-4.3" />
-          </svg>
-          <label class="visually-hidden" for="pod-search-input">Поиск по ленте</label>
-          <input id="pod-search-input" name="q" type="search" autocomplete="off" placeholder="Поиск по ленте" />
-        </form>
-
-        <nav class="site-nav" aria-label="Основная навигация">
-          <a href="/feed">Лента</a>
-          <a href="/podcasts" aria-current="page">Подкасты</a>
-          <a href="/about">О нас</a>
-        </nav>
-
-        <a class="header-cta" href="/feed">Лента</a>
+      <div class="masthead-top">
+        <span class="masthead-date" data-date></span>
+        <div class="masthead-tools">
+          <form class="nav-search" role="search" action="/feed" method="get">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="11" cy="11" r="7" /><path d="m21 21-4.3-4.3" />
+            </svg>
+            <label class="visually-hidden" for="pod-search-input">Поиск по ленте</label>
+            <input id="pod-search-input" name="q" type="search" autocomplete="off" placeholder="Поиск" />
+          </form>
+          <a class="header-cta" href="/about#contact-form">Предложить тему</a>
+          <button class="theme-toggle" type="button" data-theme-toggle aria-label="Переключить тему" aria-pressed="false">
+            <svg class="icon-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8Z" /></svg>
+            <svg class="icon-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M4 12H2M22 12h-2M5 5l1.5 1.5M17.5 17.5 19 19M19 5l-1.5 1.5M6.5 17.5 5 19" /></svg>
+          </button>
+        </div>
       </div>
+
+      <a class="brand" href="/" aria-label="Миллиардар - главная">
+        <span class="brand-name">Миллиардар</span>
+      </a>
+
+      <nav class="site-nav" aria-label="Разделы">
+        <a href="/feed">Лента</a>
+        <a href="/podcasts" aria-current="page">Подкасты</a>
+        <a href="/about">О нас</a>
+      </nav>
     </header>
 
     <main id="top">
-      <section class="hero3d hero3d-compact on-ink" aria-labelledby="podcasts-title" data-pointer-scene>
-        <div class="hero3d-orb orb-red" data-depth="24" aria-hidden="true"></div>
-        <div class="hero3d-orb orb-deep" data-depth="16" aria-hidden="true"></div>
-        <div class="hero3d-orb orb-paper" data-depth="36" aria-hidden="true"></div>
-        <div class="hero3d-grid" aria-hidden="true"></div>
-
-        <div class="hero3d-main">
-          <div class="hero3d-copy">
-            <p class="hero-kicker reveal">Видеосалон · еженедельно</p>
-            <h1 id="podcasts-title" class="hero-title" data-split>Подкасты<em>.</em></h1>
-            <p class="hero-lead reveal">
-              Недельные выпуски «Миллиардара»: редакционные обсуждения,
-              интервью и спокойные разговоры о темах недели.
-            </p>
-            <div class="hero-actions reveal">
-              <a class="button button-primary" href="https://t.me/milliardarmedia" target="_blank" rel="noopener">
-                Telegram
-              </a>
-              <a class="button button-glass" href="/feed">Читать ленту</a>
-            </div>
-          </div>
-
-          <div class="hero-glass glass glass-dark glass-liquid tilt reveal" data-tilt aria-hidden="true">
-            <div class="hero-glass-meta" data-z style="--z: 30px">
-              <span>каждую неделю</span>
-              <strong>1 / нед.</strong>
-              <p>Новый выпуск выходит регулярно — обсуждения, интервью и разговоры о темах недели.</p>
-            </div>
-          </div>
-        </div>
+      <section class="page-intro reveal">
+        <p class="section-kicker">Видеосалон · Еженедельно</p>
+        <h1>Подкасты</h1>
+        <p>
+          Недельные выпуски «Миллиардара»: редакционные обсуждения, интервью
+          и спокойные разговоры о темах недели.
+        </p>
       </section>
 
-      <section class="section archive-section podcasts-board reveal" aria-labelledby="podcasts-list-title">
-        <div class="archive-layout">
-          <header class="archive-head">
-            <p class="section-kicker">Видеосалон</p>
-            <h2 id="podcasts-list-title">Выпуски.</h2>
-            <p class="podcasts-status" data-podcast-status role="status" aria-live="polite">Проверяем новые выпуски.</p>
-          </header>
+      <section class="archive-section podcasts-board" aria-labelledby="podcasts-list-title">
+        <div class="archive-head">
+          <p class="section-kicker">Выпуски</p>
+          <h2 id="podcasts-list-title">Все выпуски</h2>
+          <p class="podcasts-status" data-podcast-status role="status" aria-live="polite">Проверяем новые выпуски.</p>
+        </div>
 
-          <div class="podcast-grid" data-podcast-list>
-            <article class="podcast-empty">
-              <span>00</span>
-              <h3>Пока без выпусков.</h3>
-              <p>Когда первый подкаст загрузят через Telegram-бота, он появится здесь.</p>
-            </article>
-          </div>
+        <div class="podcast-grid" data-podcast-list>
+          <article class="podcast-empty">
+            <span>00</span>
+            <h3>Пока без выпусков.</h3>
+            <p>Когда первый подкаст загрузят через Telegram-бота, он появится здесь.</p>
+          </article>
         </div>
       </section>
     </main>
@@ -128,8 +107,8 @@
       <a href="#top">Наверх</a>
     </footer>
 
-    <script src="/motion.js?v=20260615-news"></script>
-    <script src="/navigation.js?v=20260615-news"></script>
-    <script src="/podcasts.js?v=20260615-news"></script>
+    <script src="/motion.js?v=20260615-nyt"></script>
+    <script src="/navigation.js?v=20260615-nyt"></script>
+    <script src="/podcasts.js?v=20260615-nyt"></script>
   </body>
 </html>

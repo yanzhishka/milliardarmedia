@@ -3,6 +3,16 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script>
+      (function () {
+        try {
+          var t = localStorage.getItem("theme") || "light";
+          document.documentElement.dataset.theme = t;
+        } catch (e) {
+          document.documentElement.dataset.theme = "light";
+        }
+      })();
+    </script>
     <meta name="description" content="Лента публикаций, недельные подкасты и материалы агентства «Миллиардар» из Telegram — в одном потоке." />
     <title>Миллиардар — журналистское агентство</title>
     <link rel="icon" href="/assets/logo-favicon.png?v=20260529-logo" type="image/png" />
@@ -21,76 +31,62 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500..900;1,500..900&display=swap"
+      href="https://fonts.googleapis.com/css2?family=PT+Serif:ital,wght@0,400;0,700;1,400;1,700&family=PT+Sans:ital,wght@0,400;0,700;1,400;1,700&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="/styles.css?v=20260615-news" />
+    <link rel="stylesheet" href="/styles.css?v=20260615-nyt" />
   </head>
   <body class="home-page">
     <header class="site-header">
-      <div class="header-inner">
-        <a class="brand" href="/" aria-label="Миллиардар - главная">
-          <img class="brand-mark" src="/assets/logo.png?v=20260529-logo" alt="" aria-hidden="true" />
-          <span class="brand-name">Миллиардар</span>
-        </a>
-
-        <form class="nav-search" role="search" action="/feed" method="get" data-feed-search>
-          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" aria-hidden="true">
-            <circle cx="11" cy="11" r="7" /><path d="m21 21-4.3-4.3" />
-          </svg>
-          <label class="visually-hidden" for="home-search-input">Поиск по ленте</label>
-          <input id="home-search-input" name="q" type="search" autocomplete="off" placeholder="Поиск по ленте" />
-        </form>
-
-        <nav class="site-nav" aria-label="Основная навигация">
-          <a href="/feed">Лента</a>
-          <a href="/podcasts">Подкасты</a>
-          <a href="/about">О нас</a>
-        </nav>
-
-        <a class="header-cta" href="/about#contact-form">Предложить тему</a>
+      <div class="masthead-top">
+        <span class="masthead-date" data-date></span>
+        <div class="masthead-tools">
+          <form class="nav-search" role="search" action="/feed" method="get" data-feed-search>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="11" cy="11" r="7" /><path d="m21 21-4.3-4.3" />
+            </svg>
+            <label class="visually-hidden" for="home-search-input">Поиск по ленте</label>
+            <input id="home-search-input" name="q" type="search" autocomplete="off" placeholder="Поиск" />
+          </form>
+          <a class="header-cta" href="/about#contact-form">Предложить тему</a>
+          <button class="theme-toggle" type="button" data-theme-toggle aria-label="Переключить тему" aria-pressed="false">
+            <svg class="icon-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8Z" /></svg>
+            <svg class="icon-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M4 12H2M22 12h-2M5 5l1.5 1.5M17.5 17.5 19 19M19 5l-1.5 1.5M6.5 17.5 5 19" /></svg>
+          </button>
+        </div>
       </div>
+
+      <a class="brand" href="/" aria-label="Миллиардар - главная">
+        <span class="brand-name">Миллиардар</span>
+      </a>
+
+      <nav class="site-nav" aria-label="Разделы">
+        <a href="/feed">Лента</a>
+        <a href="/podcasts">Подкасты</a>
+        <a href="/about">О нас</a>
+      </nav>
     </header>
 
     <main id="top">
-      <section class="hero3d hero3d-compact on-ink" aria-labelledby="home-title" data-pointer-scene>
-        <div class="hero3d-orb orb-red" data-depth="24" aria-hidden="true"></div>
-        <div class="hero3d-orb orb-deep" data-depth="16" aria-hidden="true"></div>
-        <div class="hero3d-orb orb-paper" data-depth="36" aria-hidden="true"></div>
-        <div class="hero3d-grid" aria-hidden="true"></div>
-
-        <div class="hero3d-main">
-          <div class="hero3d-copy">
-            <p class="hero-kicker reveal">Журналистское агентство · лента в эфире</p>
-            <h1 id="home-title" class="hero-title" data-split>Миллиардар<em>.</em></h1>
-            <p class="hero-lead reveal">
-              Факты, разговоры и видео — в одном потоке, без шума. Свежие материалы ниже.
-            </p>
-          </div>
+      <section class="archive-section" aria-labelledby="feed-list-title">
+        <div class="archive-head">
+          <p class="section-kicker">Лента в эфире</p>
+          <h2 id="feed-list-title">Свежее</h2>
+          <p class="feed-status" data-feed-status role="status" aria-live="polite">Загружаем ленту…</p>
         </div>
-      </section>
 
-      <section class="section archive-section reveal" aria-labelledby="feed-list-title">
-        <div class="archive-layout">
-          <header class="archive-head">
-            <p class="section-kicker">Лента в эфире</p>
-            <h2 id="feed-list-title">Свежее.</h2>
-            <p class="feed-status" data-feed-status role="status" aria-live="polite">Загружаем ленту…</p>
-          </header>
+        <div class="lead-cover-slot" data-featured hidden></div>
 
-          <div class="lead-cover-slot" data-featured hidden></div>
+        <div class="feed-panel-list" data-feed-list>
+          <article class="feed-empty">
+            <span>00</span>
+            <h3>Пока без публикаций.</h3>
+            <p>Когда в Telegram появятся новые записи, они соберутся здесь.</p>
+          </article>
+        </div>
 
-          <div class="feed-panel-list" data-feed-list>
-            <article class="feed-empty">
-              <span>00</span>
-              <h3>Пока без публикаций.</h3>
-              <p>Когда в Telegram появятся новые записи, они соберутся здесь.</p>
-            </article>
-          </div>
-
-          <div class="front-more">
-            <a class="button button-glass" href="/feed">Открыть всю ленту</a>
-          </div>
+        <div class="front-more">
+          <a class="button button-glass" href="/feed">Открыть всю ленту</a>
         </div>
       </section>
     </main>
@@ -108,8 +104,8 @@
       <a href="#top">Наверх</a>
     </footer>
 
-    <script src="/motion.js?v=20260615-news"></script>
-    <script src="/navigation.js?v=20260615-news"></script>
-    <script src="/feed.js?v=20260615-news"></script>
+    <script src="/motion.js?v=20260615-nyt"></script>
+    <script src="/navigation.js?v=20260615-nyt"></script>
+    <script src="/feed.js?v=20260615-nyt"></script>
   </body>
 </html>

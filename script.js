@@ -43,10 +43,6 @@ const HOME_FEED_VISIBLE = 4;
 initLazyPortraits();
 initTelegramFeed();
 
-if (canAnimateCursor) {
-  initCursorSticker();
-}
-
 document.querySelectorAll('a[href^="#"]').forEach((link) => {
   link.addEventListener("click", (event) => {
     const target = document.querySelector(link.getAttribute("href"));

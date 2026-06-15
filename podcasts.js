@@ -25,7 +25,7 @@ function renderPodcastSkeletons(count = 2) {
     const title = document.createElement("span");
     const text = document.createElement("span");
 
-    card.className = "podcast-card glass skeleton";
+    card.className = "podcast-card skeleton";
     video.className = "podcast-video";
     media.className = "skel";
     media.style.cssText = "position:absolute;inset:0;border-radius:inherit";
@@ -93,10 +93,6 @@ function renderPodcasts(podcasts, emptyStatus = "Пока нет выпуско�
       card.style.setProperty("--reveal-delay", `${Math.min(index, 6) * 80}ms`);
     });
     window.observeReveal(cards);
-
-    if (typeof window.attachTilt === "function") {
-      window.attachTilt(cards);
-    }
   }
 }
 
@@ -109,8 +105,7 @@ function createPodcastCard(podcast, index) {
   const videoWrap = document.createElement("div");
   const video = document.createElement("video");
 
-  card.className = "podcast-card glass tilt";
-  card.dataset.tilt = "4";
+  card.className = "podcast-card";
   number.className = "podcast-number";
   videoWrap.className = "podcast-video";
   number.textContent = String(index + 1).padStart(2, "0");

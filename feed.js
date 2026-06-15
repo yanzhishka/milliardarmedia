@@ -40,7 +40,7 @@ function renderFeedSkeletons(count = 4) {
     const figure = document.createElement("figure");
     const media = document.createElement("span");
 
-    card.className = "feed-card glass skeleton has-media" + (index === 0 ? " is-featured" : "");
+    card.className = "feed-card skeleton has-media";
     copy.className = "feed-copy";
     copy.innerHTML =
       '<span class="skel skel-line is-kicker"></span>' +
@@ -320,10 +320,6 @@ function registerReveal(cards) {
   });
 
   window.observeReveal(cards);
-
-  if (typeof window.attachTilt === "function") {
-    window.attachTilt(cards);
-  }
 }
 
 function readCachedPosts() {
@@ -358,8 +354,7 @@ function createFeedCard(post, index = 0) {
   const date = post.date ? new Date(post.date * 1000) : new Date();
   const media = createFeedMedia(post);
 
-  card.className = "feed-card glass tilt";
-  card.dataset.tilt = "4";
+  card.className = "feed-card";
   copy.className = "feed-copy";
   card.classList.toggle("has-media", Boolean(media));
   time.dateTime = date.toISOString();
