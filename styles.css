@@ -513,7 +513,7 @@ main {
 }
 
 /* ============================================================
-   STORY GRID (home + feed) — columns with hairline rules
+   STORY LIST (home + feed) — wide panels with hairline rules
    ============================================================ */
 .feed-panel-list {
   display: grid;
@@ -521,10 +521,11 @@ main {
 }
 
 .feed-card {
-  display: flex;
-  flex-direction: column;
-  gap: 9px;
-  padding: 22px 0;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+  align-items: start;
+  padding: 26px 0;
   border-top: 1px solid var(--line);
 }
 
@@ -532,17 +533,23 @@ main {
   border-top: 0;
 }
 
+/* wide panel: text left, thumbnail right */
+.feed-card.has-media {
+  grid-template-columns: minmax(0, 1fr) clamp(200px, 30%, 320px);
+  column-gap: clamp(22px, 4vw, 52px);
+}
+
 .feed-copy {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  order: 2;
+  gap: 10px;
+  order: 1;
 }
 
 .feed-copy time,
 .podcast-card time {
   font-family: var(--sans);
-  font-size: 0.72rem;
+  font-size: 0.74rem;
   letter-spacing: 0.03em;
   text-transform: uppercase;
   color: var(--muted);
@@ -551,8 +558,8 @@ main {
 /* first line of post = headline, in serif */
 .feed-copy p {
   font-family: var(--serif);
-  font-size: 1.18rem;
-  line-height: 1.28;
+  font-size: clamp(1.3rem, 2.2vw, 1.7rem);
+  line-height: 1.22;
   font-weight: 700;
   color: var(--ink);
 }
@@ -563,13 +570,14 @@ main {
 
 .feed-copy a {
   font-family: var(--sans);
-  font-size: 0.78rem;
+  font-size: 0.8rem;
   font-weight: 700;
   color: var(--accent);
 }
 
 .feed-media {
-  order: 1;
+  order: 2;
+  align-self: start;
   overflow: hidden;
 }
 
@@ -624,44 +632,18 @@ main {
   margin-top: 26px;
 }
 
-/* multi-column newspaper grid on wider screens */
-@media (min-width: 700px) {
-  .feed-panel-list {
-    grid-template-columns: 1fr 1fr;
-    column-gap: 28px;
+/* stack the panel on narrow screens (image on top) */
+@media (max-width: 640px) {
+  .feed-card.has-media {
+    grid-template-columns: 1fr;
   }
 
-  .feed-card:nth-child(2) {
-    border-top: 0;
+  .feed-card.has-media .feed-media {
+    order: 1;
   }
 
-  .feed-card:nth-child(even) {
-    border-left: 1px solid var(--line);
-    padding-left: 28px;
-  }
-
-  .feed-more {
-    grid-column: 1 / -1;
-  }
-}
-
-@media (min-width: 1040px) {
-  .feed-panel-list {
-    grid-template-columns: repeat(3, 1fr);
-  }
-
-  .feed-card:nth-child(3) {
-    border-top: 0;
-  }
-
-  .feed-card:nth-child(even) {
-    border-left: 0;
-    padding-left: 0;
-  }
-
-  .feed-card:not(:nth-child(3n + 1)) {
-    border-left: 1px solid var(--line);
-    padding-left: 28px;
+  .feed-card.has-media .feed-copy {
+    order: 2;
   }
 }
 
