@@ -2643,6 +2643,125 @@ body.is-sixty-seven .sixty-seven-badge {
 }
 
 /* ============================================================
+   FEATURED LEAD (главный материал) — cover card
+   ============================================================ */
+.lead-cover {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  min-height: clamp(340px, 44vw, 520px);
+  margin-bottom: 18px;
+  border-radius: 26px;
+  border: 1px solid var(--line);
+  background: var(--paper-2);
+  color: #fff;
+  isolation: isolate;
+}
+
+.lead-cover img {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 800ms var(--ease);
+}
+
+.lead-cover:hover img {
+  transform: scale(1.04);
+}
+
+.lead-cover::after {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  content: "";
+  background: linear-gradient(180deg, rgba(10, 10, 16, 0.1) 30%, rgba(10, 10, 16, 0.88));
+}
+
+.lead-cover.no-image {
+  background:
+    radial-gradient(60% 80% at 80% 0%, rgba(124, 107, 255, 0.35), transparent 60%),
+    radial-gradient(50% 70% at 0% 100%, rgba(255, 77, 141, 0.28), transparent 60%),
+    var(--paper-2);
+}
+
+.lead-cover.no-image::after {
+  display: none;
+}
+
+.lead-body {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 14px;
+  height: 100%;
+  min-height: inherit;
+  padding: clamp(26px, 4vw, 48px);
+  justify-content: flex-end;
+}
+
+.lead-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5em;
+  font-family: var(--mono);
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #fff;
+}
+
+.lead-kicker::before {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--red);
+  content: "";
+}
+
+.lead-cover time {
+  font-family: var(--mono);
+  font-size: 0.76rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.lead-cover h2,
+.lead-cover h3 {
+  max-width: 22ch;
+  color: #fff;
+  font-size: clamp(1.9rem, 4vw, 3.4rem);
+  line-height: 1.02;
+}
+
+.lead-cover .tile-arrow {
+  color: #fff;
+}
+
+.lead-cover:hover .tile-arrow {
+  color: var(--red);
+}
+
+/* news grid (home + feed) */
+.front-grid,
+.home-page .feed-panel-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 18px;
+}
+
+.front-more {
+  display: flex;
+  justify-content: center;
+  margin-top: 28px;
+}
+
+/* ============================================================
    #10 CROSS-DOCUMENT VIEW TRANSITIONS
    ============================================================ */
 @view-transition {

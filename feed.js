@@ -4,7 +4,10 @@ const FEED_REFRESH_INTERVAL = 30000;
 const FEED_CACHE_KEY = "milliardar-feed-posts-v1";
 const FEED_REQUEST_TIMEOUT = 8000;
 const FEED_PAGE_SIZE = 6;
+const HOME_LIMIT = 6;
 const feedSearchInput = document.querySelector("[data-feed-search] input");
+const featuredSlot = document.querySelector("[data-featured]");
+const isHome = document.body.classList.contains("home-page");
 let lastFeedSignature = "";
 let allPosts = [];
 let visibleCount = FEED_PAGE_SIZE;
@@ -139,6 +142,7 @@ function paintFeed() {
   const display = getDisplayPosts();
 
   if (searchQuery && !display.length) {
+    clearFeatured();
     feedStatus.textContent = `По запросу «${searchQuery}» ничего не найдено.`;
     feedList.replaceChildren(createNoResults());
     return;
@@ -148,15 +152,92 @@ function paintFeed() {
     ? `Результаты по запросу «${searchQuery}»: ${display.length}.`
     : `Всего ${allPosts.length} публикаций из Telegram.`;
 
-  const cards = display.slice(0, visibleCount).map(createFeedCard);
+  // featured lead (skip while searching)
+  const featured = !searchQuery && featuredSlot ? display[0] : null;
+  const rest = featured ? display.slice(1) : display;
+  const limit = isHome ? HOME_LIMIT : visibleCount;
+
+  if (featuredSlot) {
+    if (featured) {
+      const cover = buildFeatured(featured);
+      featuredSlot.replaceChildren(cover);
+      featuredSlot.hidden = false;
+      registerReveal([cover]);
+    } else {
+      clearFeatured();
+    }
+  }
+
+  const cards = rest.slice(0, limit).map(createFeedCard);
 
   feedList.replaceChildren(...cards);
 
-  if (display.length > visibleCount) {
-    feedList.append(buildLoadMore(display.length - visibleCount));
+  if (!isHome && rest.length > visibleCount) {
+    feedList.append(buildLoadMore(rest.length - visibleCount));
   }
 
   registerReveal(cards);
+}
+
+function clearFeatured() {
+  if (featuredSlot) {
+    featuredSlot.replaceChildren();
+    featuredSlot.hidden = true;
+  }
+}
+
+function buildFeatured(post) {
+  const cover = document.createElement(post.messageId || post.link ? "a" : "div");
+  const body = document.createElement("div");
+  const kicker = document.createElement("span");
+  const title = document.createElement("h2");
+  const text = getFeedText(post).replace(/\s+/g, " ").trim();
+  const date = post.date ? new Date(post.date * 1000) : null;
+  const images = getPostImages(post);
+
+  cover.className = "lead-cover";
+
+  if (post.messageId) {
+    cover.href = `/post/${post.messageId}`;
+  } else if (post.link) {
+    cover.href = post.link;
+    cover.target = "_blank";
+    cover.rel = "noopener";
+  }
+
+  if (images.length) {
+    const image = document.createElement("img");
+
+    image.src = images[0].url;
+    image.alt = text ? text.slice(0, 90) : "Главный материал";
+    image.loading = "eager";
+    image.decoding = "async";
+    cover.append(image);
+  } else {
+    cover.classList.add("no-image");
+  }
+
+  body.className = "lead-body";
+  kicker.className = "lead-kicker";
+  kicker.textContent = "Главный материал";
+  title.textContent = text.length > 110 ? `${text.slice(0, 110).trim()}…` : text;
+  body.append(kicker);
+
+  if (date) {
+    const time = document.createElement("time");
+
+    time.dateTime = date.toISOString();
+    time.textContent = formatFeedDate(date);
+    body.append(time);
+  }
+
+  const arrow = document.createElement("span");
+  arrow.className = "tile-arrow";
+  arrow.textContent = "Читать материал";
+  body.append(title, arrow);
+  cover.append(body);
+
+  return cover;
 }
 
 function buildLoadMore(remaining) {
@@ -200,6 +281,11 @@ function initFeedSearch() {
   feedSearchInput.value = searchQuery;
 
   feedSearchInput.closest("form").addEventListener("submit", (event) => {
+    // On the home page let the form navigate to the full archive (/feed?q=).
+    if (isHome) {
+      return;
+    }
+
     event.preventDefault();
     feedSearchInput.blur();
   });
@@ -276,7 +362,6 @@ function createFeedCard(post, index = 0) {
   card.dataset.tilt = "4";
   copy.className = "feed-copy";
   card.classList.toggle("has-media", Boolean(media));
-  card.classList.toggle("is-featured", index === 0);
   time.dateTime = date.toISOString();
   time.textContent = formatFeedDate(date);
   text.textContent = getFeedText(post);

@@ -1,6 +1,6 @@
 const POSTS_KEY = "telegram_posts";
 const DEFAULT_FEED_RESET_AT = 1779913144;
-const ASSET_VERSION = "20260615-search";
+const ASSET_VERSION = "20260615-news";
 
 export async function onRequestGet({ params, request, env }) {
   const origin = new URL(request.url).origin;
@@ -163,7 +163,7 @@ function renderPost(post, images, origin, optimize) {
         <nav class="site-nav" aria-label="Основная навигация">
           <a href="/feed">Лента</a>
           <a href="/podcasts">Подкасты</a>
-          <a href="/#team">Команда</a>
+          <a href="/about">О нас</a>
         </nav>
         <a class="header-cta" href="/feed">Вся лента</a>
       </div>
