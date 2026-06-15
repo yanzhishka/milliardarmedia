@@ -440,35 +440,61 @@ main {
 }
 
 /* ============================================================
-   FEATURED LEAD (главный материал)
+   FEATURED LEAD (главный материал) — text over image cover
    ============================================================ */
 .lead-cover {
-  display: grid;
-  grid-template-columns: 1.05fr 0.95fr;
-  gap: clamp(20px, 3vw, 40px);
-  align-items: start;
-  padding-bottom: 26px;
-  margin-bottom: 26px;
-  border-bottom: 1px solid var(--line);
-  color: var(--ink);
-}
-
-.lead-cover.no-image {
-  grid-template-columns: 1fr;
+  position: relative;
+  display: block;
+  overflow: hidden;
+  min-height: clamp(340px, 46vw, 560px);
+  margin-bottom: 28px;
+  border-radius: 4px;
+  color: #fff;
+  isolation: isolate;
 }
 
 .lead-cover img {
-  order: 2;
+  position: absolute;
+  inset: 0;
+  z-index: -2;
   width: 100%;
-  aspect-ratio: 3 / 2;
+  height: 100%;
   object-fit: cover;
+  transition: transform 700ms var(--ease);
+}
+
+.lead-cover:hover img {
+  transform: scale(1.03);
+}
+
+.lead-cover::after {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  content: "";
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.15) 35%, rgba(0, 0, 0, 0.82));
+}
+
+.lead-cover.no-image {
+  color: var(--ink);
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+}
+
+.lead-cover.no-image::after {
+  display: none;
 }
 
 .lead-body {
-  order: 1;
+  position: relative;
   display: flex;
   flex-direction: column;
+  align-items: flex-start;
   gap: 12px;
+  height: 100%;
+  min-height: inherit;
+  padding: clamp(24px, 4vw, 48px);
+  justify-content: flex-end;
 }
 
 .lead-kicker {
@@ -477,19 +503,19 @@ main {
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
+  color: #fff;
+}
+
+.lead-cover.no-image .lead-kicker {
   color: var(--accent);
 }
 
 .lead-cover h2,
 .lead-cover h3 {
-  font-size: clamp(1.9rem, 3.6vw, 3rem);
+  max-width: 24ch;
+  font-size: clamp(1.9rem, 3.8vw, 3.2rem);
   line-height: 1.04;
-  color: var(--ink);
-}
-
-.lead-cover:hover h2,
-.lead-cover:hover h3 {
-  color: var(--accent-strong);
+  color: inherit;
 }
 
 .lead-cover time {
@@ -497,6 +523,10 @@ main {
   font-size: 0.76rem;
   letter-spacing: 0.02em;
   text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.lead-cover.no-image time {
   color: var(--muted);
 }
 
@@ -505,6 +535,10 @@ main {
   font-size: 0.8rem;
   font-weight: 700;
   letter-spacing: 0.02em;
+  color: #fff;
+}
+
+.lead-cover.no-image .tile-arrow {
   color: var(--accent);
 }
 
@@ -513,37 +547,72 @@ main {
 }
 
 /* ============================================================
-   STORY LIST (home + feed) — wide panels with hairline rules
+   STORY CARDS (home + feed) — tablets with parallax tilt
    ============================================================ */
 .feed-panel-list {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: clamp(18px, 2.4vw, 28px);
+  align-items: start;
 }
 
 .feed-card {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--paper-2);
+}
+
+/* 3D tilt (parallax tablets) */
+.tilt {
+  transform: perspective(900px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
+  transform-style: preserve-3d;
+  transition: transform 240ms var(--ease), box-shadow 280ms var(--ease);
+  will-change: transform;
+}
+
+.feed-card:hover {
+  box-shadow: 0 16px 38px rgba(0, 0, 0, 0.14);
+}
+
+.feed-media {
+  order: 1;
+  overflow: hidden;
+  background: var(--paper-3);
+}
+
+/* full, uncropped photos */
+.feed-media img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.feed-gallery {
   display: grid;
-  grid-template-columns: 1fr;
-  gap: 12px;
-  align-items: start;
-  padding: 26px 0;
-  border-top: 1px solid var(--line);
+  grid-template-columns: 1fr 1fr;
+  gap: 3px;
 }
 
-.feed-card:first-child {
-  border-top: 0;
-}
-
-/* wide panel: text left, thumbnail right */
-.feed-card.has-media {
-  grid-template-columns: minmax(0, 1fr) clamp(200px, 30%, 320px);
-  column-gap: clamp(22px, 4vw, 52px);
+.feed-media-placeholder {
+  display: grid;
+  place-items: center;
+  min-height: 150px;
+  background: var(--paper-3);
+  font-family: var(--sans);
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  color: var(--muted);
 }
 
 .feed-copy {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  order: 1;
+  gap: 9px;
+  order: 2;
+  padding: 18px 20px 22px;
 }
 
 .feed-copy time,
@@ -558,8 +627,8 @@ main {
 /* first line of post = headline, in serif */
 .feed-copy p {
   font-family: var(--serif);
-  font-size: clamp(1.3rem, 2.2vw, 1.7rem);
-  line-height: 1.22;
+  font-size: clamp(1.2rem, 1.8vw, 1.5rem);
+  line-height: 1.24;
   font-weight: 700;
   color: var(--ink);
 }
@@ -569,39 +638,11 @@ main {
 }
 
 .feed-copy a {
+  margin-top: 2px;
   font-family: var(--sans);
   font-size: 0.8rem;
   font-weight: 700;
   color: var(--accent);
-}
-
-.feed-media {
-  order: 2;
-  align-self: start;
-  overflow: hidden;
-}
-
-.feed-media img {
-  width: 100%;
-  aspect-ratio: 3 / 2;
-  object-fit: cover;
-}
-
-.feed-gallery {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 4px;
-}
-
-.feed-media-placeholder {
-  display: grid;
-  place-items: center;
-  min-height: 140px;
-  background: var(--paper-2);
-  font-family: var(--sans);
-  font-size: 0.78rem;
-  text-transform: uppercase;
-  color: var(--muted);
 }
 
 .feed-empty,
@@ -609,8 +650,10 @@ main {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  padding: 36px 0;
-  border-top: 1px solid var(--line);
+  padding: 30px 22px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--paper-2);
 }
 
 .feed-empty span,
@@ -621,6 +664,7 @@ main {
 }
 
 .feed-more {
+  grid-column: 1 / -1;
   display: flex;
   justify-content: center;
   padding-top: 26px;
@@ -630,21 +674,6 @@ main {
   display: flex;
   justify-content: center;
   margin-top: 26px;
-}
-
-/* stack the panel on narrow screens (image on top) */
-@media (max-width: 640px) {
-  .feed-card.has-media {
-    grid-template-columns: 1fr;
-  }
-
-  .feed-card.has-media .feed-media {
-    order: 1;
-  }
-
-  .feed-card.has-media .feed-copy {
-    order: 2;
-  }
 }
 
 /* ============================================================

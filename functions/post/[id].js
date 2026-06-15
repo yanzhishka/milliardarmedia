@@ -1,6 +1,6 @@
 const POSTS_KEY = "telegram_posts";
 const DEFAULT_FEED_RESET_AT = 1779913144;
-const ASSET_VERSION = "20260615-nyt2";
+const ASSET_VERSION = "20260615-nyt3";
 
 export async function onRequestGet({ params, request, env }) {
   const origin = new URL(request.url).origin;

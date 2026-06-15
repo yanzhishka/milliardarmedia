@@ -1,10 +1,12 @@
 /* ============================================================
-   Light scroll reveal (newspaper-calm).
-   Exposes window.observeReveal for dynamically rendered cards.
-   Respects prefers-reduced-motion.
+   Scroll reveal + 3D tilt for cards.
+   Exposes window.observeReveal and window.attachTilt for
+   dynamically rendered cards. Respects prefers-reduced-motion
+   and only tilts on fine pointers.
    ============================================================ */
 
 const REDUCE_MOTION = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+const TILT_ENABLED = !REDUCE_MOTION && window.matchMedia("(pointer: fine)").matches;
 
 const revealObserver =
   !REDUCE_MOTION && "IntersectionObserver" in window
@@ -41,20 +43,45 @@ window.observeReveal = function observeReveal(elements) {
   });
 };
 
-// No-op kept so any legacy callers stay safe.
-window.attachTilt = function attachTilt() {};
+function bindTilt(tile) {
+  if (!TILT_ENABLED || !tile || tile.dataset.tiltBound === "1") {
+    return;
+  }
 
-(function initReveal() {
+  tile.dataset.tiltBound = "1";
+  const max = Number(tile.dataset.tilt) || 4;
+
+  tile.addEventListener("pointermove", (event) => {
+    const rect = tile.getBoundingClientRect();
+    const px = (event.clientX - rect.left) / rect.width;
+    const py = (event.clientY - rect.top) / rect.height;
+
+    tile.style.setProperty("--ry", `${(px - 0.5) * max * 2}deg`);
+    tile.style.setProperty("--rx", `${(0.5 - py) * max * 2}deg`);
+  });
+
+  tile.addEventListener("pointerleave", () => {
+    tile.style.setProperty("--ry", "0deg");
+    tile.style.setProperty("--rx", "0deg");
+  });
+}
+
+window.attachTilt = function attachTiltList(elements) {
+  const list = Array.isArray(elements) ? elements : [elements];
+
+  list.forEach(bindTilt);
+};
+
+(function initMotion() {
   const items = document.querySelectorAll(".reveal");
 
-  if (!items.length) {
-    return;
+  if (items.length) {
+    if (revealObserver) {
+      items.forEach((item) => revealObserver.observe(item));
+    } else {
+      items.forEach((item) => item.classList.add("is-visible"));
+    }
   }
 
-  if (!revealObserver) {
-    items.forEach((item) => item.classList.add("is-visible"));
-    return;
-  }
-
-  items.forEach((item) => revealObserver.observe(item));
+  document.querySelectorAll("[data-tilt]").forEach(bindTilt);
 })();

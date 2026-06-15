@@ -162,7 +162,7 @@ function paintFeed() {
       const cover = buildFeatured(featured);
       featuredSlot.replaceChildren(cover);
       featuredSlot.hidden = false;
-      registerReveal([cover]);
+      revealOnly([cover]);
     } else {
       clearFeatured();
     }
@@ -310,16 +310,18 @@ function initFeedSearch() {
   });
 }
 
-function registerReveal(cards) {
-  if (typeof window.observeReveal !== "function") {
-    return;
+// Featured cover: fade in (no tilt). Cards: parallax tilt (no fade —
+// .reveal and .tilt both drive transform, so we don't mix them).
+function revealOnly(elements) {
+  if (typeof window.observeReveal === "function") {
+    window.observeReveal(elements);
   }
+}
 
-  cards.forEach((card, index) => {
-    card.style.setProperty("--reveal-delay", `${Math.min(index, 6) * 80}ms`);
-  });
-
-  window.observeReveal(cards);
+function registerReveal(cards) {
+  if (typeof window.attachTilt === "function") {
+    window.attachTilt(cards);
+  }
 }
 
 function readCachedPosts() {
@@ -354,7 +356,8 @@ function createFeedCard(post, index = 0) {
   const date = post.date ? new Date(post.date * 1000) : new Date();
   const media = createFeedMedia(post);
 
-  card.className = "feed-card";
+  card.className = "feed-card tilt";
+  card.dataset.tilt = "4";
   copy.className = "feed-copy";
   card.classList.toggle("has-media", Boolean(media));
   time.dateTime = date.toISOString();
