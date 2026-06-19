@@ -6,7 +6,7 @@
     <script>
       (function () {
         try {
-          var t = localStorage.getItem("theme") || "light";
+          var t = localStorage.getItem("theme") || (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
           document.documentElement.dataset.theme = t;
         } catch (e) {
           document.documentElement.dataset.theme = "light";
@@ -17,12 +17,16 @@
     <title>Миллиардар — журналистское агентство</title>
     <link rel="icon" href="/assets/logo-favicon.png?v=20260529-logo" type="image/png" />
     <link rel="canonical" href="https://milliardarmedia.ru/" />
+    <link rel="alternate" hreflang="ru" href="https://milliardarmedia.ru/" />
+    <link rel="alternate" hreflang="x-default" href="https://milliardarmedia.ru/" />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Миллиардар" />
     <meta property="og:title" content="Миллиардар — журналистское агентство" />
     <meta property="og:description" content="Лента публикаций, недельные подкасты и материалы агентства «Миллиардар» из Telegram — в одном потоке." />
     <meta property="og:url" content="https://milliardarmedia.ru/" />
     <meta property="og:image" content="https://milliardarmedia.ru/assets/logo-generated-full.png" />
+    <meta property="og:locale" content="ru_RU" />
+    <meta property="og:locale:alternate" content="en_US" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="Миллиардар — журналистское агентство" />
     <meta name="twitter:description" content="Лента публикаций, недельные подкасты и материалы агентства «Миллиардар» из Telegram." />
@@ -34,7 +38,36 @@
       href="https://fonts.googleapis.com/css2?family=PT+Serif:ital,wght@0,400;0,700;1,400;1,700&family=PT+Sans:ital,wght@0,400;0,700;1,400;1,700&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="/styles.css?v=20260615-nyt3" />
+    <link rel="stylesheet" href="/styles.css?v=20260619-nyt4" />
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "NewsMediaOrganization",
+            "@id": "https://milliardarmedia.ru/#organization",
+            "name": "Миллиардар",
+            "alternateName": "Milliardar Media",
+            "url": "https://milliardarmedia.ru/",
+            "logo": "https://milliardarmedia.ru/assets/logo-generated-full.png",
+            "sameAs": ["https://t.me/milliardarmedia"]
+          },
+          {
+            "@type": "WebSite",
+            "@id": "https://milliardarmedia.ru/#website",
+            "url": "https://milliardarmedia.ru/",
+            "name": "Миллиардар",
+            "inLanguage": ["ru", "en"],
+            "publisher": { "@id": "https://milliardarmedia.ru/#organization" },
+            "potentialAction": {
+              "@type": "SearchAction",
+              "target": "https://milliardarmedia.ru/feed?q={search_term_string}",
+              "query-input": "required name=search_term_string"
+            }
+          }
+        ]
+      }
+    </script>
   </head>
   <body class="home-page">
     <header class="site-header">
@@ -89,6 +122,19 @@
           <a class="button button-glass" href="/feed">Открыть всю ленту</a>
         </div>
       </section>
+
+      <section class="front-promos" aria-label="Разделы">
+        <a class="promo" href="/podcasts">
+          <span>Подкасты</span>
+          <h2>Недельные выпуски</h2>
+          <p>Редакционные разговоры, интервью и разбор тем недели — новый выпуск каждую неделю.</p>
+        </a>
+        <a class="promo" href="/about">
+          <span>О нас</span>
+          <h2>Редакция и контакты</h2>
+          <p>Кто делает «Миллиардар», как мы работаем и как предложить тему или материал.</p>
+        </a>
+      </section>
     </main>
 
     <footer class="site-footer">
@@ -104,8 +150,8 @@
       <a href="#top">Наверх</a>
     </footer>
 
-    <script src="/motion.js?v=20260615-nyt3"></script>
-    <script src="/navigation.js?v=20260615-nyt3"></script>
-    <script src="/feed.js?v=20260615-nyt3"></script>
+    <script src="/motion.js?v=20260619-nyt4"></script>
+    <script src="/navigation.js?v=20260619-nyt4"></script>
+    <script src="/feed.js?v=20260619-nyt4"></script>
   </body>
 </html>

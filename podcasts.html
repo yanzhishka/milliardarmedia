@@ -6,7 +6,7 @@
     <script>
       (function () {
         try {
-          var t = localStorage.getItem("theme") || "light";
+          var t = localStorage.getItem("theme") || (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
           document.documentElement.dataset.theme = t;
         } catch (e) {
           document.documentElement.dataset.theme = "light";
@@ -17,12 +17,16 @@
     <title>Подкасты — Миллиардар</title>
     <link rel="icon" href="/assets/logo-favicon.png?v=20260529-logo" type="image/png" />
     <link rel="canonical" href="https://milliardarmedia.ru/podcasts" />
+    <link rel="alternate" hreflang="ru" href="https://milliardarmedia.ru/podcasts" />
+    <link rel="alternate" hreflang="x-default" href="https://milliardarmedia.ru/podcasts" />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Миллиардар" />
     <meta property="og:title" content="Подкасты — Миллиардар" />
     <meta property="og:description" content="Недельные видео-выпуски «Миллиардара»: редакционные обсуждения, интервью и разговоры о темах недели." />
     <meta property="og:url" content="https://milliardarmedia.ru/podcasts" />
     <meta property="og:image" content="https://milliardarmedia.ru/assets/logo-generated-full.png" />
+    <meta property="og:locale" content="ru_RU" />
+    <meta property="og:locale:alternate" content="en_US" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="Подкасты — Миллиардар" />
     <meta name="twitter:description" content="Недельные видео-выпуски «Миллиардара»: обсуждения, интервью и разговоры о темах недели." />
@@ -34,7 +38,7 @@
       href="https://fonts.googleapis.com/css2?family=PT+Serif:ital,wght@0,400;0,700;1,400;1,700&family=PT+Sans:ital,wght@0,400;0,700;1,400;1,700&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="/styles.css?v=20260615-nyt3" />
+    <link rel="stylesheet" href="/styles.css?v=20260619-nyt4" />
   </head>
   <body class="podcasts-page">
     <header class="site-header">
@@ -107,8 +111,8 @@
       <a href="#top">Наверх</a>
     </footer>
 
-    <script src="/motion.js?v=20260615-nyt3"></script>
-    <script src="/navigation.js?v=20260615-nyt3"></script>
-    <script src="/podcasts.js?v=20260615-nyt3"></script>
+    <script src="/motion.js?v=20260619-nyt4"></script>
+    <script src="/navigation.js?v=20260619-nyt4"></script>
+    <script src="/podcasts.js?v=20260619-nyt4"></script>
   </body>
 </html>

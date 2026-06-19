@@ -155,7 +155,6 @@ function paintFeed() {
   // featured lead (skip while searching)
   const featured = !searchQuery && featuredSlot ? display[0] : null;
   const rest = featured ? display.slice(1) : display;
-  const limit = isHome ? HOME_LIMIT : visibleCount;
 
   if (featuredSlot) {
     if (featured) {
@@ -168,11 +167,23 @@ function paintFeed() {
     }
   }
 
-  const cards = rest.slice(0, limit).map(createFeedCard);
+  // Home = front page (compact headline list). Feed = full card archive.
+  if (isHome) {
+    feedList.classList.remove("feed-panel-list");
+    feedList.classList.add("front-headlines");
+
+    const headlines = rest.slice(0, HOME_LIMIT).map(createHeadline);
+
+    feedList.replaceChildren(...headlines);
+    registerReveal(headlines);
+    return;
+  }
+
+  const cards = rest.slice(0, visibleCount).map(createFeedCard);
 
   feedList.replaceChildren(...cards);
 
-  if (!isHome && rest.length > visibleCount) {
+  if (rest.length > visibleCount) {
     feedList.append(buildLoadMore(rest.length - visibleCount));
   }
 
@@ -310,17 +321,19 @@ function initFeedSearch() {
   });
 }
 
-// Featured cover: fade in (no tilt). Cards: parallax tilt (no fade —
-// .reveal and .tilt both drive transform, so we don't mix them).
+// Light fade-in for the featured cover and for cards/headlines (no parallax).
 function revealOnly(elements) {
   if (typeof window.observeReveal === "function") {
     window.observeReveal(elements);
   }
 }
 
-function registerReveal(cards) {
-  if (typeof window.attachTilt === "function") {
-    window.attachTilt(cards);
+function registerReveal(items) {
+  if (typeof window.observeReveal === "function") {
+    items.forEach((item, index) => {
+      item.style.setProperty("--reveal-delay", `${Math.min(index, 6) * 60}ms`);
+    });
+    window.observeReveal(items);
   }
 }
 
@@ -356,8 +369,7 @@ function createFeedCard(post, index = 0) {
   const date = post.date ? new Date(post.date * 1000) : new Date();
   const media = createFeedMedia(post);
 
-  card.className = "feed-card tilt";
-  card.dataset.tilt = "4";
+  card.className = "feed-card";
   copy.className = "feed-copy";
   card.classList.toggle("has-media", Boolean(media));
   time.dateTime = date.toISOString();
@@ -382,6 +394,32 @@ function createFeedCard(post, index = 0) {
   }
 
   return card;
+}
+
+function createHeadline(post) {
+  const item = document.createElement(post.messageId || post.link ? "a" : "div");
+  const time = document.createElement("time");
+  const title = document.createElement("h3");
+  const date = post.date ? new Date(post.date * 1000) : new Date();
+  const text = getFeedText(post).replace(/\s+/g, " ").trim();
+
+  item.className = "front-headline";
+
+  if (post.messageId) {
+    item.href = `/post/${post.messageId}`;
+  } else if (post.link) {
+    item.href = post.link;
+    item.target = "_blank";
+    item.rel = "noopener";
+  }
+
+  time.dateTime = date.toISOString();
+  time.textContent = formatFeedDate(date);
+  title.textContent = text.length > 120 ? `${text.slice(0, 120).trim()}…` : text;
+
+  item.append(time, title);
+
+  return item;
 }
 
 function createFeedMedia(post) {
@@ -462,7 +500,30 @@ function createFeedImage(postImage, post, index) {
     image.height = postImage.height;
   }
 
-  return image;
+  return wrapMediaLink(image, post);
+}
+
+// Make the image itself open the full material (post page or Telegram).
+function wrapMediaLink(node, post) {
+  const href = post.messageId ? `/post/${post.messageId}` : post.link || "";
+
+  if (!href) {
+    return node;
+  }
+
+  const link = document.createElement("a");
+
+  link.href = href;
+  link.setAttribute("aria-label", "Открыть материал");
+
+  if (!post.messageId) {
+    link.target = "_blank";
+    link.rel = "noopener";
+  }
+
+  link.append(node);
+
+  return link;
 }
 
 function getPostImages(post) {

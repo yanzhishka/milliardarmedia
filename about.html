@@ -6,7 +6,7 @@
     <script>
       (function () {
         try {
-          var t = localStorage.getItem("theme") || "light";
+          var t = localStorage.getItem("theme") || (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
           document.documentElement.dataset.theme = t;
         } catch (e) {
           document.documentElement.dataset.theme = "light";
@@ -17,12 +17,16 @@
     <title>О нас — Миллиардар</title>
     <link rel="icon" href="/assets/logo-favicon.png?v=20260529-logo" type="image/png" />
     <link rel="canonical" href="https://milliardarmedia.ru/about" />
+    <link rel="alternate" hreflang="ru" href="https://milliardarmedia.ru/about" />
+    <link rel="alternate" hreflang="x-default" href="https://milliardarmedia.ru/about" />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Миллиардар" />
     <meta property="og:title" content="О нас — Миллиардар" />
     <meta property="og:description" content="Команда, принципы работы и контакты журналистского агентства «Миллиардар»." />
     <meta property="og:url" content="https://milliardarmedia.ru/about" />
     <meta property="og:image" content="https://milliardarmedia.ru/assets/logo-generated-full.png" />
+    <meta property="og:locale" content="ru_RU" />
+    <meta property="og:locale:alternate" content="en_US" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="О нас — Миллиардар" />
     <meta name="twitter:description" content="Команда, принципы работы и контакты агентства «Миллиардар»." />
@@ -34,7 +38,7 @@
       href="https://fonts.googleapis.com/css2?family=PT+Serif:ital,wght@0,400;0,700;1,400;1,700&family=PT+Sans:ital,wght@0,400;0,700;1,400;1,700&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="/styles.css?v=20260615-nyt3" />
+    <link rel="stylesheet" href="/styles.css?v=20260619-nyt4" />
   </head>
   <body class="about-page">
     <header class="site-header">
@@ -305,8 +309,8 @@
       </div>
     </div>
 
-    <script src="/motion.js?v=20260615-nyt3"></script>
-    <script src="/navigation.js?v=20260615-nyt3"></script>
-    <script src="/script.js?v=20260615-nyt3"></script>
+    <script src="/motion.js?v=20260619-nyt4"></script>
+    <script src="/navigation.js?v=20260619-nyt4"></script>
+    <script src="/script.js?v=20260619-nyt4"></script>
   </body>
 </html>

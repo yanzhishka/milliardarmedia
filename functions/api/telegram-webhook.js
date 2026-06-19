@@ -3,6 +3,7 @@ const PODCASTS_KEY = "telegram_podcasts";
 const IMAGE_KEY_PREFIX = "telegram_post_image:";
 const PODCAST_VIDEO_KEY_PREFIX = "telegram_podcast_video:";
 const PENDING_ACTION_KEY_PREFIX = "telegram_pending_action:";
+const ADMINS_KEY = "telegram_admin_ids";
 const MAX_POSTS = 90;
 const MAX_PODCASTS = 24;
 const MAX_IMAGE_BYTES = 4 * 1024 * 1024;
@@ -96,6 +97,18 @@ async function handleBotMessage(message, env) {
     return jsonResponse({ ok: true, command: "whoami" });
   }
 
+  if (isCommand(text, "adduser")) {
+    return handleAddUserCommand(message, env, text);
+  }
+
+  if (isCommand(text, "removeuser") || isCommand(text, "deluser")) {
+    return handleRemoveUserCommand(message, env, text);
+  }
+
+  if (isCommand(text, "users")) {
+    return handleListUsersCommand(message, env);
+  }
+
   if (isCommand(text, "podcast")) {
     return handlePodcastCommand(message, env, text);
   }
@@ -128,7 +141,7 @@ async function handleBotMessage(message, env) {
 }
 
 async function handleHelpCommand(message, env) {
-  const admin = isAdminMessage(message, env);
+  const admin = await isAdminMessage(message, env);
   const publicLines = [
     "Команды бота:",
     "/help — показать эту памятку.",
@@ -138,6 +151,9 @@ async function handleHelpCommand(message, env) {
     "",
     "Команды администратора:",
     "/status — проверить KV, канал, ленту и подкасты.",
+    "/users — показать администраторов ленты.",
+    "/adduser 123456789 — добавить администратора по Telegram ID.",
+    "/removeuser 123456789 — убрать добавленного администратора.",
     "/delete — подготовить удаление последнего поста из Telegram и с сайта.",
     "/delete 123 — подготовить удаление поста по номеру сообщения.",
     "/delete ссылка — подготовить удаление поста по ссылке Telegram.",
@@ -160,7 +176,7 @@ async function handleHelpCommand(message, env) {
 }
 
 async function handleDeleteCommand(message, env, text) {
-  if (!isAdminMessage(message, env)) {
+  if (!(await isAdminMessage(message, env))) {
     await replyToBotMessage(env, message, "Команда доступна только администраторам ленты.");
     return jsonResponse({ ok: true, command: "delete", denied: true });
   }
@@ -212,7 +228,7 @@ async function handleDeleteCommand(message, env, text) {
 }
 
 async function handleDeleteSiteCommand(message, env, text) {
-  if (!isAdminMessage(message, env)) {
+  if (!(await isAdminMessage(message, env))) {
     await replyToBotMessage(env, message, "Команда доступна только администраторам ленты.");
     return jsonResponse({ ok: true, command: "deletesite", denied: true });
   }
@@ -313,7 +329,7 @@ async function executeDeleteSitePost(message, env, messageId) {
 }
 
 async function handleConfirmDeleteCommand(message, env) {
-  if (!isAdminMessage(message, env)) {
+  if (!(await isAdminMessage(message, env))) {
     await replyToBotMessage(env, message, "Команда доступна только администраторам.");
     return jsonResponse({ ok: true, command: "confirmdelete", denied: true });
   }
@@ -361,7 +377,7 @@ async function handleCallbackQuery(query, env) {
   const [, actionName, actionId] = match;
   const message = messageFromCallbackQuery(query);
 
-  if (!isAdminMessage(message, env)) {
+  if (!(await isAdminMessage(message, env))) {
     await answerCallbackQuery(env, query, "Команда доступна только администраторам.", true);
     return jsonResponse({ ok: true, command: "callback_delete", denied: true });
   }
@@ -405,7 +421,7 @@ async function handleCallbackQuery(query, env) {
 }
 
 async function handleCancelDeleteCommand(message, env) {
-  if (!isAdminMessage(message, env)) {
+  if (!(await isAdminMessage(message, env))) {
     await replyToBotMessage(env, message, "Команда доступна только администраторам.");
     return jsonResponse({ ok: true, command: "canceldelete", denied: true });
   }
@@ -505,7 +521,7 @@ function messageFromCallbackQuery(query) {
 }
 
 async function handlePodcastCommand(message, env, text) {
-  if (!isAdminMessage(message, env)) {
+  if (!(await isAdminMessage(message, env))) {
     await replyToBotMessage(env, message, "Команда доступна только администраторам подкастов.");
     return jsonResponse({ ok: true, command: "podcast", denied: true });
   }
@@ -540,7 +556,7 @@ async function handlePodcastCommand(message, env, text) {
 }
 
 async function handleDeletePodcastCommand(message, env, text) {
-  if (!isAdminMessage(message, env)) {
+  if (!(await isAdminMessage(message, env))) {
     await replyToBotMessage(env, message, "Команда доступна только администраторам подкастов.");
     return jsonResponse({ ok: true, command: "deletepodcast", denied: true });
   }
@@ -614,7 +630,7 @@ async function executeDeletePodcast(message, env, messageId) {
 }
 
 async function handleStatusCommand(message, env) {
-  if (!isAdminMessage(message, env)) {
+  if (!(await isAdminMessage(message, env))) {
     await replyToBotMessage(env, message, "Команда доступна только администраторам ленты.");
     return jsonResponse({ ok: true, command: "status", denied: true });
   }
@@ -645,6 +661,106 @@ async function handleStatusCommand(message, env) {
   );
 
   return jsonResponse({ ok: true, command: "status" });
+}
+
+async function handleAddUserCommand(message, env, text) {
+  if (!(await isAdminMessage(message, env))) {
+    await replyToBotMessage(env, message, "Команда доступна только администраторам.");
+    return jsonResponse({ ok: true, command: "adduser", denied: true });
+  }
+
+  const userId = parseUserId(text);
+
+  if (!userId) {
+    await replyToBotMessage(
+      env,
+      message,
+      "Формат: /adduser 123456789 — числовой Telegram ID. Узнать свой ID можно командой /whoami.",
+    );
+    return jsonResponse({ ok: true, command: "adduser", error: "missing_id" });
+  }
+
+  if (getEnvAdminIds(env).includes(userId)) {
+    await replyToBotMessage(env, message, `Пользователь ${userId} уже администратор (задан в настройках).`);
+    return jsonResponse({ ok: true, command: "adduser", already: true });
+  }
+
+  const ids = await getDynamicAdminIds(env);
+
+  if (ids.includes(userId)) {
+    await replyToBotMessage(env, message, `Пользователь ${userId} уже в списке администраторов.`);
+    return jsonResponse({ ok: true, command: "adduser", already: true });
+  }
+
+  ids.push(userId);
+  await env.POSTS_KV.put(ADMINS_KEY, JSON.stringify(ids));
+  await replyToBotMessage(env, message, `Пользователь ${userId} добавлен в администраторы.`);
+
+  return jsonResponse({ ok: true, command: "adduser", added: userId });
+}
+
+async function handleRemoveUserCommand(message, env, text) {
+  if (!(await isAdminMessage(message, env))) {
+    await replyToBotMessage(env, message, "Команда доступна только администраторам.");
+    return jsonResponse({ ok: true, command: "removeuser", denied: true });
+  }
+
+  const userId = parseUserId(text);
+
+  if (!userId) {
+    await replyToBotMessage(env, message, "Формат: /removeuser 123456789 — числовой Telegram ID.");
+    return jsonResponse({ ok: true, command: "removeuser", error: "missing_id" });
+  }
+
+  if (getEnvAdminIds(env).includes(userId)) {
+    await replyToBotMessage(
+      env,
+      message,
+      `Пользователь ${userId} задан в настройках окружения — убрать его можно только там.`,
+    );
+    return jsonResponse({ ok: true, command: "removeuser", protected: true });
+  }
+
+  const ids = await getDynamicAdminIds(env);
+
+  if (!ids.includes(userId)) {
+    await replyToBotMessage(env, message, `Пользователь ${userId} не найден в списке администраторов.`);
+    return jsonResponse({ ok: true, command: "removeuser", missing: true });
+  }
+
+  const nextIds = ids.filter((id) => id !== userId);
+  await env.POSTS_KV.put(ADMINS_KEY, JSON.stringify(nextIds));
+  await replyToBotMessage(env, message, `Пользователь ${userId} удалён из администраторов.`);
+
+  return jsonResponse({ ok: true, command: "removeuser", removed: userId });
+}
+
+async function handleListUsersCommand(message, env) {
+  if (!(await isAdminMessage(message, env))) {
+    await replyToBotMessage(env, message, "Команда доступна только администраторам.");
+    return jsonResponse({ ok: true, command: "users", denied: true });
+  }
+
+  const envIds = getEnvAdminIds(env);
+  const dynamicIds = await getDynamicAdminIds(env);
+
+  await replyToBotMessage(
+    env,
+    message,
+    [
+      "Администраторы ленты:",
+      `Из настроек: ${envIds.length ? envIds.join(", ") : "нет"}`,
+      `Добавленные: ${dynamicIds.length ? dynamicIds.join(", ") : "нет"}`,
+    ].join("\n"),
+  );
+
+  return jsonResponse({ ok: true, command: "users" });
+}
+
+function parseUserId(text) {
+  const match = String(text).match(/(?:^|\s)(\d{4,})\b/);
+
+  return match ? match[1] : "";
 }
 
 function isValidTelegramSecret(request, env) {
@@ -682,17 +798,33 @@ function isCommand(text, command) {
   return new RegExp(`^/${command}(?:@\\w+)?(?:\\s|$)`, "i").test(text);
 }
 
-function isAdminMessage(message, env) {
-  const adminIds = String(env.TELEGRAM_ADMIN_IDS || "")
+function getEnvAdminIds(env) {
+  return String(env.TELEGRAM_ADMIN_IDS || "")
     .split(",")
     .map((id) => id.trim())
     .filter(Boolean);
+}
 
-  if (!adminIds.length) {
+async function getDynamicAdminIds(env) {
+  const ids = await env.POSTS_KV.get(ADMINS_KEY, { type: "json" });
+
+  return Array.isArray(ids) ? ids.map((id) => String(id)) : [];
+}
+
+async function isAdminMessage(message, env) {
+  const userId = String(message.from?.id || "");
+
+  if (!userId) {
     return false;
   }
 
-  return adminIds.includes(String(message.from?.id || ""));
+  if (getEnvAdminIds(env).includes(userId)) {
+    return true;
+  }
+
+  const dynamicIds = await getDynamicAdminIds(env);
+
+  return dynamicIds.includes(userId);
 }
 
 function parseDeleteTarget(text, command = "delete") {

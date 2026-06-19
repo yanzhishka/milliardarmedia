@@ -565,16 +565,18 @@ main {
   background: var(--paper-2);
 }
 
-/* 3D tilt (parallax tablets) */
-.tilt {
-  transform: perspective(900px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
-  transform-style: preserve-3d;
-  transition: transform 240ms var(--ease), box-shadow 280ms var(--ease);
-  will-change: transform;
+.feed-card {
+  transition: box-shadow 260ms var(--ease), transform 260ms var(--ease);
 }
 
 .feed-card:hover {
+  transform: translateY(-3px);
   box-shadow: 0 16px 38px rgba(0, 0, 0, 0.14);
+}
+
+/* feed image is a link to the full material */
+.feed-media a {
+  display: block;
 }
 
 .feed-media {
@@ -674,6 +676,85 @@ main {
   display: flex;
   justify-content: center;
   margin-top: 26px;
+}
+
+/* ============================================================
+   FRONT PAGE — headline list + section promos (home only)
+   ============================================================ */
+.front-headlines {
+  border-top: 3px solid var(--rule);
+}
+
+.front-headline {
+  display: grid;
+  gap: 5px;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.front-headline time {
+  font-family: var(--sans);
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.front-headline h3 {
+  font-size: clamp(1.15rem, 2vw, 1.55rem);
+  line-height: 1.22;
+}
+
+a.front-headline:hover h3 {
+  color: var(--accent-strong);
+}
+
+.front-promos {
+  width: min(calc(100% - 48px), var(--wide));
+  margin: 8px auto 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: clamp(16px, 2.4vw, 28px);
+}
+
+.promo {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: clamp(22px, 3vw, 34px);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--paper-2);
+  transition: box-shadow 260ms var(--ease), transform 260ms var(--ease);
+}
+
+.promo:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow);
+}
+
+.promo span {
+  font-family: var(--sans);
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.promo h2 {
+  font-size: clamp(1.4rem, 2.4vw, 2rem);
+}
+
+.promo p {
+  font-family: var(--serif);
+  color: var(--text);
+}
+
+@media (max-width: 700px) {
+  .front-promos {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* ============================================================
@@ -853,6 +934,14 @@ main {
 
 .post-media img {
   width: 100%;
+  height: auto;
+  border-radius: 3px;
+}
+
+.post-gallery img {
+  aspect-ratio: 3 / 2;
+  object-fit: cover;
+  border-radius: 3px;
 }
 
 .post-gallery {
@@ -949,8 +1038,8 @@ main {
 }
 
 .portrait-shell {
-  width: 60px;
-  height: 74px;
+  width: clamp(88px, 12vw, 120px);
+  height: clamp(112px, 15vw, 150px);
   overflow: hidden;
   background: var(--paper-2);
 }

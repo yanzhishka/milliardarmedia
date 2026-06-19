@@ -1,6 +1,6 @@
 const POSTS_KEY = "telegram_posts";
 const DEFAULT_FEED_RESET_AT = 1779913144;
-const ASSET_VERSION = "20260615-nyt3";
+const ASSET_VERSION = "20260619-nyt4";
 
 export async function onRequestGet({ params, request, env }) {
   const origin = new URL(request.url).origin;
@@ -131,16 +131,20 @@ function renderPost(post, images, origin, optimize) {
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <script>(function(){try{var t=localStorage.getItem("theme")||"light";document.documentElement.dataset.theme=t;}catch(e){document.documentElement.dataset.theme="light";}})();</script>
+    <script>(function(){try{var t=localStorage.getItem("theme")||(window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");document.documentElement.dataset.theme=t;}catch(e){document.documentElement.dataset.theme="light";}})();</script>
     <title>${escapeHtml(title)}</title>
     <meta name="description" content="${escapeAttr(description)}" />
     <link rel="canonical" href="${escapeAttr(canonical)}" />
+    <link rel="alternate" hreflang="ru" href="${escapeAttr(canonical)}" />
+    <link rel="alternate" hreflang="x-default" href="${escapeAttr(canonical)}" />
     <meta property="og:type" content="article" />
     <meta property="og:site_name" content="Миллиардар" />
     <meta property="og:title" content="${escapeAttr(firstLine)}" />
     <meta property="og:description" content="${escapeAttr(description)}" />
     <meta property="og:url" content="${escapeAttr(canonical)}" />
     <meta property="og:image" content="${escapeAttr(ogImage)}" />
+    <meta property="og:locale" content="ru_RU" />
+    <meta property="og:locale:alternate" content="en_US" />
     ${images[0]?.width ? `<meta property="og:image:width" content="${Number(images[0].width)}" />` : ""}
     ${images[0]?.height ? `<meta property="og:image:height" content="${Number(images[0].height)}" />` : ""}
     ${dateIso ? `<meta property="article:published_time" content="${dateIso}" />` : ""}
@@ -148,6 +152,23 @@ function renderPost(post, images, origin, optimize) {
     <meta name="twitter:title" content="${escapeAttr(firstLine)}" />
     <meta name="twitter:description" content="${escapeAttr(description)}" />
     <meta name="twitter:image" content="${escapeAttr(ogImage)}" />
+    <script type="application/ld+json">${JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "NewsArticle",
+      headline: firstLine,
+      description,
+      image: [ogImage],
+      datePublished: dateIso || undefined,
+      dateModified: dateIso || undefined,
+      mainEntityOfPage: canonical,
+      inLanguage: "ru",
+      author: { "@type": "Organization", name: "Миллиардар", url: origin },
+      publisher: {
+        "@type": "Organization",
+        name: "Миллиардар",
+        logo: { "@type": "ImageObject", url: origin + "/assets/logo-generated-full.png" },
+      },
+    }).replace(/</g, "\\u003c")}</script>
     <link rel="icon" href="/assets/logo-favicon.png?v=20260529-logo" type="image/png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -214,7 +235,7 @@ function renderNotFound(origin) {
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <script>(function(){try{var t=localStorage.getItem("theme")||"light";document.documentElement.dataset.theme=t;}catch(e){document.documentElement.dataset.theme="light";}})();</script>
+    <script>(function(){try{var t=localStorage.getItem("theme")||(window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");document.documentElement.dataset.theme=t;}catch(e){document.documentElement.dataset.theme="light";}})();</script>
     <title>Публикация не найдена — Миллиардар</title>
     <meta name="robots" content="noindex" />
     <link rel="icon" href="/assets/logo-favicon.png?v=20260529-logo" type="image/png" />

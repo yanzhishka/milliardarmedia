@@ -26,6 +26,8 @@ function initThemeToggle() {
     return;
   }
 
+  toggle.setAttribute("aria-pressed", String(document.documentElement.dataset.theme === "dark"));
+
   toggle.addEventListener("click", () => {
     const next = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
 
