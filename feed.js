@@ -34,8 +34,6 @@ const STR = {
     imageAlt: "Изображение из Telegram",
     photoInTg: "Фото в Telegram",
     mediaInTg: "Медиа в Telegram",
-    tagResults: (label, n) => `Рубрика «${label}»: ${n}.`,
-    noTagResults: (label) => `В рубрике «${label}» пока пусто.`,
   },
   en: {
     loading: "Loading the feed…",
@@ -60,16 +58,16 @@ const STR = {
     imageAlt: "Image from Telegram",
     photoInTg: "Photo in Telegram",
     mediaInTg: "Media in Telegram",
-    tagResults: (label, n) => `Section “${label}”: ${n}.`,
-    noTagResults: (label) => `Nothing in “${label}” yet.`,
   },
 }[LANG];
 let lastFeedSignature = "";
 let allPosts = [];
 let visibleCount = FEED_PAGE_SIZE;
 let searchQuery = (new URLSearchParams(window.location.search).get("q") || "").trim();
-let activeTag = "";
-let activeLabel = "";
+
+// Rubric tags that belong to the "Выпуски" section — these posts are hidden
+// from the feed. Keep in sync with the filter chips on the Выпуски page.
+const EPISODE_TAGS = ["#репортажир"];
 
 initFeed();
 
@@ -79,7 +77,6 @@ async function initFeed() {
   }
 
   initFeedSearch();
-  initFeedFilter();
 
   if (readCachedPosts().length) {
     renderCachedFeed();
@@ -211,7 +208,8 @@ function renderFeed(posts, statusText = "") {
     return;
   }
 
-  feedStatus.textContent = statusText || STR.total(posts.length);
+  allPosts = posts;
+  feedStatus.textContent = statusText || STR.total(getDisplayPosts().length);
 
   const signature = posts.map((post) => `${post.id || ""}:${post.date || ""}:${post.editedDate || ""}`).join("|");
 
@@ -220,19 +218,19 @@ function renderFeed(posts, statusText = "") {
   }
 
   lastFeedSignature = signature;
-  allPosts = posts;
   visibleCount = Math.max(visibleCount, FEED_PAGE_SIZE);
   paintFeed();
 }
 
+function isEpisodePost(post) {
+  const text = `${post.text || post.caption || ""}`.toLowerCase();
+
+  return EPISODE_TAGS.some((tag) => text.includes(tag));
+}
+
 function getDisplayPosts() {
-  let posts = allPosts;
-
-  if (activeTag) {
-    const tag = activeTag.toLowerCase();
-
-    posts = posts.filter((post) => `${post.text || post.caption || ""}`.toLowerCase().includes(tag));
-  }
+  // Hide posts that belong to the "Выпуски" section (carry a rubric tag).
+  let posts = allPosts.filter((post) => !isEpisodePost(post));
 
   if (searchQuery) {
     const query = searchQuery.toLowerCase();
@@ -245,25 +243,20 @@ function getDisplayPosts() {
 
 function paintFeed() {
   const display = getDisplayPosts();
-  const filtering = Boolean(searchQuery || activeTag);
 
-  if (filtering && !display.length) {
+  if (searchQuery && !display.length) {
     clearFeatured();
-    feedStatus.textContent = searchQuery
-      ? STR.noResults(searchQuery)
-      : STR.noTagResults(activeLabel);
+    feedStatus.textContent = STR.noResults(searchQuery);
     feedList.replaceChildren(createNoResults());
     return;
   }
 
   feedStatus.textContent = searchQuery
     ? STR.results(searchQuery, display.length)
-    : activeTag
-      ? STR.tagResults(activeLabel, display.length)
-      : STR.total(allPosts.length);
+    : STR.total(display.length);
 
-  // featured lead (skip while searching or filtering by rubric)
-  const featured = !filtering && featuredSlot ? display[0] : null;
+  // featured lead (skip while searching)
+  const featured = !searchQuery && featuredSlot ? display[0] : null;
   const rest = featured ? display.slice(1) : display;
 
   if (featuredSlot) {
@@ -428,29 +421,6 @@ function initFeedSearch() {
     if (allPosts.length) {
       paintFeed();
     }
-  });
-}
-
-function initFeedFilter() {
-  const bar = document.querySelector("[data-feed-filter]");
-
-  if (!bar) {
-    return;
-  }
-
-  const chips = [...bar.querySelectorAll(".filter-chip")];
-
-  chips.forEach((chip) => {
-    chip.addEventListener("click", () => {
-      activeTag = chip.dataset.tag || "";
-      activeLabel = chip.textContent.trim();
-      visibleCount = FEED_PAGE_SIZE;
-      chips.forEach((other) => other.classList.toggle("is-active", other === chip));
-
-      if (allPosts.length) {
-        paintFeed();
-      }
-    });
   });
 }
 
