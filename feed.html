@@ -39,7 +39,7 @@
       href="https://fonts.googleapis.com/css2?family=PT+Serif:ital,wght@0,400;0,700;1,400;1,700&family=PT+Sans:ital,wght@0,400;0,700;1,400;1,700&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="/styles.css?v=20260620-nyt6" />
+    <link rel="stylesheet" href="/styles.css?v=20260620-nyt7" />
   </head>
   <body class="feed-page">
     <header class="site-header">
@@ -68,7 +68,7 @@
 
       <nav class="site-nav" aria-label="Разделы">
         <a href="/feed" aria-current="page">Лента</a>
-        <a href="/podcasts">Подкасты</a>
+        <a href="/podcasts">Выпуски</a>
         <a href="/about">О нас</a>
       </nav>
     </header>
@@ -88,6 +88,11 @@
           <p class="section-kicker">Публикации</p>
           <h2 id="feed-list-title">Все материалы</h2>
           <p class="feed-status" data-feed-status role="status" aria-live="polite">Подключаем редакционную ленту.</p>
+        </div>
+
+        <div class="filter-bar" role="group" aria-label="Фильтр ленты" data-feed-filter>
+          <button type="button" class="filter-chip is-active" data-tag="">Все</button>
+          <button type="button" class="filter-chip" data-tag="#РепортаЖИР">РепортаЖИР</button>
         </div>
 
         <div class="feed-actions">
@@ -114,14 +119,14 @@
       </div>
       <nav aria-label="Навигация в подвале">
         <a href="/">Главная</a>
-        <a href="/podcasts">Подкасты</a>
+        <a href="/podcasts">Выпуски</a>
         <a href="/about">О нас</a>
       </nav>
       <a href="#top">Наверх</a>
     </footer>
 
-    <script src="/motion.js?v=20260620-nyt6"></script>
-    <script src="/navigation.js?v=20260620-nyt6"></script>
-    <script src="/feed.js?v=20260620-nyt6"></script>
+    <script src="/motion.js?v=20260620-nyt7"></script>
+    <script src="/navigation.js?v=20260620-nyt7"></script>
+    <script src="/feed.js?v=20260620-nyt7"></script>
   </body>
 </html>

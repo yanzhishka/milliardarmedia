@@ -6,9 +6,11 @@ const DATE_LOCALE = LANG === "en" ? "en-GB" : "ru-RU";
 const STR = {
   ru: {
     loading: "Загружаем выпуски…",
-    notConnected: "Подкасты появятся после подключения Telegram-бота.",
+    notConnected: "Выпуски появятся после подключения Telegram-бота.",
     noneYet: "Пока нет выпусков.",
     total: (n) => `Всего ${n} выпусков.`,
+    tagResults: (label, n) => `Рубрика «${label}»: ${n}.`,
+    noTagResults: (label) => `В рубрике «${label}» пока пусто.`,
     defaultTitle: "Недельный выпуск",
     noDescription: "Выпуск без описания.",
     videoMissing: "Видео пока не загружено.",
@@ -18,9 +20,11 @@ const STR = {
   },
   en: {
     loading: "Loading episodes…",
-    notConnected: "Podcasts will appear once the Telegram bot is connected.",
+    notConnected: "Episodes will appear once the Telegram bot is connected.",
     noneYet: "No episodes yet.",
     total: (n) => `${n} episodes in total.`,
+    tagResults: (label, n) => `Section “${label}”: ${n}.`,
+    noTagResults: (label) => `Nothing in “${label}” yet.`,
     defaultTitle: "Weekly episode",
     noDescription: "Episode without a description.",
     videoMissing: "Video not uploaded yet.",
@@ -30,6 +34,9 @@ const STR = {
   },
 }[LANG];
 let lastPodcastSignature = "";
+let allPodcasts = [];
+let activeTag = "";
+let activeLabel = "";
 
 initPodcasts();
 
@@ -38,10 +45,31 @@ async function initPodcasts() {
     return;
   }
 
+  initPodcastFilter();
   renderPodcastSkeletons();
   podcastStatus.textContent = STR.loading;
   await loadPodcasts();
   window.setInterval(loadPodcasts, PODCAST_REFRESH_INTERVAL);
+}
+
+function initPodcastFilter() {
+  const bar = document.querySelector("[data-podcast-filter]");
+
+  if (!bar) {
+    return;
+  }
+
+  const chips = [...bar.querySelectorAll(".filter-chip")];
+
+  chips.forEach((chip) => {
+    chip.addEventListener("click", () => {
+      activeTag = chip.dataset.tag || "";
+      activeLabel = chip.textContent.trim();
+      lastPodcastSignature = "";
+      chips.forEach((other) => other.classList.toggle("is-active", other === chip));
+      renderPodcasts();
+    });
+  });
 }
 
 function renderPodcastSkeletons(count = 2) {
@@ -83,17 +111,33 @@ async function loadPodcasts() {
     }
 
     const data = await response.json();
-    const podcasts = Array.isArray(data.podcasts) ? data.podcasts : [];
 
-    renderPodcasts(podcasts);
+    allPodcasts = Array.isArray(data.podcasts) ? data.podcasts : [];
+    renderPodcasts();
   } catch (error) {
-    renderPodcasts([], STR.notConnected);
+    allPodcasts = [];
+    renderPodcasts(STR.notConnected);
   }
 }
 
-function renderPodcasts(podcasts, emptyStatus = STR.noneYet) {
+function getDisplayPodcasts() {
+  if (!activeTag) {
+    return allPodcasts;
+  }
+
+  const tag = activeTag.toLowerCase();
+
+  return allPodcasts.filter((podcast) =>
+    `${podcast.title || ""} ${podcast.description || ""} ${podcast.text || ""}`.toLowerCase().includes(tag),
+  );
+}
+
+function renderPodcasts(emptyStatus = "") {
+  const podcasts = getDisplayPodcasts();
+
   if (!podcasts.length) {
-    podcastStatus.textContent = emptyStatus;
+    podcastStatus.textContent =
+      emptyStatus || (activeTag ? STR.noTagResults(activeLabel) : STR.noneYet);
 
     if (lastPodcastSignature !== "empty") {
       lastPodcastSignature = "empty";
@@ -103,9 +147,12 @@ function renderPodcasts(podcasts, emptyStatus = STR.noneYet) {
     return;
   }
 
-  podcastStatus.textContent = STR.total(podcasts.length);
+  podcastStatus.textContent = activeTag
+    ? STR.tagResults(activeLabel, podcasts.length)
+    : STR.total(podcasts.length);
 
-  const signature = podcasts.map((podcast) => `${podcast.id || ""}:${podcast.videoUrl || ""}`).join("|");
+  const signature =
+    `${activeTag}|` + podcasts.map((podcast) => `${podcast.id || ""}:${podcast.videoUrl || ""}`).join("|");
 
   if (signature === lastPodcastSignature) {
     return;
