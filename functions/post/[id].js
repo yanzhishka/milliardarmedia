@@ -169,7 +169,7 @@ function renderPost(post, images, origin, optimize) {
         logo: { "@type": "ImageObject", url: origin + "/assets/logo-generated-full.png" },
       },
     }).replace(/</g, "\\u003c")}</script>
-    <link rel="icon" href="/assets/logo-favicon.png?v=20260529-logo" type="image/png" />
+    <link rel="icon" href="/assets/logo-favicon.png?v=20260620-tab" type="image/png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=PT+Serif:ital,wght@0,400;0,700;1,400;1,700&family=PT+Sans:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet" />
@@ -238,7 +238,7 @@ function renderNotFound(origin) {
     <script>(function(){try{var t=localStorage.getItem("theme")||(window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");document.documentElement.dataset.theme=t;}catch(e){document.documentElement.dataset.theme="light";}})();</script>
     <title>Публикация не найдена — Миллиардар</title>
     <meta name="robots" content="noindex" />
-    <link rel="icon" href="/assets/logo-favicon.png?v=20260529-logo" type="image/png" />
+    <link rel="icon" href="/assets/logo-favicon.png?v=20260620-tab" type="image/png" />
     <link href="https://fonts.googleapis.com/css2?family=PT+Serif:ital,wght@0,400;0,700;1,400;1,700&family=PT+Sans:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="/styles.css?v=${ASSET_VERSION}" />
   </head>
