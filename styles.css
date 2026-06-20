@@ -709,54 +709,6 @@ a.front-headline:hover h3 {
   color: var(--accent-strong);
 }
 
-.front-promos {
-  width: min(calc(100% - 48px), var(--wide));
-  margin: 8px auto 0;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: clamp(16px, 2.4vw, 28px);
-}
-
-.promo {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: clamp(22px, 3vw, 34px);
-  border: 1px solid var(--line);
-  border-radius: 6px;
-  background: var(--paper-2);
-  transition: box-shadow 260ms var(--ease), transform 260ms var(--ease);
-}
-
-.promo:hover {
-  transform: translateY(-3px);
-  box-shadow: var(--shadow);
-}
-
-.promo span {
-  font-family: var(--sans);
-  font-size: 0.74rem;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--accent);
-}
-
-.promo h2 {
-  font-size: clamp(1.4rem, 2.4vw, 2rem);
-}
-
-.promo p {
-  font-family: var(--serif);
-  color: var(--text);
-}
-
-@media (max-width: 700px) {
-  .front-promos {
-    grid-template-columns: 1fr;
-  }
-}
-
 /* language switcher in the masthead */
 .lang-switch {
   align-self: center;
