@@ -12,6 +12,11 @@ export async function onRequestGet({ request, env }) {
     { loc: `${origin}/`, priority: "1.0" },
     { loc: `${origin}/feed`, priority: "0.9" },
     { loc: `${origin}/podcasts`, priority: "0.8" },
+    { loc: `${origin}/about`, priority: "0.6" },
+    { loc: `${origin}/en/`, priority: "0.7" },
+    { loc: `${origin}/en/feed`, priority: "0.7" },
+    { loc: `${origin}/en/podcasts`, priority: "0.6" },
+    { loc: `${origin}/en/about`, priority: "0.5" },
   ];
 
   posts

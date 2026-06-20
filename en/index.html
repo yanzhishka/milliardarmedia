@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script>
+      (function () {
+        try {
+          var t = localStorage.getItem("theme") || (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+          document.documentElement.dataset.theme = t;
+        } catch (e) {
+          document.documentElement.dataset.theme = "light";
+        }
+      })();
+    </script>
+    <meta name="description" content="Milliardar — a journalism agency: a feed of posts, weekly podcasts and stories from our Telegram channel, in one stream." />
+    <title>Milliardar — journalism agency</title>
+    <link rel="icon" href="/assets/logo-favicon.png?v=20260529-logo" type="image/png" />
+    <link rel="canonical" href="https://milliardarmedia.ru/en/" />
+    <link rel="alternate" hreflang="en" href="https://milliardarmedia.ru/en/" />
+    <link rel="alternate" hreflang="ru" href="https://milliardarmedia.ru/" />
+    <link rel="alternate" hreflang="x-default" href="https://milliardarmedia.ru/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Milliardar" />
+    <meta property="og:title" content="Milliardar — journalism agency" />
+    <meta property="og:description" content="A feed of posts, weekly podcasts and stories from the Milliardar Telegram channel, in one stream." />
+    <meta property="og:url" content="https://milliardarmedia.ru/en/" />
+    <meta property="og:image" content="https://milliardarmedia.ru/assets/logo-generated-full.png" />
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:locale:alternate" content="ru_RU" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Milliardar — journalism agency" />
+    <meta name="twitter:description" content="A feed of posts, weekly podcasts and stories from the Milliardar Telegram channel." />
+    <meta name="twitter:image" content="https://milliardarmedia.ru/assets/logo-generated-full.png" />
+    <link rel="alternate" type="application/rss+xml" title="Milliardar — feed" href="/rss.xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=PT+Serif:ital,wght@0,400;0,700;1,400;1,700&family=PT+Sans:ital,wght@0,400;0,700;1,400;1,700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/styles.css?v=20260619-nyt5" />
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "NewsMediaOrganization",
+            "@id": "https://milliardarmedia.ru/#organization",
+            "name": "Milliardar",
+            "alternateName": "Миллиардар",
+            "url": "https://milliardarmedia.ru/",
+            "logo": "https://milliardarmedia.ru/assets/logo-generated-full.png",
+            "sameAs": ["https://t.me/milliardarmedia"]
+          },
+          {
+            "@type": "WebSite",
+            "@id": "https://milliardarmedia.ru/#website",
+            "url": "https://milliardarmedia.ru/",
+            "name": "Milliardar",
+            "inLanguage": ["ru", "en"],
+            "publisher": { "@id": "https://milliardarmedia.ru/#organization" },
+            "potentialAction": {
+              "@type": "SearchAction",
+              "target": "https://milliardarmedia.ru/en/feed?q={search_term_string}",
+              "query-input": "required name=search_term_string"
+            }
+          }
+        ]
+      }
+    </script>
+  </head>
+  <body class="home-page">
+    <header class="site-header">
+      <div class="masthead-top">
+        <span class="masthead-date" data-date></span>
+        <div class="masthead-tools">
+          <form class="nav-search" role="search" action="/en/feed" method="get" data-feed-search>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="11" cy="11" r="7" /><path d="m21 21-4.3-4.3" />
+            </svg>
+            <label class="visually-hidden" for="home-search-input">Search the feed</label>
+            <input id="home-search-input" name="q" type="search" autocomplete="off" placeholder="Search" />
+          </form>
+          <a class="header-cta" href="/en/about#contact-form">Pitch a story</a>
+          <a class="lang-switch" href="/" hreflang="ru" aria-label="На русском">RU</a>
+          <button class="theme-toggle" type="button" data-theme-toggle aria-label="Toggle theme" aria-pressed="false">
+            <svg class="icon-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8Z" /></svg>
+            <svg class="icon-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M4 12H2M22 12h-2M5 5l1.5 1.5M17.5 17.5 19 19M19 5l-1.5 1.5M6.5 17.5 5 19" /></svg>
+          </button>
+        </div>
+      </div>
+
+      <a class="brand" href="/en/" aria-label="Milliardar - home">
+        <span class="brand-name">Milliardar</span>
+      </a>
+
+      <nav class="site-nav" aria-label="Sections">
+        <a href="/en/feed">Feed</a>
+        <a href="/en/podcasts">Podcasts</a>
+        <a href="/en/about">About</a>
+      </nav>
+    </header>
+
+    <main id="top">
+      <section class="archive-section" aria-labelledby="feed-list-title">
+        <div class="archive-head">
+          <p class="section-kicker">Live feed</p>
+          <h2 id="feed-list-title">Latest</h2>
+          <p class="feed-status" data-feed-status role="status" aria-live="polite">Loading the feed…</p>
+        </div>
+
+        <div class="lead-cover-slot" data-featured hidden></div>
+
+        <div class="feed-panel-list" data-feed-list>
+          <article class="feed-empty">
+            <span>00</span>
+            <h3>No posts yet.</h3>
+            <p>New posts from Telegram will appear here.</p>
+          </article>
+        </div>
+
+        <div class="front-more">
+          <a class="button button-glass" href="/en/feed">Open the full feed</a>
+        </div>
+      </section>
+
+      <section class="front-promos" aria-label="Sections">
+        <a class="promo" href="/en/podcasts">
+          <span>Podcasts</span>
+          <h2>Weekly episodes</h2>
+          <p>Editorial conversations, interviews and a look at the week's topics — a new episode every week.</p>
+        </a>
+        <a class="promo" href="/en/about">
+          <span>About</span>
+          <h2>Team and contacts</h2>
+          <p>Who makes Milliardar, how we work, and how to pitch a story or a project.</p>
+        </a>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <strong>Milliardar</strong>
+        <span>Journalism agency</span>
+      </div>
+      <nav aria-label="Footer navigation">
+        <a href="/en/feed">Feed</a>
+        <a href="/en/podcasts">Podcasts</a>
+        <a href="/en/about">About</a>
+      </nav>
+      <a href="#top">Top</a>
+    </footer>
+
+    <script src="/motion.js?v=20260619-nyt5"></script>
+    <script src="/navigation.js?v=20260619-nyt5"></script>
+    <script src="/feed.js?v=20260619-nyt5"></script>
+  </body>
+</html>

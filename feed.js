@@ -8,6 +8,58 @@ const HOME_LIMIT = 6;
 const feedSearchInput = document.querySelector("[data-feed-search] input");
 const featuredSlot = document.querySelector("[data-featured]");
 const isHome = document.body.classList.contains("home-page");
+const LANG = (document.documentElement.lang || "ru").slice(0, 2) === "en" ? "en" : "ru";
+const DATE_LOCALE = LANG === "en" ? "en-GB" : "ru-RU";
+const STR = {
+  ru: {
+    loading: "Загружаем ленту…",
+    cachedRetry: "Показываем последние загруженные публикации. Обновление ещё пробует подключиться.",
+    slow: "Лента подключается дольше обычного. Попробуйте обновить страницу через несколько секунд.",
+    cachedUpdating: "Показываем последние загруженные публикации. Обновляем ленту...",
+    waitingFirst: "Ждём первые публикации из Telegram.",
+    total: (n) => `Всего ${n} публикаций из Telegram.`,
+    noResults: (q) => `По запросу «${q}» ничего не найдено.`,
+    results: (q, n) => `Результаты по запросу «${q}»: ${n}.`,
+    leadKicker: "Главный материал",
+    read: "Читать материал",
+    openTelegram: "Открыть в Telegram",
+    showMore: (n) => `Показать ещё (${n})`,
+    notFoundTitle: "Ничего не найдено.",
+    notFoundText: "Попробуйте другой запрос или откройте всю ленту.",
+    openMaterial: "Открыть материал",
+    emptyTitle: "Пока без публикаций.",
+    emptyText: "Когда в Telegram появятся новые записи, они соберутся здесь.",
+    photoFromTg: "Фото из Telegram.",
+    noText: "Публикация без текста.",
+    imageAlt: "Изображение из Telegram",
+    photoInTg: "Фото в Telegram",
+    mediaInTg: "Медиа в Telegram",
+  },
+  en: {
+    loading: "Loading the feed…",
+    cachedRetry: "Showing the latest loaded posts. Still trying to refresh.",
+    slow: "The feed is taking longer than usual. Try refreshing in a few seconds.",
+    cachedUpdating: "Showing the latest loaded posts. Refreshing…",
+    waitingFirst: "Waiting for the first posts from Telegram.",
+    total: (n) => `${n} posts from Telegram.`,
+    noResults: (q) => `Nothing found for “${q}”.`,
+    results: (q, n) => `Results for “${q}”: ${n}.`,
+    leadKicker: "Top story",
+    read: "Read the story",
+    openTelegram: "Open in Telegram",
+    showMore: (n) => `Show more (${n})`,
+    notFoundTitle: "Nothing found.",
+    notFoundText: "Try another query or open the full feed.",
+    openMaterial: "Open the story",
+    emptyTitle: "No posts yet.",
+    emptyText: "New posts from Telegram will appear here.",
+    photoFromTg: "Photo from Telegram.",
+    noText: "Post without text.",
+    imageAlt: "Image from Telegram",
+    photoInTg: "Photo in Telegram",
+    mediaInTg: "Media in Telegram",
+  },
+}[LANG];
 let lastFeedSignature = "";
 let allPosts = [];
 let visibleCount = FEED_PAGE_SIZE;
@@ -26,7 +78,7 @@ async function initFeed() {
     renderCachedFeed();
   } else {
     renderFeedSkeletons();
-    feedStatus.textContent = "Загружаем ленту…";
+    feedStatus.textContent = STR.loading;
   }
 
   await loadFeed();
@@ -82,11 +134,11 @@ async function loadFeed() {
     saveCachedPosts(posts);
   } catch (error) {
     if (feedList.querySelector(".feed-card:not(.skeleton)")) {
-      feedStatus.textContent = "Показываем последние загруженные публикации. Обновление ещё пробует подключиться.";
+      feedStatus.textContent = STR.cachedRetry;
       return;
     }
 
-    renderFeed([], "Лента подключается дольше обычного. Попробуйте обновить страницу через несколько секунд.");
+    renderFeed([], STR.slow);
   } finally {
     window.clearTimeout(timeoutId);
   }
@@ -99,12 +151,12 @@ function renderCachedFeed() {
     return;
   }
 
-  renderFeed(cachedPosts, "Показываем последние загруженные публикации. Обновляем ленту...");
+  renderFeed(cachedPosts, STR.cachedUpdating);
 }
 
 function renderFeed(posts, statusText = "") {
   if (!posts.length) {
-    feedStatus.textContent = statusText || "Ждём первые публикации из Telegram.";
+    feedStatus.textContent = statusText || STR.waitingFirst;
 
     if (lastFeedSignature !== "empty") {
       lastFeedSignature = "empty";
@@ -114,7 +166,7 @@ function renderFeed(posts, statusText = "") {
     return;
   }
 
-  feedStatus.textContent = statusText || `Всего ${posts.length} публикаций из Telegram.`;
+  feedStatus.textContent = statusText || STR.total(posts.length);
 
   const signature = posts.map((post) => `${post.id || ""}:${post.date || ""}:${post.editedDate || ""}`).join("|");
 
@@ -143,14 +195,14 @@ function paintFeed() {
 
   if (searchQuery && !display.length) {
     clearFeatured();
-    feedStatus.textContent = `По запросу «${searchQuery}» ничего не найдено.`;
+    feedStatus.textContent = STR.noResults(searchQuery);
     feedList.replaceChildren(createNoResults());
     return;
   }
 
   feedStatus.textContent = searchQuery
-    ? `Результаты по запросу «${searchQuery}»: ${display.length}.`
-    : `Всего ${allPosts.length} публикаций из Telegram.`;
+    ? STR.results(searchQuery, display.length)
+    : STR.total(allPosts.length);
 
   // featured lead (skip while searching)
   const featured = !searchQuery && featuredSlot ? display[0] : null;
@@ -220,7 +272,7 @@ function buildFeatured(post) {
     const image = document.createElement("img");
 
     image.src = images[0].url;
-    image.alt = text ? text.slice(0, 90) : "Главный материал";
+    image.alt = text ? text.slice(0, 90) : STR.leadKicker;
     image.loading = "eager";
     image.decoding = "async";
     cover.append(image);
@@ -230,7 +282,7 @@ function buildFeatured(post) {
 
   body.className = "lead-body";
   kicker.className = "lead-kicker";
-  kicker.textContent = "Главный материал";
+  kicker.textContent = STR.leadKicker;
   title.textContent = text.length > 110 ? `${text.slice(0, 110).trim()}…` : text;
   body.append(kicker);
 
@@ -244,7 +296,7 @@ function buildFeatured(post) {
 
   const arrow = document.createElement("span");
   arrow.className = "tile-arrow";
-  arrow.textContent = "Читать материал";
+  arrow.textContent = STR.read;
   body.append(title, arrow);
   cover.append(body);
 
@@ -258,7 +310,7 @@ function buildLoadMore(remaining) {
   wrap.className = "feed-more";
   button.type = "button";
   button.className = "button button-glass";
-  button.textContent = `Показать ещё (${remaining})`;
+  button.textContent = STR.showMore(remaining);
   button.addEventListener("click", () => {
     visibleCount += FEED_PAGE_SIZE;
     paintFeed();
@@ -277,8 +329,8 @@ function createNoResults() {
 
   empty.className = "feed-empty";
   number.textContent = "00";
-  title.textContent = "Ничего не найдено.";
-  text.textContent = "Попробуйте другой запрос или откройте всю ленту.";
+  title.textContent = STR.notFoundTitle;
+  text.textContent = STR.notFoundText;
   empty.append(number, title, text);
 
   return empty;
@@ -378,12 +430,12 @@ function createFeedCard(post, index = 0) {
 
   if (post.messageId) {
     link.href = `/post/${post.messageId}`;
-    link.textContent = "Читать материал";
+    link.textContent = STR.read;
   } else {
     link.href = post.link || "https://t.me/milliardarmedia";
     link.target = "_blank";
     link.rel = "noopener";
-    link.textContent = "Открыть в Telegram";
+    link.textContent = STR.openTelegram;
   }
 
   copy.append(time, text, link);
@@ -451,9 +503,7 @@ function createFeedMedia(post) {
 
     figure.className = "feed-media";
     image.src = post.imageUrl;
-    image.alt = post.text
-      ? `Изображение к публикации: ${post.text.slice(0, 90)}`
-      : "Изображение из Telegram";
+    image.alt = post.text ? post.text.slice(0, 90) : STR.imageAlt;
     image.loading = "lazy";
     image.decoding = "async";
 
@@ -465,7 +515,7 @@ function createFeedMedia(post) {
       image.height = post.imageHeight;
     }
 
-    figure.append(image);
+    figure.append(wrapMediaLink(image, post));
 
     return figure;
   }
@@ -474,7 +524,7 @@ function createFeedMedia(post) {
     const placeholder = document.createElement("div");
 
     placeholder.className = "feed-media feed-media-placeholder";
-    placeholder.textContent = post.mediaType === "photo" ? "Фото в Telegram" : "Медиа в Telegram";
+    placeholder.textContent = post.mediaType === "photo" ? STR.photoInTg : STR.mediaInTg;
 
     return placeholder;
   }
@@ -486,9 +536,7 @@ function createFeedImage(postImage, post, index) {
   const image = document.createElement("img");
 
   image.src = postImage.url;
-  image.alt = post.text
-    ? `Изображение ${index + 1} к публикации: ${post.text.slice(0, 90)}`
-    : `Изображение ${index + 1} из Telegram`;
+  image.alt = post.text ? post.text.slice(0, 90) : STR.imageAlt;
   image.loading = "lazy";
   image.decoding = "async";
 
@@ -514,7 +562,7 @@ function wrapMediaLink(node, post) {
   const link = document.createElement("a");
 
   link.href = href;
-  link.setAttribute("aria-label", "Открыть материал");
+  link.setAttribute("aria-label", STR.openMaterial);
 
   if (!post.messageId) {
     link.target = "_blank";
@@ -558,8 +606,8 @@ function createEmptyState() {
 
   empty.className = "feed-empty";
   number.textContent = "00";
-  title.textContent = "Пока без публикаций.";
-  text.textContent = "Когда в Telegram появятся новые записи, они соберутся здесь.";
+  title.textContent = STR.emptyTitle;
+  text.textContent = STR.emptyText;
 
   empty.append(number, title, text);
 
@@ -572,14 +620,14 @@ function getFeedText(post) {
   }
 
   if (post.imageUrl || post.mediaType === "photo" || post.images?.length) {
-    return "Фото из Telegram.";
+    return STR.photoFromTg;
   }
 
-  return "Публикация без текста.";
+  return STR.noText;
 }
 
 function formatFeedDate(date) {
-  return new Intl.DateTimeFormat("ru-RU", {
+  return new Intl.DateTimeFormat(DATE_LOCALE, {
     day: "numeric",
     month: "short",
     hour: "2-digit",

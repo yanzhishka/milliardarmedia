@@ -1,6 +1,34 @@
 const podcastList = document.querySelector("[data-podcast-list]");
 const podcastStatus = document.querySelector("[data-podcast-status]");
 const PODCAST_REFRESH_INTERVAL = 45000;
+const LANG = (document.documentElement.lang || "ru").slice(0, 2) === "en" ? "en" : "ru";
+const DATE_LOCALE = LANG === "en" ? "en-GB" : "ru-RU";
+const STR = {
+  ru: {
+    loading: "Загружаем выпуски…",
+    notConnected: "Подкасты появятся после подключения Telegram-бота.",
+    noneYet: "Пока нет выпусков.",
+    total: (n) => `Всего ${n} выпусков.`,
+    defaultTitle: "Недельный выпуск",
+    noDescription: "Выпуск без описания.",
+    videoMissing: "Видео пока не загружено.",
+    emptyTitle: "Пока без выпусков.",
+    emptyText: "Первый недельный выпуск появится здесь после загрузки.",
+    dateTbd: "Дата уточняется",
+  },
+  en: {
+    loading: "Loading episodes…",
+    notConnected: "Podcasts will appear once the Telegram bot is connected.",
+    noneYet: "No episodes yet.",
+    total: (n) => `${n} episodes in total.`,
+    defaultTitle: "Weekly episode",
+    noDescription: "Episode without a description.",
+    videoMissing: "Video not uploaded yet.",
+    emptyTitle: "No episodes yet.",
+    emptyText: "The first weekly episode will appear here after upload.",
+    dateTbd: "Date to be confirmed",
+  },
+}[LANG];
 let lastPodcastSignature = "";
 
 initPodcasts();
@@ -11,7 +39,7 @@ async function initPodcasts() {
   }
 
   renderPodcastSkeletons();
-  podcastStatus.textContent = "Загружаем выпуски…";
+  podcastStatus.textContent = STR.loading;
   await loadPodcasts();
   window.setInterval(loadPodcasts, PODCAST_REFRESH_INTERVAL);
 }
@@ -59,11 +87,11 @@ async function loadPodcasts() {
 
     renderPodcasts(podcasts);
   } catch (error) {
-    renderPodcasts([], "Подкасты появятся после подключения Telegram-бота.");
+    renderPodcasts([], STR.notConnected);
   }
 }
 
-function renderPodcasts(podcasts, emptyStatus = "Пока нет выпусков.") {
+function renderPodcasts(podcasts, emptyStatus = STR.noneYet) {
   if (!podcasts.length) {
     podcastStatus.textContent = emptyStatus;
 
@@ -75,7 +103,7 @@ function renderPodcasts(podcasts, emptyStatus = "Пока нет выпуско�
     return;
   }
 
-  podcastStatus.textContent = `Всего ${podcasts.length} выпусков.`;
+  podcastStatus.textContent = STR.total(podcasts.length);
 
   const signature = podcasts.map((podcast) => `${podcast.id || ""}:${podcast.videoUrl || ""}`).join("|");
 
@@ -109,10 +137,10 @@ function createPodcastCard(podcast, index) {
   number.className = "podcast-number";
   videoWrap.className = "podcast-video";
   number.textContent = String(index + 1).padStart(2, "0");
-  title.textContent = podcast.title || "Недельный выпуск";
+  title.textContent = podcast.title || STR.defaultTitle;
   meta.dateTime = new Date((podcast.date || Date.now() / 1000) * 1000).toISOString();
   meta.textContent = formatPodcastDate(podcast.date);
-  description.textContent = podcast.description || podcast.text || "Выпуск без описания.";
+  description.textContent = podcast.description || podcast.text || STR.noDescription;
 
   if (podcast.videoUrl) {
     video.src = podcast.videoUrl;
@@ -122,7 +150,7 @@ function createPodcastCard(podcast, index) {
     videoWrap.append(video);
   } else {
     videoWrap.classList.add("is-missing");
-    videoWrap.textContent = podcast.videoError || "Видео пока не загружено.";
+    videoWrap.textContent = podcast.videoError || STR.videoMissing;
   }
 
   card.append(number, videoWrap, meta, title, description);
@@ -138,8 +166,8 @@ function createEmptyState() {
 
   empty.className = "podcast-empty";
   number.textContent = "00";
-  title.textContent = "Пока без выпусков.";
-  text.textContent = "Первый недельный выпуск появится здесь после загрузки.";
+  title.textContent = STR.emptyTitle;
+  text.textContent = STR.emptyText;
 
   empty.append(number, title, text);
 
@@ -148,10 +176,10 @@ function createEmptyState() {
 
 function formatPodcastDate(timestamp) {
   if (!timestamp) {
-    return "Дата уточняется";
+    return STR.dateTbd;
   }
 
-  return new Intl.DateTimeFormat("ru-RU", {
+  return new Intl.DateTimeFormat(DATE_LOCALE, {
     day: "numeric",
     month: "long",
     year: "numeric",

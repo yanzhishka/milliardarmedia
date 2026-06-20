@@ -757,6 +757,25 @@ a.front-headline:hover h3 {
   }
 }
 
+/* language switcher in the masthead */
+.lang-switch {
+  align-self: center;
+  padding: 5px 9px;
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  font-family: var(--sans);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  transition: color 160ms var(--ease), border-color 160ms var(--ease);
+}
+
+.lang-switch:hover {
+  color: var(--ink);
+  border-color: var(--ink);
+}
+
 /* ============================================================
    PODCASTS
    ============================================================ */

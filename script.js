@@ -39,6 +39,21 @@ let sixtySevenTimer;
 let lastTickerSignature = "";
 let lastHomeFeedSignature = "init";
 const HOME_FEED_VISIBLE = 4;
+const SITE_LANG = (document.documentElement.lang || "ru").slice(0, 2) === "en" ? "en" : "ru";
+const FORM_TEXT =
+  SITE_LANG === "en"
+    ? {
+        fill: "Fill in the fields so we can reply.",
+        sending: "Sending",
+        sent: "Thank you. Your message has been sent — the team will get back to you soon.",
+        failed: "Could not send the message. Write to us directly at milliardar.media@gmail.com.",
+      }
+    : {
+        fill: "Заполните поля, чтобы мы могли ответить.",
+        sending: "Отправляем",
+        sent: "Спасибо. Сообщение отправлено, команда скоро выйдет на связь.",
+        failed: "Не удалось отправить сообщение. Напишите напрямую на milliardar.media@gmail.com.",
+      };
 
 initLazyPortraits();
 initTelegramFeed();
@@ -598,7 +613,7 @@ form.addEventListener("submit", async (event) => {
   event.preventDefault();
 
   if (!form.checkValidity()) {
-    formNote.textContent = "Заполните поля, чтобы мы могли ответить.";
+    formNote.textContent = FORM_TEXT.fill;
     form.reportValidity();
     return;
   }
@@ -607,7 +622,7 @@ form.addEventListener("submit", async (event) => {
   const defaultButtonText = submitButton.textContent;
 
   submitButton.disabled = true;
-  submitButton.textContent = "Отправляем";
+  submitButton.textContent = FORM_TEXT.sending;
   formNote.textContent = "";
 
   try {
@@ -623,12 +638,10 @@ form.addEventListener("submit", async (event) => {
       throw new Error("Form submission failed");
     }
 
-    formNote.textContent =
-      "Спасибо. Сообщение отправлено, команда скоро выйдет на связь.";
+    formNote.textContent = FORM_TEXT.sent;
     form.reset();
   } catch (error) {
-    formNote.textContent =
-      "Не удалось отправить сообщение. Напишите напрямую на milliardar.media@gmail.com.";
+    formNote.textContent = FORM_TEXT.failed;
   } finally {
     submitButton.disabled = false;
     submitButton.textContent = defaultButtonText;

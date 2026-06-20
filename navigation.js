@@ -1,4 +1,10 @@
 const BACK_TO_TOP_SCROLL_OFFSET = 320;
+const NAV_LANG = (document.documentElement.lang || "ru").slice(0, 2) === "en" ? "en" : "ru";
+const NAV_DATE_LOCALE = NAV_LANG === "en" ? "en-GB" : "ru-RU";
+const NAV_TEXT =
+  NAV_LANG === "en"
+    ? { top: "Top", topAria: "Back to top" }
+    : { top: "Наверх", topAria: "Вернуться наверх" };
 
 initMastheadDate();
 initThemeToggle();
@@ -11,7 +17,7 @@ function initMastheadDate() {
     return;
   }
 
-  dateEl.textContent = new Intl.DateTimeFormat("ru-RU", {
+  dateEl.textContent = new Intl.DateTimeFormat(NAV_DATE_LOCALE, {
     weekday: "long",
     day: "numeric",
     month: "long",
@@ -48,8 +54,8 @@ function initBackToTop() {
 
   button.className = "back-to-top";
   button.type = "button";
-  button.textContent = "Наверх";
-  button.setAttribute("aria-label", "Вернуться наверх");
+  button.textContent = NAV_TEXT.top;
+  button.setAttribute("aria-label", NAV_TEXT.topAria);
   button.setAttribute("aria-hidden", "true");
   document.body.append(button);
 
