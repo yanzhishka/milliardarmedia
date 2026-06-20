@@ -442,12 +442,23 @@ main {
 /* ============================================================
    FEATURED LEAD (главный материал) — text over image cover
    ============================================================ */
+/* Reserve the hero height before JS fills it — prevents layout shift (CLS). */
+.lead-cover-slot {
+  min-height: clamp(340px, 46vw, 560px);
+  margin-bottom: 28px;
+  border-radius: 4px;
+}
+
+.lead-cover-slot:empty {
+  background: var(--paper-2);
+}
+
 .lead-cover {
   position: relative;
   display: block;
   overflow: hidden;
   min-height: clamp(340px, 46vw, 560px);
-  margin-bottom: 28px;
+  margin-bottom: 0;
   border-radius: 4px;
   color: #fff;
   isolation: isolate;
@@ -554,6 +565,7 @@ main {
   grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
   gap: clamp(18px, 2.4vw, 28px);
   align-items: start;
+  min-height: clamp(300px, 46vh, 480px);
 }
 
 .feed-card {
@@ -683,6 +695,7 @@ main {
    ============================================================ */
 .front-headlines {
   border-top: 3px solid var(--rule);
+  min-height: clamp(300px, 46vh, 480px);
 }
 
 .front-headline {

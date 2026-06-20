@@ -77,6 +77,7 @@ async function initFeed() {
   if (readCachedPosts().length) {
     renderCachedFeed();
   } else {
+    renderFeaturedSkeleton();
     renderFeedSkeletons();
     feedStatus.textContent = STR.loading;
   }
@@ -85,7 +86,43 @@ async function initFeed() {
   window.setInterval(loadFeed, FEED_REFRESH_INTERVAL);
 }
 
+// Reserve the hero slot height while the feed loads, so the real cover
+// replacing it does not push the page down (CLS).
+function renderFeaturedSkeleton() {
+  if (!featuredSlot || searchQuery) {
+    return;
+  }
+
+  const skeleton = document.createElement("div");
+
+  skeleton.className = "lead-cover skel skeleton";
+  featuredSlot.replaceChildren(skeleton);
+  featuredSlot.hidden = false;
+}
+
 function renderFeedSkeletons(count = 4) {
+  // On the home page the feed renders as a compact headline list — reserve
+  // matching height so the swap to real headlines doesn't shift the layout.
+  if (isHome) {
+    feedList.classList.remove("feed-panel-list");
+    feedList.classList.add("front-headlines");
+
+    const headlines = Array.from({ length: HOME_LIMIT }, () => {
+      const item = document.createElement("div");
+
+      item.className = "front-headline skeleton";
+      item.innerHTML =
+        '<span class="skel skel-line is-kicker"></span>' +
+        '<span class="skel skel-line is-lg"></span>' +
+        '<span class="skel skel-line w-70"></span>';
+
+      return item;
+    });
+
+    feedList.replaceChildren(...headlines);
+    return;
+  }
+
   const items = Array.from({ length: count }, (unused, index) => {
     const card = document.createElement("article");
     const copy = document.createElement("div");
@@ -157,6 +194,7 @@ function renderCachedFeed() {
 function renderFeed(posts, statusText = "") {
   if (!posts.length) {
     feedStatus.textContent = statusText || STR.waitingFirst;
+    clearFeatured();
 
     if (lastFeedSignature !== "empty") {
       lastFeedSignature = "empty";
