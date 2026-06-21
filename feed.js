@@ -228,9 +228,21 @@ function isEpisodePost(post) {
   return EPISODE_TAGS.some((tag) => text.includes(tag));
 }
 
+// Feed shows text and photo posts. Videos belong to the "Выпуски" section, and
+// empty posts (no text and no image) are skipped so nothing blank appears.
+function isFeedPost(post) {
+  if (post.mediaType === "video") {
+    return false;
+  }
+
+  const hasText = Boolean(`${post.text || post.caption || ""}`.trim());
+
+  return hasText || getPostImages(post).length > 0;
+}
+
 function getDisplayPosts() {
-  // Hide posts that belong to the "Выпуски" section (carry a rubric tag).
-  let posts = allPosts.filter((post) => !isEpisodePost(post));
+  // Drop rubric (Выпуски) posts, videos and empty posts.
+  let posts = allPosts.filter((post) => !isEpisodePost(post) && isFeedPost(post));
 
   if (searchQuery) {
     const query = searchQuery.toLowerCase();
