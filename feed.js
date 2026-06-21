@@ -65,9 +65,12 @@ let allPosts = [];
 let visibleCount = FEED_PAGE_SIZE;
 let searchQuery = (new URLSearchParams(window.location.search).get("q") || "").trim();
 
-// Rubric tags that belong to the "Выпуски" section — these posts are hidden
-// from the feed. Keep in sync with the filter chips on the Выпуски page.
-const EPISODE_TAGS = ["#репортажир"];
+// Rubric tags that belong to the "Выпуски" section — posts carrying any of
+// them are hidden from the feed. The set is the rubric tags used on episodes
+// (loaded from /api/podcasts), plus a default so it works before the first
+// tagged episode exists.
+const DEFAULT_EPISODE_TAGS = ["#репортажир"];
+let episodeTags = DEFAULT_EPISODE_TAGS.slice();
 
 initFeed();
 
@@ -77,6 +80,7 @@ async function initFeed() {
   }
 
   initFeedSearch();
+  loadEpisodeTags();
 
   if (readCachedPosts().length) {
     renderCachedFeed();
@@ -149,6 +153,45 @@ function renderFeedSkeletons(count = 4) {
   });
 
   feedList.replaceChildren(...items);
+}
+
+// Learn which rubric tags belong to the "Выпуски" section so the feed can
+// hide channel posts carrying them.
+async function loadEpisodeTags() {
+  try {
+    const response = await fetch("/api/podcasts", {
+      cache: "no-store",
+      headers: { Accept: "application/json" },
+    });
+
+    if (!response.ok) {
+      return;
+    }
+
+    const data = await response.json();
+    const tags = new Set(episodeTags);
+
+    (Array.isArray(data.podcasts) ? data.podcasts : []).forEach((podcast) => {
+      const fromTags = Array.isArray(podcast.tags) ? podcast.tags : [];
+      const fromText = `${podcast.title || ""} ${podcast.description || ""} ${podcast.text || ""}`.match(/#[^\s#]+/g) || [];
+
+      [...fromTags, ...fromText].forEach((tag) => {
+        const key = String(tag).toLowerCase();
+
+        if (key !== "#podcast") {
+          tags.add(key);
+        }
+      });
+    });
+
+    episodeTags = [...tags];
+
+    if (allPosts.length) {
+      paintFeed();
+    }
+  } catch (error) {
+    // Keep the default tag set if podcasts can't be loaded.
+  }
 }
 
 async function loadFeed() {
@@ -225,7 +268,7 @@ function renderFeed(posts, statusText = "") {
 function isEpisodePost(post) {
   const text = `${post.text || post.caption || ""}`.toLowerCase();
 
-  return EPISODE_TAGS.some((tag) => text.includes(tag));
+  return episodeTags.some((tag) => text.includes(tag));
 }
 
 // Feed shows text and photo posts. Videos belong to the "Выпуски" section, and

@@ -8,6 +8,7 @@ const STR = {
     loading: "Загружаем выпуски…",
     notConnected: "Выпуски появятся после подключения Telegram-бота.",
     noneYet: "Пока нет выпусков.",
+    all: "Все",
     total: (n) => `Всего ${n} выпусков.`,
     tagResults: (label, n) => `Рубрика «${label}»: ${n}.`,
     noTagResults: (label) => `В рубрике «${label}» пока пусто.`,
@@ -23,6 +24,7 @@ const STR = {
     loading: "Loading episodes…",
     notConnected: "Episodes will appear once the Telegram bot is connected.",
     noneYet: "No episodes yet.",
+    all: "All",
     total: (n) => `${n} episodes in total.`,
     tagResults: (label, n) => `Section “${label}”: ${n}.`,
     noTagResults: (label) => `Nothing in “${label}” yet.`,
@@ -47,31 +49,86 @@ async function initPodcasts() {
     return;
   }
 
-  initPodcastFilter();
   renderPodcastSkeletons();
   podcastStatus.textContent = STR.loading;
   await loadPodcasts();
   window.setInterval(loadPodcasts, PODCAST_REFRESH_INTERVAL);
 }
 
-function initPodcastFilter() {
+// Build the rubric filter chips from the tags actually used on episodes.
+function renderFilterChips() {
   const bar = document.querySelector("[data-podcast-filter]");
 
   if (!bar) {
     return;
   }
 
-  const chips = [...bar.querySelectorAll(".filter-chip")];
+  const tags = collectTags();
 
-  chips.forEach((chip) => {
+  if (activeTag && !tags.some((tag) => tag.toLowerCase() === activeTag.toLowerCase())) {
+    activeTag = "";
+    activeLabel = "";
+  }
+
+  if (!tags.length) {
+    bar.replaceChildren();
+    bar.hidden = true;
+    return;
+  }
+
+  bar.hidden = false;
+
+  const makeChip = (label, tag) => {
+    const chip = document.createElement("button");
+
+    chip.type = "button";
+    chip.className = "filter-chip" + (tag.toLowerCase() === activeTag.toLowerCase() ? " is-active" : "");
+    chip.dataset.tag = tag;
+    chip.textContent = label;
     chip.addEventListener("click", () => {
-      activeTag = chip.dataset.tag || "";
-      activeLabel = chip.textContent.trim();
+      activeTag = tag;
+      activeLabel = label;
       lastPodcastSignature = "";
-      chips.forEach((other) => other.classList.toggle("is-active", other === chip));
+      [...bar.querySelectorAll(".filter-chip")].forEach((other) => other.classList.toggle("is-active", other === chip));
       renderPodcasts();
     });
+
+    return chip;
+  };
+
+  const chips = [makeChip(STR.all, "")];
+
+  tags.forEach((tag) => chips.push(makeChip(tag.replace(/^#/, ""), tag)));
+  bar.replaceChildren(...chips);
+}
+
+function collectTags() {
+  const seen = new Map();
+  const add = (tag) => {
+    const value = String(tag).trim();
+    const key = value.toLowerCase();
+
+    if (value && key !== "#podcast" && !seen.has(key)) {
+      seen.set(key, value);
+    }
+  };
+
+  allPodcasts.forEach((podcast) => {
+    (Array.isArray(podcast.tags) ? podcast.tags : []).forEach(add);
+    (`${podcast.title || ""} ${podcast.description || ""} ${podcast.text || ""}`.match(/#[^\s#]+/g) || []).forEach(add);
   });
+
+  return [...seen.values()];
+}
+
+function podcastHasTag(podcast, tag) {
+  const key = tag.toLowerCase();
+
+  if (Array.isArray(podcast.tags) && podcast.tags.some((value) => String(value).toLowerCase() === key)) {
+    return true;
+  }
+
+  return `${podcast.title || ""} ${podcast.description || ""} ${podcast.text || ""}`.toLowerCase().includes(key);
 }
 
 function renderPodcastSkeletons(count = 2) {
@@ -115,9 +172,11 @@ async function loadPodcasts() {
     const data = await response.json();
 
     allPodcasts = Array.isArray(data.podcasts) ? data.podcasts : [];
+    renderFilterChips();
     renderPodcasts();
   } catch (error) {
     allPodcasts = [];
+    renderFilterChips();
     renderPodcasts(STR.notConnected);
   }
 }
@@ -127,11 +186,7 @@ function getDisplayPodcasts() {
     return allPodcasts;
   }
 
-  const tag = activeTag.toLowerCase();
-
-  return allPodcasts.filter((podcast) =>
-    `${podcast.title || ""} ${podcast.description || ""} ${podcast.text || ""}`.toLowerCase().includes(tag),
-  );
+  return allPodcasts.filter((podcast) => podcastHasTag(podcast, activeTag));
 }
 
 function renderPodcasts(emptyStatus = "") {

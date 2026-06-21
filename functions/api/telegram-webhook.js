@@ -959,6 +959,7 @@ async function normalizePodcast(message, env, rawText = "") {
     title: details.title,
     description: details.description,
     text: details.description,
+    tags: details.tags || [],
     link: chat.username ? `https://t.me/${chat.username}/${message.message_id}` : "",
     mediaType: "video",
     videoUrl: savedVideo?.url || "",
@@ -982,18 +983,44 @@ function parsePodcastDetails(text) {
     .replace(/^\/podcast(?:@\w+)?/i, "")
     .replace(/(^|\s)#podcast\b/gi, " ")
     .trim();
+  const tags = extractTags(body);
   const lines = body
     .split(/\n+/)
     .map((line) => line.trim())
     .filter(Boolean);
-  const title =
-    (lines.shift() || "Недельный выпуск").replace(/https?:\/\/\S+/gi, "").trim() || "Недельный выпуск";
-  const description = lines.join("\n").replace(/https?:\/\/\S+/gi, "").trim();
+  const clean = (value) => value.replace(/https?:\/\/\S+/gi, "").replace(/#[^\s#]+/g, "").trim();
+  const title = clean(lines.shift() || "") || "Недельный выпуск";
+  const description = clean(lines.join("\n"));
 
   return {
     title: title.slice(0, 120),
     description: description.slice(0, 1200),
+    tags,
   };
+}
+
+// Pull hashtags (rubric tags) out of an episode caption, excluding #podcast.
+function extractTags(text) {
+  const matches = String(text || "").match(/#[^\s#]+/g) || [];
+  const seen = new Set();
+  const tags = [];
+
+  matches.forEach((raw) => {
+    const tag = raw.trim();
+
+    if (/^#podcast$/i.test(tag)) {
+      return;
+    }
+
+    const key = tag.toLowerCase();
+
+    if (!seen.has(key)) {
+      seen.add(key);
+      tags.push(tag);
+    }
+  });
+
+  return tags;
 }
 
 async function handleSetCover(message, env) {
