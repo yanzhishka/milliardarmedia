@@ -17,6 +17,7 @@ const STR = {
     emptyTitle: "Пока без выпусков.",
     emptyText: "Первый недельный выпуск появится здесь после загрузки.",
     dateTbd: "Дата уточняется",
+    play: "Смотреть выпуск",
   },
   en: {
     loading: "Loading episodes…",
@@ -31,6 +32,7 @@ const STR = {
     emptyTitle: "No episodes yet.",
     emptyText: "The first weekly episode will appear here after upload.",
     dateTbd: "Date to be confirmed",
+    play: "Watch the episode",
   },
 }[LANG];
 let lastPodcastSignature = "";
@@ -189,12 +191,27 @@ function createPodcastCard(podcast, index) {
   meta.textContent = formatPodcastDate(podcast.date);
   description.textContent = podcast.description || podcast.text || STR.noDescription;
 
-  if (podcast.videoUrl) {
+  if (podcast.embedUrl) {
+    videoWrap.append(createEmbedPlayer(podcast));
+  } else if (podcast.videoUrl) {
     video.src = podcast.videoUrl;
     video.controls = true;
-    video.preload = "metadata";
+    video.preload = podcast.coverUrl ? "none" : "metadata";
     video.playsInline = true;
+
+    if (podcast.coverUrl) {
+      video.poster = podcast.coverUrl;
+    }
+
     videoWrap.append(video);
+  } else if (podcast.coverUrl) {
+    const cover = document.createElement("img");
+
+    cover.src = podcast.coverUrl;
+    cover.alt = podcast.title || STR.defaultTitle;
+    cover.loading = "lazy";
+    cover.decoding = "async";
+    videoWrap.append(cover);
   } else {
     videoWrap.classList.add("is-missing");
     videoWrap.textContent = podcast.videoError || STR.videoMissing;
@@ -203,6 +220,49 @@ function createPodcastCard(podcast, index) {
   card.append(number, videoWrap, meta, title, description);
 
   return card;
+}
+
+// Embedded YouTube/VK player. With a cover, show a lightweight facade and only
+// load the heavy iframe when the user clicks play.
+function createEmbedPlayer(podcast) {
+  if (!podcast.coverUrl) {
+    return createEmbedIframe(podcast.embedUrl, false, podcast.title);
+  }
+
+  const facade = document.createElement("button");
+  const img = document.createElement("img");
+  const play = document.createElement("span");
+
+  facade.type = "button";
+  facade.className = "podcast-facade";
+  facade.setAttribute("aria-label", `${STR.play}: ${podcast.title || STR.defaultTitle}`);
+  img.src = podcast.coverUrl;
+  img.alt = podcast.title || STR.defaultTitle;
+  img.loading = "lazy";
+  img.decoding = "async";
+  play.className = "podcast-play";
+  play.setAttribute("aria-hidden", "true");
+  facade.append(img, play);
+
+  facade.addEventListener("click", () => {
+    facade.replaceWith(createEmbedIframe(podcast.embedUrl, true, podcast.title));
+  });
+
+  return facade;
+}
+
+function createEmbedIframe(embedUrl, autoplay, title) {
+  const iframe = document.createElement("iframe");
+  const src = autoplay ? embedUrl + (embedUrl.includes("?") ? "&" : "?") + "autoplay=1" : embedUrl;
+
+  iframe.src = src;
+  iframe.title = title || STR.defaultTitle;
+  iframe.loading = "lazy";
+  iframe.allow = "autoplay; encrypted-media; picture-in-picture; fullscreen";
+  iframe.allowFullscreen = true;
+  iframe.setAttribute("frameborder", "0");
+
+  return iframe;
 }
 
 function createEmptyState() {

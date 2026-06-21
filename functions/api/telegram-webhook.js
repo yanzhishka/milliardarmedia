@@ -49,6 +49,10 @@ export async function onRequestPost({ request, env }) {
     return jsonResponse({ ok: true, ignored: true, reason: "channel_mismatch" });
   }
 
+  if (isCoverPost(channelPost)) {
+    return handleSetCover(channelPost, env);
+  }
+
   if (isPodcastPost(channelPost)) {
     const { podcast } = await storePodcast(channelPost, env);
 
@@ -113,6 +117,10 @@ async function handleBotMessage(message, env) {
     return handlePodcastCommand(message, env, text);
   }
 
+  if (isCommand(text, "cover")) {
+    return handleSetCover(message, env);
+  }
+
   if (isCommand(text, "deletepodcast")) {
     return handleDeletePodcastCommand(message, env, text);
   }
@@ -163,7 +171,8 @@ async function handleHelpCommand(message, env) {
     "/deletepodcast 123 — подготовить удаление выпуска по номеру сообщения.",
     "/confirmdelete — запасное подтверждение, если кнопка не сработала.",
     "/canceldelete — отменить подготовленное удаление, если кнопка потерялась.",
-    "/podcast Название — отправьте видео с этой подписью, чтобы добавить выпуск.",
+    "/podcast Название — отправьте видео или ссылку на YouTube/VK с этой подписью, чтобы добавить выпуск.",
+    "/cover — ответьте этой командой на выпуск, приложив фото, чтобы задать обложку.",
     "",
     "После /delete, /deletesite и /deletepodcast бот пришлёт кнопки подтверждения.",
     "Важно: /deletesite чистит пост и файлы только на сайте, но оставляет сообщение в Telegram.",
@@ -526,19 +535,22 @@ async function handlePodcastCommand(message, env, text) {
     return jsonResponse({ ok: true, command: "podcast", denied: true });
   }
 
-  if (!pickPodcastVideo(message)) {
+  const embed = parseVideoEmbed(message.caption || message.text || "");
+
+  if (!pickPodcastVideo(message) && !embed) {
     await replyToBotMessage(
       env,
       message,
-      "Пришлите видео с подписью: /podcast Название выпуска",
+      "Пришлите видео или ссылку на YouTube/VK с подписью: /podcast Название выпуска",
     );
     return jsonResponse({ ok: true, command: "podcast", error: "missing_video" });
   }
 
   const { podcast } = await storePodcast(message, env, text);
-  const statusLine =
-    podcast.videoStatus === "saved"
-      ? "Видео сохранено для страницы подкастов."
+  const statusLine = podcast.embedUrl
+    ? `Видео встроено с ${podcast.videoPlatform === "youtube" ? "YouTube" : "VK"}.`
+    : podcast.videoStatus === "saved"
+      ? "Видео сохранено для страницы выпусков."
       : `Видео не сохранено: ${podcast.videoError || "неизвестная ошибка"}`;
 
   await replyToBotMessage(
@@ -924,6 +936,15 @@ async function normalizePodcast(message, env, rawText = "") {
   const video = pickPodcastVideo(message);
   const savedVideo = video ? await saveTelegramPodcastVideo(env, postId, video) : null;
   const videoStatus = video ? savedVideo?.status || "error" : "none";
+  // Use the video's own thumbnail as a default cover; /cover overrides it.
+  const thumb = video && (video.thumbnail || video.thumb);
+  const savedCover = thumb?.file_id ? await saveTelegramPhoto(env, `podcast-cover:${postId}`, thumb) : null;
+  const embed = parseVideoEmbed(rawText || message.caption || message.text || "");
+  const coverUrl =
+    savedCover?.url ||
+    (embed?.platform === "youtube" && embed.videoId
+      ? `https://i.ytimg.com/vi/${embed.videoId}/hqdefault.jpg`
+      : "");
 
   return {
     id: postId,
@@ -944,6 +965,10 @@ async function normalizePodcast(message, env, rawText = "") {
     videoKey: savedVideo?.key || "",
     videoStatus,
     videoError: savedVideo?.error || "",
+    coverUrl,
+    coverKey: savedCover?.key || "",
+    embedUrl: embed?.embedUrl || "",
+    videoPlatform: embed?.platform || (video ? "telegram" : ""),
     videoSize: video?.file_size || null,
     videoDuration: video?.duration || null,
     videoWidth: video?.width || null,
@@ -961,8 +986,9 @@ function parsePodcastDetails(text) {
     .split(/\n+/)
     .map((line) => line.trim())
     .filter(Boolean);
-  const title = lines.shift() || "Недельный выпуск";
-  const description = lines.join("\n").trim();
+  const title =
+    (lines.shift() || "Недельный выпуск").replace(/https?:\/\/\S+/gi, "").trim() || "Недельный выпуск";
+  const description = lines.join("\n").replace(/https?:\/\/\S+/gi, "").trim();
 
   return {
     title: title.slice(0, 120),
@@ -970,13 +996,110 @@ function parsePodcastDetails(text) {
   };
 }
 
+async function handleSetCover(message, env) {
+  const isDirect = Boolean(message.from?.id);
+
+  if (isDirect && !(await isAdminMessage(message, env))) {
+    await replyToBotMessage(env, message, "Команда доступна только администраторам.");
+    return jsonResponse({ ok: true, command: "cover", denied: true });
+  }
+
+  const reply = message.reply_to_message;
+  const photo = pickPhoto(message.photo);
+
+  if (!reply || !photo) {
+    if (isDirect) {
+      await replyToBotMessage(
+        env,
+        message,
+        "Ответьте командой /cover на сообщение с выпуском и приложите фото-обложку.",
+      );
+    }
+
+    return jsonResponse({ ok: true, command: "cover", error: "missing_reply_or_photo" });
+  }
+
+  const stored = await env.POSTS_KV.get(PODCASTS_KEY, { type: "json" });
+  const podcasts = Array.isArray(stored) ? stored : [];
+  const podcast = podcasts.find((item) => Number(item.messageId) === Number(reply.message_id));
+
+  if (!podcast) {
+    if (isDirect) {
+      await replyToBotMessage(
+        env,
+        message,
+        "Не нашёл выпуск для этого сообщения. Сначала добавьте видео через /podcast.",
+      );
+    }
+
+    return jsonResponse({ ok: true, command: "cover", error: "podcast_not_found" });
+  }
+
+  const saved = await saveTelegramPhoto(env, `podcast-cover:${podcast.id}`, photo);
+
+  if (saved.status !== "saved") {
+    if (isDirect) {
+      await replyToBotMessage(env, message, `Не удалось сохранить обложку: ${saved.error || "ошибка"}.`);
+    }
+
+    return jsonResponse({ ok: true, command: "cover", error: "save_failed" });
+  }
+
+  podcast.coverUrl = saved.url;
+  podcast.coverKey = saved.key;
+  await env.POSTS_KV.put(PODCASTS_KEY, JSON.stringify(podcasts));
+
+  if (isDirect) {
+    await replyToBotMessage(env, message, `Обложка добавлена к выпуску «${podcast.title || "выпуск"}».`);
+  }
+
+  return jsonResponse({ ok: true, command: "cover", podcast: podcast.id });
+}
+
+function isCoverPost(message) {
+  const text = message.text || message.caption || "";
+
+  return Boolean(message.reply_to_message && pickPhoto(message.photo) && isCommand(text, "cover"));
+}
+
 function isPodcastPost(message) {
   const text = message.text || message.caption || "";
 
   return Boolean(
-    pickPodcastVideo(message) &&
+    (pickPodcastVideo(message) || parseVideoEmbed(text)) &&
       (isCommand(text, "podcast") || /(^|\s)#podcast\b/i.test(text)),
   );
+}
+
+// Recognise a YouTube / VK video link and build an embeddable URL.
+function parseVideoEmbed(text) {
+  const str = String(text || "");
+
+  const yt = str.match(
+    /(?:youtube\.com\/(?:watch\?v=|shorts\/|embed\/|live\/)|youtu\.be\/)([A-Za-z0-9_-]{6,})/i,
+  );
+
+  if (yt) {
+    return { platform: "youtube", videoId: yt[1], embedUrl: `https://www.youtube.com/embed/${yt[1]}` };
+  }
+
+  const vk = str.match(/(?:vk\.com|vkvideo\.ru)\/video(-?\d+)_(\d+)/i);
+
+  if (vk) {
+    return {
+      platform: "vk",
+      videoId: `${vk[1]}_${vk[2]}`,
+      embedUrl: `https://vk.com/video_ext.php?oid=${vk[1]}&id=${vk[2]}&hd=2`,
+    };
+  }
+
+  const vkExt = str.match(/https?:\/\/vk\.com\/video_ext\.php\?\S+/i);
+
+  if (vkExt) {
+    return { platform: "vk", videoId: "", embedUrl: vkExt[0].replace(/[).,]+$/, "") };
+  }
+
+  return null;
 }
 
 function detectMediaType(message) {
@@ -1303,7 +1426,9 @@ async function deletePostImages(env, posts) {
 }
 
 async function deletePodcastVideos(env, podcasts) {
-  const videoKeys = [...new Set(podcasts.map((podcast) => podcast.videoKey).filter(Boolean))];
+  const videoKeys = [
+    ...new Set(podcasts.flatMap((podcast) => [podcast.videoKey, podcast.coverKey]).filter(Boolean)),
+  ];
 
   await Promise.all(videoKeys.map((videoKey) => env.POSTS_KV.delete(videoKey).catch(() => {})));
 }
