@@ -1,6 +1,6 @@
 const POSTS_KEY = "telegram_posts";
 const DEFAULT_FEED_RESET_AT = 1779913144;
-const ASSET_VERSION = "20260620-nyt13";
+const ASSET_VERSION = "20260620-nyt14";
 
 export async function onRequestGet({ params, request, env }) {
   const origin = new URL(request.url).origin;
@@ -101,6 +101,8 @@ function renderPost(post, images, origin, optimize) {
     ? `${origin}${optimizedPath(images[0].url, 1200, optimize)}`
     : `${origin}/assets/logo-generated-full.png`;
   const canonical = `${origin}/post/${post.messageId}`;
+  const shareUrl = encodeURIComponent(canonical);
+  const shareText = encodeURIComponent(firstLine);
   const tgLink = post.link || "https://t.me/milliardarmedia";
   const date = post.date ? new Date(post.date * 1000) : null;
   const dateText = date
@@ -170,9 +172,9 @@ function renderPost(post, images, origin, optimize) {
       },
     }).replace(/</g, "\\u003c")}</script>
     <link rel="icon" href="/assets/logo-favicon.png?v=20260620-tab" type="image/png" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=PT+Serif:ital,wght@0,400;0,700;1,400;1,700&family=PT+Sans:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet" />
+    <link rel="preload" href="/assets/fonts/ptserif-400-normal-cyrillic.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/assets/fonts/ptsans-400-normal-cyrillic.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="stylesheet" href="/fonts.css?v=${ASSET_VERSION}" />
     <link rel="stylesheet" href="/styles.css?v=${ASSET_VERSION}" />
   </head>
   <body class="post-page">
@@ -203,6 +205,12 @@ function renderPost(post, images, origin, optimize) {
         ${dateText ? `<time class="post-date" datetime="${dateIso}">${escapeHtml(dateText)}</time>` : ""}
         <div class="post-body">${bodyHtml}</div>
         ${mediaHtml}
+        <div class="post-share">
+          <span class="post-share-label">Поделиться:</span>
+          <a class="share-btn" href="https://t.me/share/url?url=${shareUrl}&text=${shareText}" target="_blank" rel="noopener">Telegram</a>
+          <a class="share-btn" href="https://vk.com/share.php?url=${shareUrl}&title=${shareText}" target="_blank" rel="noopener">ВКонтакте</a>
+          <button class="share-btn" type="button" data-copy-link="${escapeAttr(canonical)}">Копировать ссылку</button>
+        </div>
         <div class="post-actions">
           <a class="button button-primary" href="${escapeAttr(tgLink)}" target="_blank" rel="noopener">Открыть в Telegram</a>
           <a class="button button-glass" href="/feed">Вернуться к ленте</a>

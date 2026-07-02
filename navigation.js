@@ -3,12 +3,13 @@ const NAV_LANG = (document.documentElement.lang || "ru").slice(0, 2) === "en" ? 
 const NAV_DATE_LOCALE = NAV_LANG === "en" ? "en-GB" : "ru-RU";
 const NAV_TEXT =
   NAV_LANG === "en"
-    ? { top: "Top", topAria: "Back to top" }
-    : { top: "Наверх", topAria: "Вернуться наверх" };
+    ? { top: "Top", topAria: "Back to top", copied: "Copied" }
+    : { top: "Наверх", topAria: "Вернуться наверх", copied: "Скопировано" };
 
 initMastheadDate();
 initThemeToggle();
 initBackToTop();
+initShareCopy();
 
 function initMastheadDate() {
   const dateEl = document.querySelector("[data-date]");
@@ -45,6 +46,28 @@ function initThemeToggle() {
     } catch (error) {
       // Ignore storage limits / private mode.
     }
+  });
+}
+
+function initShareCopy() {
+  document.querySelectorAll("[data-copy-link]").forEach((button) => {
+    button.addEventListener("click", async () => {
+      const original = button.textContent;
+
+      try {
+        await navigator.clipboard.writeText(button.dataset.copyLink);
+      } catch (error) {
+        return;
+      }
+
+      button.textContent = NAV_TEXT.copied;
+      button.classList.add("is-copied");
+
+      window.setTimeout(() => {
+        button.textContent = original;
+        button.classList.remove("is-copied");
+      }, 1600);
+    });
   });
 }
 

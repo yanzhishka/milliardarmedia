@@ -34,6 +34,9 @@ const STR = {
     imageAlt: "Изображение из Telegram",
     photoInTg: "Фото в Telegram",
     mediaInTg: "Медиа в Telegram",
+    all: "Все",
+    tagResults: (label, n) => `Рубрика «${label}»: ${n}.`,
+    noTagResults: (label) => `В рубрике «${label}» пока пусто.`,
   },
   en: {
     loading: "Loading the feed…",
@@ -58,12 +61,17 @@ const STR = {
     imageAlt: "Image from Telegram",
     photoInTg: "Photo in Telegram",
     mediaInTg: "Media in Telegram",
+    all: "All",
+    tagResults: (label, n) => `Section “${label}”: ${n}.`,
+    noTagResults: (label) => `Nothing in “${label}” yet.`,
   },
 }[LANG];
 let lastFeedSignature = "";
 let allPosts = [];
 let visibleCount = FEED_PAGE_SIZE;
 let searchQuery = (new URLSearchParams(window.location.search).get("q") || "").trim();
+let activeTag = "";
+let activeLabel = "";
 
 // Rubric tags that belong to the "Выпуски" section — posts carrying any of
 // them are hidden from the feed. The set is the rubric tags used on episodes
@@ -187,6 +195,7 @@ async function loadEpisodeTags() {
     episodeTags = [...tags];
 
     if (allPosts.length) {
+      renderFeedFilterChips();
       paintFeed();
     }
   } catch (error) {
@@ -262,6 +271,7 @@ function renderFeed(posts, statusText = "") {
 
   lastFeedSignature = signature;
   visibleCount = Math.max(visibleCount, FEED_PAGE_SIZE);
+  renderFeedFilterChips();
   paintFeed();
 }
 
@@ -287,6 +297,12 @@ function getDisplayPosts() {
   // Drop rubric (Выпуски) posts, videos and empty posts.
   let posts = allPosts.filter((post) => !isEpisodePost(post) && isFeedPost(post));
 
+  if (activeTag) {
+    const tag = activeTag.toLowerCase();
+
+    posts = posts.filter((post) => `${post.text || post.caption || ""}`.toLowerCase().includes(tag));
+  }
+
   if (searchQuery) {
     const query = searchQuery.toLowerCase();
 
@@ -298,20 +314,23 @@ function getDisplayPosts() {
 
 function paintFeed() {
   const display = getDisplayPosts();
+  const filtering = Boolean(searchQuery || activeTag);
 
-  if (searchQuery && !display.length) {
+  if (filtering && !display.length) {
     clearFeatured();
-    feedStatus.textContent = STR.noResults(searchQuery);
+    feedStatus.textContent = searchQuery ? STR.noResults(searchQuery) : STR.noTagResults(activeLabel);
     feedList.replaceChildren(createNoResults());
     return;
   }
 
   feedStatus.textContent = searchQuery
     ? STR.results(searchQuery, display.length)
-    : STR.total(display.length);
+    : activeTag
+      ? STR.tagResults(activeLabel, display.length)
+      : STR.total(display.length);
 
-  // featured lead (skip while searching)
-  const featured = !searchQuery && featuredSlot ? display[0] : null;
+  // featured lead (skip while searching or filtering by rubric)
+  const featured = !filtering && featuredSlot ? display[0] : null;
   const rest = featured ? display.slice(1) : display;
 
   if (featuredSlot) {
@@ -477,6 +496,73 @@ function initFeedSearch() {
       paintFeed();
     }
   });
+}
+
+// Rubric filter chips for the feed, built from hashtags used on feed posts.
+function renderFeedFilterChips() {
+  const bar = document.querySelector("[data-feed-filter]");
+
+  if (!bar) {
+    return;
+  }
+
+  const tags = collectFeedTags();
+
+  if (activeTag && !tags.some((tag) => tag.toLowerCase() === activeTag.toLowerCase())) {
+    activeTag = "";
+    activeLabel = "";
+  }
+
+  if (!tags.length) {
+    bar.replaceChildren();
+    bar.hidden = true;
+    return;
+  }
+
+  bar.hidden = false;
+
+  const makeChip = (label, tag) => {
+    const chip = document.createElement("button");
+
+    chip.type = "button";
+    chip.className = "filter-chip" + (tag.toLowerCase() === activeTag.toLowerCase() ? " is-active" : "");
+    chip.dataset.tag = tag;
+    chip.textContent = label;
+    chip.addEventListener("click", () => {
+      activeTag = tag;
+      activeLabel = label;
+      visibleCount = FEED_PAGE_SIZE;
+      [...bar.querySelectorAll(".filter-chip")].forEach((other) => other.classList.toggle("is-active", other === chip));
+      paintFeed();
+    });
+
+    return chip;
+  };
+
+  const chips = [makeChip(STR.all, "")];
+
+  tags.forEach((tag) => chips.push(makeChip(tag.replace(/^#/, ""), tag)));
+  bar.replaceChildren(...chips);
+}
+
+function collectFeedTags() {
+  const seen = new Map();
+  const add = (tag) => {
+    const value = String(tag).trim();
+    const key = value.toLowerCase();
+
+    if (value && key !== "#podcast" && !episodeTags.includes(key) && !seen.has(key)) {
+      seen.set(key, value);
+    }
+  };
+
+  allPosts
+    .filter((post) => !isEpisodePost(post) && isFeedPost(post))
+    .forEach((post) => {
+      (`${post.text || post.caption || ""}`.match(/#[^\s#]+/g) || []).forEach(add);
+    });
+
+  return [...seen.values()];
 }
 
 // Light fade-in for the featured cover and for cards/headlines (no parallax).

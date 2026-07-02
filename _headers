@@ -18,6 +18,9 @@
 /api/*
   Cache-Control: no-store
 
+/fonts.css
+  Cache-Control: public, max-age=31536000, immutable
+
 /styles.css
   Cache-Control: public, max-age=31536000, immutable
 
