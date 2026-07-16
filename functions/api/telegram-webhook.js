@@ -1,3 +1,29 @@
+import {
+  buildNewsPostHtml,
+  buildNewsReviewKeyboard,
+  isPremiumEmojiEnabled,
+  isNewsDraftCallback,
+  listNewsDrafts,
+  parseNewsDraftCallback,
+  readNewsDraft,
+  readNewsDraftForReviewMessage,
+  saveNewsDraft,
+  saveNewsDraftReviewMessage,
+} from "../lib/news-drafts.js";
+import {
+  buildAdvancedPanel,
+  buildDraftsPanel,
+  buildHelpPanel,
+  buildHomePanel,
+  buildManagePanel,
+  buildNewsPanel,
+  buildPodcastPanel,
+  buildReplyKeyboard,
+  buildStatusPanel,
+  buildUsersPanel,
+  isMenuCallback,
+} from "../lib/bot-menu.js";
+
 const POSTS_KEY = "telegram_posts";
 const PODCASTS_KEY = "telegram_podcasts";
 const IMAGE_KEY_PREFIX = "telegram_post_image:";
@@ -32,11 +58,11 @@ export async function onRequestPost({ request, env }) {
   }
 
   if (update.callback_query) {
-    return handleCallbackQuery(update.callback_query, env);
+    return handleCallbackQuery(update.callback_query, env, request);
   }
 
   if (update.message) {
-    return handleBotMessage(update.message, env);
+    return handleBotMessage(update.message, env, request);
   }
 
   const channelPost = update.channel_post || update.edited_channel_post;
@@ -89,8 +115,20 @@ async function readPodcasts(env) {
   return Array.isArray(podcasts) ? filterVisiblePodcasts(podcasts, env) : [];
 }
 
-async function handleBotMessage(message, env) {
+async function handleBotMessage(message, env, request) {
   const text = (message.text || message.caption || "").trim();
+
+  if (!text.startsWith("/") && (await handleNewsDraftEditReply(message, env))) {
+    return jsonResponse({ ok: true, command: "news_edit_reply" });
+  }
+
+  if (isCommand(text, "start") || isCommand(text, "menu")) {
+    return handleMenuCommand(message, env);
+  }
+
+  if (isMenuButtonText(text)) {
+    return handleMenuButton(message, env, text);
+  }
 
   if (isCommand(text, "help") || isCommand(text, "commands")) {
     return handleHelpCommand(message, env);
@@ -111,6 +149,10 @@ async function handleBotMessage(message, env) {
 
   if (isCommand(text, "users")) {
     return handleListUsersCommand(message, env);
+  }
+
+  if (isCommand(text, "news")) {
+    return handleNewsRequestCommand(message, env);
   }
 
   if (isCommand(text, "podcast")) {
@@ -150,38 +192,117 @@ async function handleBotMessage(message, env) {
 
 async function handleHelpCommand(message, env) {
   const admin = await isAdminMessage(message, env);
-  const publicLines = [
-    "Команды бота:",
-    "/help — показать эту памятку.",
-    "/whoami — узнать свой Telegram ID.",
-  ];
-  const adminLines = [
-    "",
-    "Команды администратора:",
-    "/status — проверить KV, канал, ленту и подкасты.",
-    "/users — показать администраторов ленты.",
-    "/adduser 123456789 — добавить администратора по Telegram ID.",
-    "/removeuser 123456789 — убрать добавленного администратора.",
-    "/delete — подготовить удаление последнего поста из Telegram и с сайта.",
-    "/delete 123 — подготовить удаление поста по номеру сообщения.",
-    "/delete ссылка — подготовить удаление поста по ссылке Telegram.",
-    "/deletesite 123 — подготовить удаление поста только с сайта.",
-    "/deletesite ссылка — подготовить удаление поста по ссылке только с сайта.",
-    "/deletepodcast — подготовить удаление последнего выпуска со страницы подкастов.",
-    "/deletepodcast 123 — подготовить удаление выпуска по номеру сообщения.",
-    "/confirmdelete — запасное подтверждение, если кнопка не сработала.",
-    "/canceldelete — отменить подготовленное удаление, если кнопка потерялась.",
-    "/podcast Название — отправьте видео или ссылку на YouTube/VK с этой подписью, чтобы добавить выпуск.",
-    "/cover — ответьте этой командой на выпуск, приложив фото, чтобы задать обложку.",
-    "",
-    "После /delete, /deletesite и /deletepodcast бот пришлёт кнопки подтверждения.",
-    "Важно: /deletesite чистит пост и файлы только на сайте, но оставляет сообщение в Telegram.",
-    "Важно: /deletepodcast чистит карточку и файл на сайте, но не удаляет сообщение в Telegram.",
-  ];
-
-  await replyToBotMessage(env, message, (admin ? [...publicLines, ...adminLines] : publicLines).join("\n"));
+  await sendBotPanel(env, message, buildHelpPanel(admin));
 
   return jsonResponse({ ok: true, command: "help", admin });
+}
+
+async function handleMenuCommand(message, env) {
+  const admin = await isAdminMessage(message, env);
+  await sendBotHome(env, message, admin);
+
+  return jsonResponse({ ok: true, command: "menu", admin });
+}
+
+async function handleMenuButton(message, env, text) {
+  const action = menuActionFromText(text);
+  const admin = await isAdminMessage(message, env);
+
+  if (action === "help") {
+    await sendBotPanel(env, message, buildHelpPanel(admin));
+    return jsonResponse({ ok: true, command: "menu_help", admin });
+  }
+
+  if (!admin) {
+    await replyToBotMessage(env, message, "Этот раздел доступен только редакторам.");
+    return jsonResponse({ ok: true, command: "menu", denied: true });
+  }
+
+  const panel = await buildMenuPanel(`menu_${action}`, env, message);
+  await sendBotPanel(env, message, panel);
+
+  return jsonResponse({ ok: true, command: `menu_${action}`, admin: true });
+}
+
+function isMenuButtonText(text) {
+  return Boolean(menuActionFromText(text));
+}
+
+function menuActionFromText(text) {
+  const actions = {
+    "📰 Новость": "news",
+    "📝 Черновики": "drafts",
+    "🎙 Подкасты": "podcast",
+    "⚙️ Управление": "manage",
+    "ℹ️ Помощь": "help",
+  };
+
+  return actions[String(text || "").trim()] || "";
+}
+
+async function sendBotHome(env, message, admin) {
+  const panel = buildHomePanel({ admin, name: message.from?.first_name || "" });
+  await replyToBotMessage(env, message, panel.text, {
+    parse_mode: "HTML",
+    reply_markup: buildReplyKeyboard(admin),
+  });
+}
+
+async function sendBotPanel(env, message, panel) {
+  await replyToBotMessage(env, message, panel.text, {
+    parse_mode: "HTML",
+    reply_markup: panel.reply_markup,
+  });
+}
+
+async function buildMenuPanel(action, env, message) {
+  if (action === "menu_home") {
+    return buildHomePanel({
+      admin: await isAdminMessage(message, env),
+      name: message.from?.first_name || "",
+    });
+  }
+
+  if (action === "menu_news") {
+    return buildNewsPanel();
+  }
+
+  if (action === "menu_drafts") {
+    return buildDraftsPanel(await listNewsDrafts(env));
+  }
+
+  if (action === "menu_podcast") {
+    return buildPodcastPanel();
+  }
+
+  if (action === "menu_manage") {
+    return buildManagePanel();
+  }
+
+  if (action === "menu_status") {
+    const [posts, podcasts] = await Promise.all([readPosts(env), readPodcasts(env)]);
+    return buildStatusPanel({
+      kv: Boolean(env.POSTS_KV),
+      bot: Boolean(env.TELEGRAM_BOT_TOKEN),
+      channel: getChannelChatId(env),
+      posts: posts.length,
+      podcasts: podcasts.length,
+      newsReady: Boolean(env.GROQ_API_KEY && env.NEWS_RUN_SECRET),
+    });
+  }
+
+  if (action === "menu_users") {
+    return buildUsersPanel({
+      envIds: getEnvAdminIds(env),
+      dynamicIds: await getDynamicAdminIds(env),
+    });
+  }
+
+  if (action === "menu_advanced") {
+    return buildAdvancedPanel();
+  }
+
+  return buildHelpPanel(await isAdminMessage(message, env));
 }
 
 async function handleDeleteCommand(message, env, text) {
@@ -374,8 +495,21 @@ async function handleConfirmDeleteCommand(message, env) {
   return response;
 }
 
-async function handleCallbackQuery(query, env) {
+async function handleCallbackQuery(query, env, request) {
   const data = String(query.data || "");
+
+  if (isMenuCallback(data)) {
+    return handleMenuCallback(query, env);
+  }
+
+  if (data === "news_request") {
+    return handleNewsRequestCallback(query, env, request);
+  }
+
+  if (isNewsDraftCallback(data)) {
+    return handleNewsDraftCallback(query, env);
+  }
+
   const match = data.match(/^delete_(confirm|cancel):([a-z0-9_-]+)$/i);
 
   if (!match) {
@@ -427,6 +561,379 @@ async function handleCallbackQuery(query, env) {
   }
 
   return response;
+}
+
+async function handleNewsRequestCommand(message, env) {
+  if (!(await isAdminMessage(message, env))) {
+    await replyToBotMessage(env, message, "Команда доступна только администраторам.");
+    return jsonResponse({ ok: true, command: "news", denied: true });
+  }
+
+  await sendBotPanel(env, message, buildNewsPanel());
+
+  return jsonResponse({ ok: true, command: "news", requested: false });
+}
+
+async function handleMenuCallback(query, env) {
+  const action = String(query.data || "").toLowerCase();
+  const message = messageFromCallbackQuery(query);
+  const publicAction = action === "menu_home" || action === "menu_help";
+  const admin = await isAdminMessage(message, env);
+
+  if (!publicAction && !admin) {
+    await answerCallbackQuery(env, query, "Раздел доступен только редакторам.", true);
+    return jsonResponse({ ok: true, command: "menu_callback", denied: true });
+  }
+
+  const panel = await buildMenuPanel(action, env, message);
+  await editBotPanelCallback(env, query, panel);
+  await answerCallbackQuery(env, query);
+
+  return jsonResponse({ ok: true, command: "menu_callback", action, admin });
+}
+
+async function handleNewsRequestCallback(query, env, request) {
+  const message = messageFromCallbackQuery(query);
+
+  if (!(await isAdminMessage(message, env))) {
+    await answerCallbackQuery(env, query, "Команда доступна только администраторам.", true);
+    return jsonResponse({ ok: true, command: "news_request", denied: true });
+  }
+
+  await answerCallbackQuery(env, query, "Ищу свежую новость...");
+  const result = await requestNewsDraft(env, request);
+
+  if (!result.ok) {
+    await answerCallbackQuery(env, query, "Не получилось подготовить черновик. Попробуйте ещё раз.", true);
+    await replyToNewsCallback(env, query, `Не удалось создать черновик: ${result.error || "неизвестная ошибка"}.`);
+    return jsonResponse({ ok: false, command: "news_request", error: result.error || "request_failed" });
+  }
+
+  if (!result.created) {
+    await answerCallbackQuery(env, query, "Подходящих свежих новостей пока нет.");
+    await replyToNewsCallback(env, query, "Подходящих свежих новостей пока нет. Попробуйте позже.");
+    return jsonResponse({ ok: true, command: "news_request", created: false });
+  }
+
+  await answerCallbackQuery(env, query, "Черновик отправлен.");
+  await replyToNewsCallback(env, query, "📝 Черновик отправлен в личный чат на согласование.");
+
+  return jsonResponse({ ok: true, command: "news_request", created: true, draftId: result.draftId || null });
+}
+
+async function requestNewsDraft(env, request) {
+  const secret = String(env.NEWS_RUN_SECRET || "");
+
+  if (!secret) {
+    return { ok: false, error: "Не настроен NEWS_RUN_SECRET" };
+  }
+
+  let runUrl;
+
+  try {
+    runUrl = env.NEWS_RUN_URL
+      ? new URL(env.NEWS_RUN_URL).toString()
+      : new URL("/api/news-run", request.url).toString();
+  } catch {
+    return { ok: false, error: "Некорректный NEWS_RUN_URL" };
+  }
+
+  try {
+    const response = await fetch(runUrl, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${secret}` },
+    });
+    const data = await response.json().catch(() => ({}));
+
+    return response.ok && data.ok
+      ? data
+      : { ok: false, error: data.error || `Сервис новостей вернул ${response.status}` };
+  } catch {
+    return { ok: false, error: "Сервис новостей недоступен" };
+  }
+}
+
+async function handleNewsDraftCallback(query, env) {
+  const parsed = parseNewsDraftCallback(query.data);
+  const message = messageFromCallbackQuery(query);
+
+  if (!parsed) {
+    await answerCallbackQuery(env, query, "Неизвестная кнопка.");
+    return jsonResponse({ ok: true, command: "news_callback", ignored: true });
+  }
+
+  if (!(await isAdminMessage(message, env))) {
+    await answerCallbackQuery(env, query, "Команда доступна только администраторам.", true);
+    return jsonResponse({ ok: true, command: "news_callback", denied: true });
+  }
+
+  const draft = await readNewsDraft(env, parsed.draftId);
+
+  if (!draft) {
+    await answerCallbackQuery(env, query, "Этот черновик уже недоступен.", true);
+    await removeCallbackButtons(env, query);
+    return jsonResponse({ ok: true, command: "news_callback", missing: true });
+  }
+
+  if (Number(draft.reviewRevision || 1) !== parsed.revision) {
+    await answerCallbackQuery(env, query, "Есть более свежая версия черновика.", true);
+    await removeCallbackButtons(env, query);
+    return jsonResponse({ ok: true, command: "news_callback", stale: true });
+  }
+
+  if (draft.status !== "pending") {
+    await answerCallbackQuery(env, query, newsDraftStatusText(draft.status), true);
+    await removeCallbackButtons(env, query);
+    return jsonResponse({ ok: true, command: "news_callback", status: draft.status });
+  }
+
+  if (parsed.action === "skip") {
+    await saveNewsDraft(env, { ...draft, status: "skipped", skippedAt: new Date().toISOString() });
+    await answerCallbackQuery(env, query, "Черновик пропущен.");
+    await removeCallbackButtons(env, query);
+    await replyToNewsCallback(env, query, "🗑 Черновик пропущен и не будет опубликован.");
+
+    return jsonResponse({ ok: true, command: "news_callback", action: "skip", draftId: draft.id });
+  }
+
+  if (parsed.action === "edit") {
+    await saveNewsDraft(env, {
+      ...draft,
+      status: "editing",
+      reviewRevision: Number(draft.reviewRevision || 1) + 1,
+      editingStartedAt: new Date().toISOString(),
+    });
+    await answerCallbackQuery(env, query, "Жду новый текст.");
+    await removeCallbackButtons(env, query);
+    await replyToNewsCallback(
+      env,
+      query,
+      "✏️ Ответьте на карточку черновика новым текстом. Я добавлю фирменный финал и пришлю обновлённый вариант на подтверждение.",
+    );
+
+    return jsonResponse({ ok: true, command: "news_callback", action: "edit", draftId: draft.id });
+  }
+
+  await answerCallbackQuery(env, query, "Готовлю чистый пост для пересылки...");
+  const ready = await sendNewsReadyForForward(env, draft, query.message?.chat?.id);
+
+  if (!ready.ok) {
+    await answerCallbackQuery(env, query, "Не удалось подготовить пост. Попробуйте ещё раз.", true);
+
+    return jsonResponse({ ok: false, command: "news_callback", action: "ready", error: ready.error });
+  }
+
+  await saveNewsDraft(env, {
+    ...draft,
+    status: "ready",
+    readyAt: new Date().toISOString(),
+    readyMessageId: ready.messageId || null,
+    usedPlainEmojiFallback: ready.usedPlainEmojiFallback,
+  });
+  await removeCallbackButtons(env, query);
+  await replyToNewsCallback(
+    env,
+    query,
+    ready.usedPlainEmojiFallback
+      ? "✅ Чистый пост отправлен отдельным сообщением. Telegram не принял custom emoji, поэтому в подписи обычный 📱."
+      : "✅ Готовый пост отправлен отдельным сообщением — перешлите его вручную в канал.",
+  );
+
+  return jsonResponse({
+    ok: true,
+    command: "news_callback",
+    action: "ready",
+    draftId: draft.id,
+    messageId: ready.messageId || null,
+  });
+}
+
+async function handleNewsDraftEditReply(message, env) {
+  const reply = message.reply_to_message;
+
+  if (!reply?.message_id || !message.chat?.id) {
+    return false;
+  }
+
+  const draft = await readNewsDraftForReviewMessage(env, message.chat.id, reply.message_id);
+
+  if (!draft) {
+    return false;
+  }
+
+  if (!(await isAdminMessage(message, env))) {
+    await replyToBotMessage(env, message, "Править черновики могут только администраторы.");
+    return true;
+  }
+
+  if (draft.status !== "editing") {
+    await replyToBotMessage(env, message, newsDraftStatusText(draft.status));
+    return true;
+  }
+
+  const body = normalizeNewsEditorText(message.text || message.caption || "");
+
+  if (!body) {
+    await replyToBotMessage(env, message, "Пришлите непустой текст ответом на карточку черновика.");
+    return true;
+  }
+
+  const nextDraft = await saveNewsDraft(env, {
+    ...draft,
+    status: "pending",
+    headline: "",
+    body,
+    emoji: "",
+    editedAt: new Date().toISOString(),
+  });
+  const review = await sendNewsDraftForReview(env, nextDraft, message.chat.id);
+
+  if (!review.ok) {
+    await saveNewsDraft(env, {
+      ...nextDraft,
+      status: "editing",
+      lastReviewError: review.error || "Telegram error",
+    });
+    await replyToBotMessage(env, message, "Не смог отправить обновлённый черновик. Попробуйте ответить ещё раз.");
+    return true;
+  }
+
+  await saveNewsDraftReviewMessage(env, nextDraft, review.chatId, review.messageId);
+  await replyToBotMessage(env, message, "Готово — ниже обновлённый черновик с новыми кнопками.");
+
+  return true;
+}
+
+async function sendNewsReadyForForward(env, draft, chatId) {
+  if (!chatId) {
+    return { ok: false, error: "Не удалось определить личный чат для финального сообщения" };
+  }
+
+  const useCustomEmoji = isPremiumEmojiEnabled(env);
+  const modes = useCustomEmoji ? [true, false] : [false];
+  let lastError = "";
+
+  for (const customEmoji of modes) {
+    const html = buildNewsPostHtml(draft, customEmoji);
+    const imageUrl = safeHttpUrl(draft.imageUrl);
+    const photoResult = imageUrl && html.length <= 1024
+      ? await callTelegram(env, "sendPhoto", {
+          chat_id: chatId,
+          photo: imageUrl,
+          caption: html,
+          parse_mode: "HTML",
+        })
+      : null;
+
+    if (photoResult?.ok) {
+      return {
+        ok: true,
+        messageId: photoResult.result?.message_id,
+        usedPlainEmojiFallback: useCustomEmoji && !customEmoji,
+      };
+    }
+
+    const textResult = await callTelegram(env, "sendMessage", {
+      chat_id: chatId,
+      text: html,
+      parse_mode: "HTML",
+      disable_web_page_preview: true,
+    });
+
+    if (textResult.ok) {
+      return {
+        ok: true,
+        messageId: textResult.result?.message_id,
+        usedPlainEmojiFallback: useCustomEmoji && !customEmoji,
+      };
+    }
+
+    lastError = textResult.description || photoResult?.description || lastError;
+  }
+
+  return { ok: false, error: lastError || "Telegram API error" };
+}
+
+async function sendNewsDraftForReview(env, draft, chatId) {
+  const useCustomEmoji = isPremiumEmojiEnabled(env);
+  const modes = useCustomEmoji ? [true, false] : [false];
+  let lastError = "";
+
+  for (const customEmoji of modes) {
+    const html = buildNewsPostHtml(draft, customEmoji);
+    const payload = {
+      chat_id: chatId,
+      parse_mode: "HTML",
+      reply_markup: buildNewsReviewKeyboard(draft),
+    };
+    const imageUrl = safeHttpUrl(draft.imageUrl);
+    const photoResult = imageUrl && html.length <= 1024
+      ? await callTelegram(env, "sendPhoto", { ...payload, photo: imageUrl, caption: html })
+      : null;
+
+    if (photoResult?.ok) {
+      return { ok: true, chatId, messageId: photoResult.result?.message_id };
+    }
+
+    const textResult = await callTelegram(env, "sendMessage", { ...payload, text: html });
+
+    if (textResult.ok) {
+      return { ok: true, chatId, messageId: textResult.result?.message_id };
+    }
+
+    lastError = textResult.description || photoResult?.description || lastError;
+  }
+
+  return { ok: false, chatId, error: lastError || "Telegram API error" };
+}
+
+async function replyToNewsCallback(env, query, text) {
+  const chatId = query.message?.chat?.id;
+
+  if (!chatId) {
+    return;
+  }
+
+  await callTelegram(env, "sendMessage", {
+    chat_id: chatId,
+    text,
+    reply_to_message_id: query.message?.message_id,
+  });
+}
+
+function normalizeNewsEditorText(value) {
+  return String(value || "")
+    .replace(/<[^>]*>/g, "")
+    .replace(/\n*📱\s*(?:Миллиардар|@milliardarmedia)\s*$/i, "")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim()
+    .slice(0, 760);
+}
+
+function newsDraftStatusText(status) {
+  if (status === "ready") {
+    return "Готовое сообщение уже отправлено в личный чат для пересылки.";
+  }
+
+  if (status === "skipped") {
+    return "Этот черновик был пропущен.";
+  }
+
+  if (status === "editing") {
+    return "Этот черновик сейчас ожидает новую версию текста.";
+  }
+
+  return "Этот черновик сейчас недоступен.";
+}
+
+function safeHttpUrl(value) {
+  try {
+    const url = new URL(String(value || ""));
+
+    return /^(https?):$/.test(url.protocol) ? url.toString() : "";
+  } catch {
+    return "";
+  }
 }
 
 async function handleCancelDeleteCommand(message, env) {
@@ -1702,6 +2209,23 @@ async function editCallbackMessage(env, query, text) {
     chat_id: chatId,
     message_id: messageId,
     text,
+  });
+}
+
+async function editBotPanelCallback(env, query, panel) {
+  const chatId = query.message?.chat?.id;
+  const messageId = query.message?.message_id;
+
+  if (!chatId || !messageId) {
+    return;
+  }
+
+  await callTelegram(env, "editMessageText", {
+    chat_id: chatId,
+    message_id: messageId,
+    text: panel.text,
+    parse_mode: "HTML",
+    reply_markup: panel.reply_markup || { inline_keyboard: [] },
   });
 }
 
