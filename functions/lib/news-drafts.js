@@ -38,7 +38,7 @@ export function buildNewsPostHtml(draft, useCustomEmoji = false) {
 
   parts.push(buildChannelFooter(useCustomEmoji));
 
-  return parts.join("<br><br>");
+  return parts.join("\n\n");
 }
 
 export function buildNewsReviewKeyboard(draft) {
@@ -199,7 +199,7 @@ function buildChannelFooter(useCustomEmoji) {
 function formatParagraphs(value, emoji) {
   const paragraphs = value
     .split(/\n\s*\n+/)
-    .map((paragraph) => escapeHtml(paragraph.trim()).replace(/\n/g, "<br>"))
+    .map((paragraph) => escapeHtml(paragraph.trim()).replace(/\n/g, "\n"))
     .filter(Boolean);
 
   if (!paragraphs.length) {
@@ -210,7 +210,7 @@ function formatParagraphs(value, emoji) {
     paragraphs[paragraphs.length - 1] = `${paragraphs.at(-1)} ${emoji}`;
   }
 
-  return paragraphs.join("<br><br>");
+  return paragraphs.join("\n\n");
 }
 
 function normalizeEmoji(value) {
