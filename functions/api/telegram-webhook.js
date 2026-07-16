@@ -36,6 +36,7 @@ const MAX_IMAGE_BYTES = 4 * 1024 * 1024;
 const MAX_PODCAST_VIDEO_BYTES = 20 * 1024 * 1024;
 const DEFAULT_FEED_RESET_AT = 1779913144;
 const DELETE_CONFIRM_TTL_SECONDS = 10 * 60;
+const TELEGRAM_WEBHOOK_UPDATES = ["message", "channel_post", "edited_channel_post", "callback_query"];
 
 export async function onRequestPost({ request, env }) {
   if (!env.POSTS_KV) {
@@ -123,6 +124,7 @@ async function handleBotMessage(message, env, request) {
   }
 
   if (isCommand(text, "start") || isCommand(text, "menu")) {
+    await ensureTelegramWebhookUpdates(request, env);
     return handleMenuCommand(message, env);
   }
 
@@ -1290,6 +1292,30 @@ function isValidTelegramSecret(request, env) {
   }
 
   return request.headers.get("X-Telegram-Bot-Api-Secret-Token") === expectedSecret;
+}
+
+async function ensureTelegramWebhookUpdates(request, env) {
+  if (!env.TELEGRAM_BOT_TOKEN || !env.TELEGRAM_WEBHOOK_SECRET) {
+    return;
+  }
+
+  let webhookUrl;
+
+  try {
+    webhookUrl = new URL(request.url);
+  } catch {
+    return;
+  }
+
+  if (webhookUrl.protocol !== "https:") {
+    return;
+  }
+
+  await callTelegram(env, "setWebhook", {
+    url: webhookUrl.toString(),
+    secret_token: env.TELEGRAM_WEBHOOK_SECRET,
+    allowed_updates: TELEGRAM_WEBHOOK_UPDATES,
+  });
 }
 
 function isAllowedChannel(chat, env) {
