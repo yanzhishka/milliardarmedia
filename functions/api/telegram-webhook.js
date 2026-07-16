@@ -603,7 +603,7 @@ async function handleNewsRequestCallback(query, env, request) {
   }
 
   await answerCallbackQuery(env, query, "Ищу свежую новость...");
-  const result = await requestNewsDraft(env, request);
+  const result = await requestNewsDraft(env, request, message.chat?.id);
 
   if (!result.ok) {
     await answerCallbackQuery(env, query, "Не получилось подготовить черновик. Попробуйте ещё раз.", true);
@@ -623,7 +623,7 @@ async function handleNewsRequestCallback(query, env, request) {
   return jsonResponse({ ok: true, command: "news_request", created: true, draftId: result.draftId || null });
 }
 
-async function requestNewsDraft(env, request) {
+async function requestNewsDraft(env, request, reviewChatId = "") {
   const secret = String(env.NEWS_RUN_SECRET || "");
 
   if (!secret) {
@@ -643,7 +643,10 @@ async function requestNewsDraft(env, request) {
   try {
     const response = await fetch(runUrl, {
       method: "POST",
-      headers: { Authorization: `Bearer ${secret}` },
+      headers: {
+        Authorization: `Bearer ${secret}`,
+        ...(reviewChatId ? { "X-News-Review-Chat-Id": String(reviewChatId) } : {}),
+      },
     });
     const data = await response.json().catch(() => ({}));
 

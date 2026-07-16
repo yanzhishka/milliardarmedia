@@ -36,7 +36,8 @@ export async function onRequestPost({ request, env }) {
     return jsonResponse({ ok: false, error: "Missing GROQ_API_KEY" }, 500);
   }
 
-  const reviewChatIds = getNewsReviewChatIds(env);
+  const requestedReviewChatId = getRequestedReviewChatId(request);
+  const reviewChatIds = requestedReviewChatId ? [requestedReviewChatId] : getNewsReviewChatIds(env);
 
   if (!reviewChatIds.length) {
     return jsonResponse({ ok: false, error: "Missing NEWS_REVIEW_CHAT_IDS or TELEGRAM_ADMIN_IDS" }, 500);
@@ -78,6 +79,12 @@ export async function onRequestPost({ request, env }) {
 
 export async function onRequestOptions() {
   return new Response(null, { status: 204, headers: corsHeaders() });
+}
+
+function getRequestedReviewChatId(request) {
+  const chatId = String(request.headers.get("X-News-Review-Chat-Id") || "").trim();
+
+  return /^-?\d+$/.test(chatId) ? chatId : "";
 }
 
 async function createFreshDraft(env, candidates) {
