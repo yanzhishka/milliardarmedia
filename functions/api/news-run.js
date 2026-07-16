@@ -119,7 +119,7 @@ async function createFreshDraft(env, candidates) {
       continue;
     }
 
-    const imageUrl = await resolveImage(env, generated.imageQuery, article.imageUrl || candidate.imageUrl);
+    const imageUrl = await resolveImage(env, generated.imageQuery, article.imageUrl, candidate.imageUrl);
 
     return {
       providerError: "",
@@ -369,10 +369,12 @@ function parseModelJson(value) {
   }
 }
 
-async function resolveImage(env, imageQuery, sourceImage) {
-  const pexelsImage = await findPexelsImage(env, imageQuery);
+async function resolveImage(env, imageQuery, articleImage, feedImage) {
+  const originalImage = safeHttpUrl(articleImage) || safeHttpUrl(feedImage);
 
-  return pexelsImage || safeHttpUrl(sourceImage);
+  // The article's own image is the only visual that is guaranteed to describe
+  // this exact news item. Stock search is a last resort, never the default.
+  return originalImage || findPexelsImage(env, imageQuery);
 }
 
 async function findPexelsImage(env, imageQuery) {
