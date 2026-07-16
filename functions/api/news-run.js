@@ -390,31 +390,43 @@ async function sendDraftForReview(env, draft, chatId) {
     parse_mode: "HTML",
     reply_markup: buildNewsReviewKeyboard(draft),
   };
-  const html = buildNewsPostHtml(draft, isPremiumEmojiEnabled(env));
   const imageUrl = safeHttpUrl(draft.imageUrl);
-  const method = imageUrl && html.length <= 1024 ? "sendPhoto" : "sendMessage";
-  const result = method === "sendPhoto"
-    ? await callTelegram(env, method, { ...payload, photo: imageUrl, caption: html })
-    : await callTelegram(env, method, { ...payload, text: html });
+  const emojiModes = isPremiumEmojiEnabled(env) ? [true, false] : [false];
+  let lastError = "";
 
-  if (result.ok) {
-    return { ok: true, chatId, messageId: result.result?.message_id };
-  }
+  for (const customEmoji of emojiModes) {
+    const html = buildNewsPostHtml(draft, customEmoji);
 
-  // A Premium/custom emoji entitlement must never block a draft from reaching
-  // its editor. Retry once with the normal phone emoji.
-  if (isPremiumEmojiEnabled(env)) {
-    const fallbackHtml = buildNewsPostHtml(draft, false);
-    const fallback = method === "sendPhoto"
-      ? await callTelegram(env, method, { ...payload, photo: imageUrl, caption: fallbackHtml })
-      : await callTelegram(env, method, { ...payload, text: fallbackHtml });
+    if (imageUrl && html.length <= 1024) {
+      const photo = await callTelegram(env, "sendPhoto", { ...payload, photo: imageUrl, caption: html });
 
-    if (fallback.ok) {
-      return { ok: true, chatId, messageId: fallback.result?.message_id, usedFallback: true };
+      if (photo.ok) {
+        return {
+          ok: true,
+          chatId,
+          messageId: photo.result?.message_id,
+          usedFallback: isPremiumEmojiEnabled(env) && !customEmoji,
+        };
+      }
+
+      lastError = photo.description || lastError;
     }
+
+    const text = await callTelegram(env, "sendMessage", { ...payload, text: html, disable_web_page_preview: true });
+
+    if (text.ok) {
+      return {
+        ok: true,
+        chatId,
+        messageId: text.result?.message_id,
+        usedFallback: isPremiumEmojiEnabled(env) && !customEmoji,
+      };
+    }
+
+    lastError = text.description || lastError;
   }
 
-  return { ok: false, chatId, error: result.description || "Telegram delivery failed" };
+  return { ok: false, chatId, error: lastError || "Telegram delivery failed" };
 }
 
 async function callTelegram(env, method, payload) {
