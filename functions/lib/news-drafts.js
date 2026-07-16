@@ -40,6 +40,7 @@ export function buildNewsPostHtml(draft, useCustomEmoji = false) {
   const emoji = normalizeEmoji(draft.emoji);
   const contextEmojis = normalizePremiumEmojiCategories(draft.premiumEmojiCategories)
     .map((category) => buildContextPremiumEmoji(category, useCustomEmoji));
+  const keyPhrases = normalizeKeyPhrases(draft.keyPhrases, body);
   const parts = [];
 
   if (headline) {
@@ -47,7 +48,7 @@ export function buildNewsPostHtml(draft, useCustomEmoji = false) {
   }
 
   if (body) {
-    parts.push(formatParagraphs(body, emoji, contextEmojis));
+    parts.push(formatParagraphs(body, emoji, contextEmojis, keyPhrases));
   }
 
   parts.push(buildChannelFooter(useCustomEmoji));
@@ -66,6 +67,29 @@ export function normalizePremiumEmojiCategories(value) {
   // A completed post should always have a friendly visual accent, including if
   // a model response is malformed or an older saved draft has no category.
   return valid.length ? valid : ["positive"];
+}
+
+export function normalizeKeyPhrases(value, body) {
+  const source = String(body || "").trim();
+  const sourceLower = source.toLocaleLowerCase("ru-RU");
+  const phrases = Array.isArray(value) ? value : [];
+  const seen = new Set();
+
+  return phrases
+    .map((phrase) => String(phrase || "").replace(/\s+/g, " ").trim())
+    .filter((phrase) => phrase.length >= 3 && phrase.length <= 80)
+    .filter((phrase) => sourceLower.includes(phrase.toLocaleLowerCase("ru-RU")))
+    .filter((phrase) => {
+      const key = phrase.toLocaleLowerCase("ru-RU");
+
+      if (seen.has(key)) {
+        return false;
+      }
+
+      seen.add(key);
+      return true;
+    })
+    .slice(0, 3);
 }
 
 export function buildNewsReviewKeyboard(draft) {
@@ -235,10 +259,13 @@ function buildContextPremiumEmoji(category, useCustomEmoji) {
     : definition.fallback;
 }
 
-function formatParagraphs(value, emoji, contextEmojis = []) {
+function formatParagraphs(value, emoji, contextEmojis = [], keyPhrases = []) {
   const paragraphs = value
     .split(/\n\s*\n+/)
-    .map((paragraph) => escapeHtml(paragraph.trim()).replace(/\n/g, "\n"))
+    .map((paragraph) => highlightKeyPhrases(
+      escapeHtml(paragraph.trim()).replace(/\n/g, "\n"),
+      keyPhrases,
+    ))
     .filter(Boolean);
 
   if (!paragraphs.length) {
@@ -256,6 +283,21 @@ function formatParagraphs(value, emoji, contextEmojis = []) {
   return paragraphs.join("\n\n");
 }
 
+function highlightKeyPhrases(value, keyPhrases) {
+  const escapedPhrases = keyPhrases
+    .map((phrase) => escapeHtml(phrase))
+    .filter(Boolean)
+    .sort((left, right) => right.length - left.length);
+
+  if (!escapedPhrases.length) {
+    return value;
+  }
+
+  const pattern = escapedPhrases.map(escapeRegExp).join("|");
+
+  return value.replace(new RegExp(`(${pattern})`, "giu"), "<b>$1</b>");
+}
+
 function normalizeEmoji(value) {
   const emoji = String(value || "").trim();
 
@@ -270,6 +312,10 @@ function escapeHtml(value) {
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;");
+}
+
+function escapeRegExp(value) {
+  return String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
 function safeHttpUrl(value) {
