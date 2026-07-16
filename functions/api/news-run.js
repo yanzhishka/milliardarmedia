@@ -62,7 +62,16 @@ export async function onRequestPost({ request, env }) {
   const delivered = reviews.filter((review) => review.ok);
 
   if (!delivered.length) {
-    return jsonResponse({ ok: false, created: false, error: "Telegram could not deliver the draft" }, 502);
+    const errors = reviews
+      .map((review) => cleanText(review.error || "", 220))
+      .filter(Boolean)
+      .join("; ");
+
+    return jsonResponse({
+      ok: false,
+      created: false,
+      error: errors || "Telegram could not deliver the draft",
+    }, 502);
   }
 
   for (const review of delivered) {
