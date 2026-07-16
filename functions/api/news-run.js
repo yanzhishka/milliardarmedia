@@ -15,7 +15,7 @@ import {
 const DEFAULT_GROQ_MODEL = "llama-3.3-70b-versatile";
 const MAX_CANDIDATES_PER_RUN = 20;
 const MAX_ARTICLE_CHARS = 7000;
-const MIN_DRAFT_BODY_CHARS = 420;
+const MIN_DRAFT_BODY_CHARS = 280;
 const MAX_DRAFT_BODY_CHARS = 720;
 const MAX_NEWS_IMAGE_BYTES = 8 * 1024 * 1024;
 
