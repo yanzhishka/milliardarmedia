@@ -6,7 +6,6 @@ import {
   hasSeenNews,
   isPremiumEmojiEnabled,
   normalizeKeyPhrases,
-  normalizePremiumEmojiCategories,
   rememberSeenNews,
   saveNewsDraft,
   saveNewsDraftReviewMessage,
@@ -146,7 +145,7 @@ async function createFreshDraft(env, candidates) {
         env,
         candidate,
         article,
-        `Текст получился слишком коротким. Подготовь содержательный body объёмом ${MIN_DRAFT_BODY_CHARS}–${MAX_DRAFT_BODY_CHARS} знаков: 2–3 абзаца с контекстом, конкретными деталями из источника и объяснением, чем новость интересна.`,
+        `Текст получился слишком коротким. Подготовь содержательный body объёмом ${MIN_DRAFT_BODY_CHARS}–${MAX_DRAFT_BODY_CHARS} знаков: от одного до трёх смысловых абзацев с контекстом, конкретными деталями из источника и объяснением, чем новость интересна. Простой инфоповод оставь одним блоком, отдельные детали вынеси в новые абзацы.`,
       );
       body = cleanText(generated?.body, MAX_DRAFT_BODY_CHARS);
     }
@@ -175,7 +174,6 @@ async function createFreshDraft(env, candidates) {
         headline: cleanText(generated.headline, 130),
         body,
         emoji: cleanEmoji(generated.emoji),
-        premiumEmojiCategories: normalizePremiumEmojiCategories(generated.premiumEmojiCategories),
         keyPhrases: normalizeKeyPhrases(generated.keyPhrases, body),
         imageUrl,
         imageQuery: cleanText(generated.imageQuery, 120),
@@ -434,9 +432,9 @@ async function generatePost(env, candidate, article, additionalInstruction = "")
     "Тематика канала: наука, технологии, культура, искусство, любопытные открытия, дизайн, кино, игры, добрые и вдохновляющие события.",
     "Жёстко отклони политику и всё, что напрямую связано с государственными деятелями, выборами, санкциями и политическими конфликтами. Также не бери войны, терроризм, преступления, насилие, катастрофы, смерти и тяжёлые трагедии.",
     "Новость не обязана быть позитивной: допускаются интересные нейтральные, аналитические и необычные инфоповоды без запрещённых тем. Не отклоняй материал только из-за отсутствия вдохновляющего или радостного оттенка. Отклоняй при прямом нарушении правил, явной токсичности или недостатке проверяемых фактов.",
-    `Пиши по-русски: нейтрально, живо, без кликбейта, 2–3 коротких абзаца, ${MIN_DRAFT_BODY_CHARS}–${MAX_DRAFT_BODY_CHARS} знаков в body. Раскрой суть, добавь подтверждённые детали и объясни, чем событие интересно. Не придумывай факты. Не добавляй ссылку, подпись канала или HTML.`,
-    "Верни строго JSON: {\"publish\":boolean,\"headline\":string,\"body\":string,\"emoji\":string,\"premiumEmojiCategories\":string[],\"keyPhrases\":string[],\"imageQuery\":string}. headline можно оставить пустым; emoji — один обычный тематический эмодзи; imageQuery — точный запрос для легального фотобанка на английском.",
-    "premiumEmojiCategories — массив из 1–3 категорий Premium emoji: positive (универсальная спокойная новость), discovery (открытие или неожиданный факт), space (космос), transport (транспорт и авиация), business (бизнес и деньги), knowledge (наука и образование), achievement (спорт, рекорд или личное достижение), celebration (праздник, премьера или победа), technology (компьютеры, гаджеты и IT), nature (экология и растения), animals (животные), food (еда и гастрономия), history (история, археология и палеонтология), entertainment (кино, игры, искусство и шоу), community (общественные и добрые инициативы). Сначала выбери самую точную категорию; positive используй только если ни одна тематическая категория не подходит. Обычно выбирай одну, две-три — только когда каждая действительно оправдана. Не добавляй эмодзи в body.",
+    `Пиши по-русски: нейтрально, живо, без кликбейта, ${MIN_DRAFT_BODY_CHARS}–${MAX_DRAFT_BODY_CHARS} знаков в body. Делай от одного до трёх смысловых абзацев: простой инфоповод оставь одним цельным блоком, а отдельный контекст или детали отделяй пустой строкой. Раскрой суть, добавь подтверждённые детали и объясни, чем событие интересно. Не придумывай факты. Не добавляй ссылку, подпись канала или HTML.`,
+    "Верни строго JSON: {\"publish\":boolean,\"headline\":string,\"body\":string,\"emoji\":string,\"keyPhrases\":string[],\"imageQuery\":string}. headline можно оставить пустым, если отдельный заголовок лишь повторяет первое предложение; emoji — ровно один обычный тематический эмодзи, который подходит к конкретной новости; imageQuery — точный запрос для легального фотобанка на английском.",
+    "Не добавляй никаких эмодзи в headline или body. Бот сам поставит выбранный обычный emoji ровно один раз — после последнего предложения. Не используй Premium/custom emoji или Telegram-разметку.",
     "keyPhrases — массив из 1–3 коротких ключевых слов или фраз, которые дословно есть в body. Выбери самые важные смысловые акценты новости. Не включай служебные слова, не меняй форму слов и не добавляй разметку: бот сам выделит эти фразы жирным в Telegram.",
     "imageQuery — 5–12 английских слов для реалистичной редакционной фотографии именно об этом событии: назови конкретный объект, место или действие. Не используй общие слова вроде news, technology, abstract и не проси коллаж, текст или логотип.",
     additionalInstruction,
@@ -650,7 +648,7 @@ function isAuthorizedRunner(request, env) {
 
 function cleanText(value, maxLength) {
   return stripHtml(String(value || ""))
-    .replace(/\s+\n/g, "\n")
+    .replace(/[ \t]+\n/g, "\n")
     .replace(/\n{3,}/g, "\n\n")
     .replace(/[ \t]{2,}/g, " ")
     .trim()
@@ -658,9 +656,11 @@ function cleanText(value, maxLength) {
 }
 
 function cleanEmoji(value) {
-  const emoji = String(value || "").trim();
+  const emoji = String(value || "").match(
+    /(?:\p{Regional_Indicator}{2}|[#*0-9]\uFE0F?\u20E3|\p{Extended_Pictographic}(?:\uFE0E|\uFE0F)?(?:\p{Emoji_Modifier})?(?:\u200D\p{Extended_Pictographic}(?:\uFE0E|\uFE0F)?(?:\p{Emoji_Modifier})?)*)/u,
+  );
 
-  return emoji.length > 0 && emoji.length <= 8 ? emoji : "";
+  return emoji?.[0] || "";
 }
 
 function stripHtml(value) {

@@ -8,27 +8,7 @@ const MAX_SEEN_ITEMS = 360;
 export const CHANNEL_FOOTER_EMOJI_ID = "5330237710655306682";
 export const CHANNEL_URL = "https://t.me/milliardarmedia";
 
-// These custom emoji are already part of the channel's visual language. The
-// model selects semantic categories, never raw emoji ids or Telegram markup.
-// Keeping the mapping here makes the generated HTML safe and gives Telegram a
-// reliable native-emoji fallback when Premium emoji are unavailable.
-const CONTEXT_PREMIUM_EMOJIS = {
-  positive: { emojiId: "5195306786155947802", fallback: "🙂" },
-  discovery: { emojiId: "5470051501869140340", fallback: "🤯" },
-  space: { emojiId: "5188481279963715781", fallback: "🚀" },
-  transport: { emojiId: "5819098039406562961", fallback: "🚕" },
-  business: { emojiId: "5314330921317473766", fallback: "🤑" },
-  knowledge: { emojiId: "5309826024609970534", fallback: "🤓" },
-  achievement: { emojiId: "5463137180048175912", fallback: "💪" },
-  celebration: { emojiId: "5280538638323574909", fallback: "🎉" },
-  technology: { emojiId: "5334685308204100177", fallback: "💻" },
-  nature: { emojiId: "5368338090660209672", fallback: "🌿" },
-  animals: { emojiId: "5235478122081560535", fallback: "🐈‍⬛" },
-  food: { emojiId: "5312126881540093748", fallback: "🌭" },
-  history: { emojiId: "5341811621020839100", fallback: "🦖" },
-  entertainment: { emojiId: "5199838560768771372", fallback: "🤩" },
-  community: { emojiId: "5271684318429748295", fallback: "💗" },
-};
+const DEFAULT_CONTEXT_EMOJI = "📰";
 
 export function createNewsDraftId() {
   return `${Date.now().toString(36)}${crypto.randomUUID().replace(/-/g, "").slice(0, 10)}`;
@@ -45,11 +25,9 @@ export function isPremiumEmojiEnabled(env) {
 }
 
 export function buildNewsPostHtml(draft, useCustomEmoji = false) {
-  const headline = String(draft.headline || "").trim();
+  const headline = stripBodyEmojis(draft.headline).trim();
   const body = String(draft.body || "").trim();
-  const emoji = normalizeEmoji(draft.emoji);
-  const contextEmojis = normalizePremiumEmojiCategories(draft.premiumEmojiCategories)
-    .map((category) => buildContextPremiumEmoji(category, useCustomEmoji));
+  const emoji = normalizeEmoji(draft.emoji) || DEFAULT_CONTEXT_EMOJI;
   const keyPhrases = normalizeKeyPhrases(draft.keyPhrases, body);
   const parts = [];
 
@@ -58,25 +36,12 @@ export function buildNewsPostHtml(draft, useCustomEmoji = false) {
   }
 
   if (body) {
-    parts.push(formatParagraphs(body, emoji, contextEmojis, keyPhrases));
+    parts.push(formatParagraphs(body, emoji, keyPhrases));
   }
 
   parts.push(buildChannelFooter(useCustomEmoji));
 
   return parts.join("\n\n");
-}
-
-export function normalizePremiumEmojiCategories(value) {
-  const categories = Array.isArray(value) ? value : [];
-  const valid = [...new Set(
-    categories
-      .map((category) => String(category || "").trim().toLowerCase())
-      .filter((category) => Object.hasOwn(CONTEXT_PREMIUM_EMOJIS, category)),
-  )].slice(0, 3);
-
-  // A completed post should always have a friendly visual accent, including if
-  // a model response is malformed or an older saved draft has no category.
-  return valid.length ? valid : ["positive"];
 }
 
 export function normalizeKeyPhrases(value, body) {
@@ -257,20 +222,8 @@ function buildChannelFooter(useCustomEmoji) {
   return `${icon} <a href="${CHANNEL_URL}">Миллиардар</a>`;
 }
 
-function buildContextPremiumEmoji(category, useCustomEmoji) {
-  const definition = CONTEXT_PREMIUM_EMOJIS[category];
-
-  if (!definition) {
-    return "";
-  }
-
-  return useCustomEmoji
-    ? `<tg-emoji emoji-id="${definition.emojiId}">${definition.fallback}</tg-emoji>`
-    : definition.fallback;
-}
-
-function formatParagraphs(value, emoji, contextEmojis = [], keyPhrases = []) {
-  const paragraphs = value
+function formatParagraphs(value, emoji, keyPhrases = []) {
+  const paragraphs = stripBodyEmojis(value)
     .split(/\n\s*\n+/)
     .map((paragraph) => highlightKeyPhrases(
       escapeHtml(paragraph.trim()).replace(/\n/g, "\n"),
@@ -282,13 +235,7 @@ function formatParagraphs(value, emoji, contextEmojis = [], keyPhrases = []) {
     return "";
   }
 
-  const decorations = contextEmojis.filter(Boolean).join(" ");
-
-  if (decorations) {
-    paragraphs[paragraphs.length - 1] = `${paragraphs.at(-1)} ${decorations}`;
-  } else if (emoji && !paragraphs.join(" ").includes(emoji)) {
-    paragraphs[paragraphs.length - 1] = `${paragraphs.at(-1)} ${emoji}`;
-  }
+  paragraphs[paragraphs.length - 1] = `${paragraphs.at(-1)} ${emoji}`;
 
   return paragraphs.join("\n\n");
 }
@@ -309,11 +256,23 @@ function highlightKeyPhrases(value, keyPhrases) {
 }
 
 function normalizeEmoji(value) {
-  const emoji = String(value || "").trim();
+  const emoji = String(value || "").match(
+    /(?:\p{Regional_Indicator}{2}|[#*0-9]\uFE0F?\u20E3|\p{Extended_Pictographic}(?:\uFE0E|\uFE0F)?(?:\p{Emoji_Modifier})?(?:\u200D\p{Extended_Pictographic}(?:\uFE0E|\uFE0F)?(?:\p{Emoji_Modifier})?)*)/u,
+  );
 
-  // A short, visible native emoji is safe in Telegram and prevents the model from
-  // inserting arbitrary HTML or a long reaction string.
-  return emoji.length > 0 && emoji.length <= 8 ? emoji : "";
+  // Only the first complete native emoji is accepted. Telegram markup and any
+  // additional model-generated reactions are discarded.
+  return emoji?.[0] || "";
+}
+
+function stripBodyEmojis(value) {
+  return String(value || "")
+    .replace(
+      /(?:\p{Regional_Indicator}{2}|[#*0-9]\uFE0F?\u20E3|\p{Extended_Pictographic}(?:\uFE0E|\uFE0F)?(?:\p{Emoji_Modifier})?(?:\u200D\p{Extended_Pictographic}(?:\uFE0E|\uFE0F)?(?:\p{Emoji_Modifier})?)*)/gu,
+      "",
+    )
+    .replace(/[ \t]+([.,!?;:])/g, "$1")
+    .replace(/[ \t]{2,}/g, " ");
 }
 
 function escapeHtml(value) {

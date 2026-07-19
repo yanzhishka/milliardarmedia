@@ -108,7 +108,7 @@ export function buildStatusPanel(status) {
       [
         "<b>Генератор</b>",
         `Написать пост: ${generationReady ? "✅ готов" : "❌ не готов"}`,
-        `Premium emoji: ${status.news.premiumEmoji ? "✅ включены" : "⚪️ обычные emoji"}`,
+        `Premium-шильдик: ${status.news.premiumEmoji ? "✅ включён" : "⚪️ обычный 📱"}`,
         `Резервные фото Pexels: ${status.news.pexels ? "✅ включены" : "⚪️ только первоисточник"}`,
         `RSS-источники: <b>${status.news.builtInFeeds}</b> встроенных${status.news.customFeeds ? ` + ${status.news.customFeeds} своих` : ""}`,
       ].join("\n"),

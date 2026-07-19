@@ -797,7 +797,6 @@ async function handleNewsDraftEditReply(message, env) {
     status: "pending",
     headline: "",
     body,
-    emoji: "",
     editedAt: new Date().toISOString(),
   });
   const review = await sendNewsDraftForReview(env, nextDraft, message.chat.id);
