@@ -18,15 +18,32 @@ const MAX_ARTICLE_CHARS = 7000;
 const MIN_DRAFT_BODY_CHARS = 280;
 const MAX_DRAFT_BODY_CHARS = 720;
 const MAX_NEWS_IMAGE_BYTES = 8 * 1024 * 1024;
+const MAX_NEWS_FEEDS = 24;
+const BLOCKED_CANDIDATE_PATTERN = /(?:^|[^\p{L}\p{N}])(?:политик\p{L}*|войн\p{L}*|военн\p{L}*|теракт\p{L}*|террор\p{L}*|убийств\p{L}*|погиб\p{L}*|смерт\p{L}*|катастроф\p{L}*|авари\p{L}*|взрыв\p{L}*|нападени\p{L}*|преступ\p{L}*|арест\p{L}*|санкц\p{L}*|президент\p{L}*|конфликт\p{L}*|скандал\p{L}*|болезн\p{L}*|заболев\p{L}*|травм\p{L}*|эпидем\p{L}*|пожар\p{L}*|politic\p{L}*|war|military|terror\p{L}*|attack\p{L}*|killed|death\p{L}*|disaster\p{L}*|crash\p{L}*|explosion\p{L}*|crime\p{L}*|arrest\p{L}*|court|sanction\p{L}*|election\p{L}*|president\p{L}*|conflict\p{L}*|scandal\p{L}*|disease\p{L}*|injur\p{L}*|epidemic\p{L}*|wildfire\p{L}*)(?=$|[^\p{L}\p{N}])/iu;
 
-// These queries deliberately favour discoveries, culture and useful innovation.
-// NEWS_FEEDS may override them with a JSON array of RSS URLs in Cloudflare.
+// Russian-language publishers come first because they best match the audience.
+// International sources broaden the selection when local feeds have no match.
 const DEFAULT_FEEDS = [
+  "https://naked-science.ru/feed",
+  "https://nplus1.ru/rss",
+  "https://www.techinsider.ru/out/public-all.xml",
+  "https://www.ixbt.com/export/news.rss",
+  "https://www.ixbt.com/export/articles.rss",
+  "https://habr.com/ru/rss/news/?fl=ru",
+  "https://daily.afisha.ru/rss/",
+  "https://knife.media/feed/",
+  "https://dtf.ru/rss/all",
+  "https://www.goha.ru/rss/news",
   "https://news.google.com/rss/search?q=%D0%BD%D0%B0%D1%83%D0%BA%D0%B0+%D0%BE%D1%82%D0%BA%D1%80%D1%8B%D1%82%D0%B8%D0%B5+%D0%B8%D0%BD%D0%BD%D0%BE%D0%B2%D0%B0%D1%86%D0%B8%D1%8F+when%3A1d&hl=ru&gl=RU&ceid=RU%3Aru",
   "https://news.google.com/rss/search?q=%D0%BA%D1%83%D0%BB%D1%8C%D1%82%D1%83%D1%80%D0%B0+%D0%B8%D1%81%D0%BA%D1%83%D1%81%D1%81%D1%82%D0%B2%D0%BE+%D0%B2%D1%8B%D1%81%D1%82%D0%B0%D0%B2%D0%BA%D0%B0+%D0%BA%D0%B8%D0%BD%D0%BE+when%3A1d&hl=ru&gl=RU&ceid=RU%3Aru",
   "https://news.google.com/rss/search?q=%D1%82%D0%B5%D1%85%D0%BD%D0%BE%D0%BB%D0%BE%D0%B3%D0%B8%D0%B8+%D0%B7%D0%B0%D0%BF%D1%83%D1%81%D0%BA+%D0%B2%D0%BF%D0%B5%D1%80%D0%B2%D1%8B%D0%B5+when%3A1d&hl=ru&gl=RU&ceid=RU%3Aru",
   "https://news.google.com/rss/search?q=%D0%BF%D0%BE%D0%B7%D0%B8%D1%82%D0%B8%D0%B2%D0%BD%D1%8B%D0%B5+%D0%BD%D0%BE%D0%B2%D0%BE%D1%81%D1%82%D0%B8+%D0%BC%D0%B8%D1%80%D0%B0+when%3A1d&hl=ru&gl=RU&ceid=RU%3Aru",
   "https://www.goodnewsnetwork.org/feed/",
+  "https://www.sciencedaily.com/rss/top/science.xml",
+  "https://www.positive.news/feed/",
+  "https://www.thisiscolossal.com/feed/",
+  "https://newatlas.com/index.rss",
+  "https://www.nasa.gov/news-release/feed/",
 ];
 
 export async function onRequestPost({ request, env }) {
@@ -175,7 +192,15 @@ async function collectCandidates(env) {
   const feeds = readFeedUrls(env);
   const responses = await Promise.all(feeds.map(readRssFeed));
 
-  return uniqueCandidates(roundRobinCandidates(responses)).slice(0, MAX_CANDIDATES_PER_RUN);
+  return uniqueCandidates(roundRobinCandidates(responses))
+    .filter(isCandidateSafeByText)
+    .slice(0, MAX_CANDIDATES_PER_RUN);
+}
+
+function isCandidateSafeByText(candidate) {
+  const text = `${candidate?.title || ""} ${candidate?.description || ""}`;
+
+  return !BLOCKED_CANDIDATE_PATTERN.test(text);
 }
 
 function roundRobinCandidates(groups) {
@@ -204,7 +229,7 @@ function readFeedUrls(env) {
     const configured = JSON.parse(String(env.NEWS_FEEDS || ""));
 
     if (Array.isArray(configured) && configured.every((url) => typeof url === "string" && url)) {
-      return configured.slice(0, 12);
+      return [...new Set([...configured, ...DEFAULT_FEEDS])].slice(0, MAX_NEWS_FEEDS);
     }
   } catch {
     // A malformed optional setting must not stop the standard news flow.
@@ -411,7 +436,7 @@ async function generatePost(env, candidate, article, additionalInstruction = "")
     "Если источник явно относится к разрешённой позитивной тематике и не содержит этих стоп-тем, ставь publish: true. Отклоняй только при прямом нарушении правил или если фактов совсем недостаточно.",
     `Пиши по-русски: нейтрально, живо, без кликбейта, 2–3 коротких абзаца, ${MIN_DRAFT_BODY_CHARS}–${MAX_DRAFT_BODY_CHARS} знаков в body. Раскрой суть, добавь подтверждённые детали и объясни, чем событие интересно. Не придумывай факты. Не добавляй ссылку, подпись канала или HTML.`,
     "Верни строго JSON: {\"publish\":boolean,\"headline\":string,\"body\":string,\"emoji\":string,\"premiumEmojiCategories\":string[],\"keyPhrases\":string[],\"imageQuery\":string}. headline можно оставить пустым; emoji — один обычный тематический эмодзи; imageQuery — точный запрос для легального фотобанка на английском.",
-    "premiumEmojiCategories — массив из 1–3 категорий Premium emoji: positive (добрая или культурная новость), discovery (открытие, наука или неожиданный факт), space (космос или запуск), transport (транспорт или авиация), business (деньги, рынок или бизнес). Выбирай строго по смыслу: обычно одну категорию, две-три — только когда каждая действительно подходит. Не добавляй эмодзи в body.",
+    "premiumEmojiCategories — массив из 1–3 категорий Premium emoji: positive (универсальная добрая новость), discovery (открытие или неожиданный факт), space (космос), transport (транспорт и авиация), business (бизнес и деньги), knowledge (наука и образование), achievement (спорт, рекорд или личное достижение), celebration (праздник, премьера или победа), technology (компьютеры, гаджеты и IT), nature (экология и растения), animals (животные), food (еда и гастрономия), history (история, археология и палеонтология), entertainment (кино, игры, искусство и шоу), community (помощь людям и добрые инициативы). Сначала выбери самую точную категорию; positive используй только если ни одна тематическая категория не подходит. Обычно выбирай одну, две-три — только когда каждая действительно оправдана. Не добавляй эмодзи в body.",
     "keyPhrases — массив из 1–3 коротких ключевых слов или фраз, которые дословно есть в body. Выбери самые важные смысловые акценты новости. Не включай служебные слова, не меняй форму слов и не добавляй разметку: бот сам выделит эти фразы жирным в Telegram.",
     "imageQuery — 5–12 английских слов для реалистичной редакционной фотографии именно об этом событии: назови конкретный объект, место или действие. Не используй общие слова вроде news, technology, abstract и не проси коллаж, текст или логотип.",
     additionalInstruction,

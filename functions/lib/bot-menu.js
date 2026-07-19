@@ -3,7 +3,7 @@ const CHANNEL_URL = "https://t.me/milliardarmedia";
 export function buildReplyKeyboard(admin) {
   const rows = admin
     ? [
-        [{ text: "📰 Новость" }, { text: "📝 Черновики" }],
+        [{ text: "✍️ Написать пост" }],
         [{ text: "🎙 Подкасты" }, { text: "⚙️ Управление" }],
         [{ text: "ℹ️ Помощь" }],
       ]
@@ -22,8 +22,7 @@ export function buildHomePanel({ admin, name = "" }) {
   const text = admin
     ? [
         `<b>Редакторская панель${greeting}</b>`,
-        "Здесь можно найти позитивную новость, согласовать текст и подготовить пост для ручной пересылки в канал.",
-        "Выберите раздел на клавиатуре ниже.",
+        "Нажмите «✍️ Написать пост»: бот найдёт позитивную новость, подготовит фото и текст и отправит результат на согласование.",
       ].join("\n\n")
     : [
         `<b>Миллиардар${greeting}</b>`,
@@ -31,48 +30,6 @@ export function buildHomePanel({ admin, name = "" }) {
       ].join("\n\n");
 
   return { text };
-}
-
-export function buildNewsPanel() {
-  return {
-    text: [
-      "<b>📰 Новая новость</b>",
-      "По кнопке найду один свежий позитивный инфоповод, подготовлю фото и текст в стиле канала, а затем пришлю черновик на согласование.",
-    ].join("\n\n"),
-    reply_markup: {
-      inline_keyboard: [
-        [{ text: "📰 Найти свежую новость", callback_data: "news_request" }],
-        [
-          { text: "📝 Черновики", callback_data: "menu_drafts" },
-          { text: "⬅️ В меню", callback_data: "menu_home" },
-        ],
-      ],
-    },
-  };
-}
-
-export function buildDraftsPanel(drafts) {
-  const items = drafts.slice(0, 6);
-  const text = items.length
-    ? [
-        "<b>📝 Последние черновики</b>",
-        items.map(renderDraft).join("\n\n"),
-        "Кнопки согласования находятся в самих сообщениях-черновиках.",
-      ].join("\n\n")
-    : [
-        "<b>📝 Черновиков пока нет</b>",
-        "Запросите первую идею — бот найдёт свежую позитивную новость и пришлёт её на согласование.",
-      ].join("\n\n");
-
-  return {
-    text,
-    reply_markup: {
-      inline_keyboard: [
-        [{ text: "📰 Найти новость", callback_data: "news_request" }],
-        [{ text: "⬅️ В меню", callback_data: "menu_home" }],
-      ],
-    },
-  };
 }
 
 export function buildPodcastPanel() {
@@ -156,13 +113,13 @@ export function buildAdvancedPanel() {
 
 export function buildHelpPanel(admin) {
   const adminBlock = admin
-    ? "<b>Для редактора</b>\n/news — открыть поиск новости\n/podcast Название — добавить выпуск\n/status — технический статус"
+    ? "<b>Для редактора</b>\n/news — сразу написать пост\n/podcast Название — добавить выпуск\n/status — технический статус"
     : "Чтобы стать редактором, попросите администратора добавить ваш Telegram ID.";
 
   return {
     text: [
       "<b>ℹ️ Помощь</b>",
-      "<b>Как сделать пост</b>\n1. Откройте «Новость».\n2. Нажмите «Найти свежую новость».\n3. Нажмите «Править» или «Готово к пересылке».\n4. Перешлите чистое сообщение в канал вручную.",
+      "<b>Как сделать пост</b>\n1. Нажмите «✍️ Написать пост».\n2. Дождитесь готового варианта.\n3. Нажмите «Править» или «Готово к пересылке».\n4. Перешлите чистое сообщение в канал вручную.",
       adminBlock,
       `<a href="${CHANNEL_URL}">Открыть Telegram-канал</a>`,
     ].join("\n\n"),
@@ -171,35 +128,13 @@ export function buildHelpPanel(admin) {
 }
 
 export function isMenuCallback(data) {
-  return /^menu_(home|news|drafts|podcast|manage|status|users|advanced|help)$/i.test(String(data || ""));
+  return /^menu_(home|podcast|manage|status|users|advanced|help)$/i.test(String(data || ""));
 }
 
 function backToMenuKeyboard() {
   return {
     inline_keyboard: [[{ text: "⬅️ В меню", callback_data: "menu_home" }]],
   };
-}
-
-function renderDraft(draft) {
-  const status = draftStatus(draft.status);
-  const title = String(draft.headline || draft.body || draft.sourceTitle || "Без текста")
-    .replace(/\s+/g, " ")
-    .trim()
-    .slice(0, 150);
-  const date = draft.updatedAt || draft.createdAt;
-  const dateText = date
-    ? new Date(date).toLocaleString("ru-RU", { dateStyle: "short", timeStyle: "short", timeZone: "Europe/Moscow" })
-    : "";
-
-  return `${status} <b>${escapeHtml(title)}</b>${dateText ? `\n<code>${escapeHtml(dateText)}</code>` : ""}`;
-}
-
-function draftStatus(status) {
-  if (status === "pending") return "🟡";
-  if (status === "editing") return "🟠";
-  if (status === "ready") return "🟢";
-  if (status === "skipped") return "⚪️";
-  return "⚫️";
 }
 
 function escapeHtml(value) {

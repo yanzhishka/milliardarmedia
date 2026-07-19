@@ -18,6 +18,16 @@ const CONTEXT_PREMIUM_EMOJIS = {
   space: { emojiId: "5188481279963715781", fallback: "🚀" },
   transport: { emojiId: "5819098039406562961", fallback: "🚕" },
   business: { emojiId: "5314330921317473766", fallback: "🤑" },
+  knowledge: { emojiId: "5309826024609970534", fallback: "🤓" },
+  achievement: { emojiId: "5463137180048175912", fallback: "💪" },
+  celebration: { emojiId: "5280538638323574909", fallback: "🎉" },
+  technology: { emojiId: "5334685308204100177", fallback: "💻" },
+  nature: { emojiId: "5368338090660209672", fallback: "🌿" },
+  animals: { emojiId: "5235478122081560535", fallback: "🐈‍⬛" },
+  food: { emojiId: "5312126881540093748", fallback: "🌭" },
+  history: { emojiId: "5341811621020839100", fallback: "🦖" },
+  entertainment: { emojiId: "5199838560768771372", fallback: "🤩" },
+  community: { emojiId: "5271684318429748295", fallback: "💗" },
 };
 
 export function createNewsDraftId() {

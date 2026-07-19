@@ -3,7 +3,6 @@ import {
   buildNewsReviewKeyboard,
   isPremiumEmojiEnabled,
   isNewsDraftCallback,
-  listNewsDrafts,
   parseNewsDraftCallback,
   readNewsDraft,
   readNewsDraftForReviewMessage,
@@ -12,11 +11,9 @@ import {
 } from "../lib/news-drafts.js";
 import {
   buildAdvancedPanel,
-  buildDraftsPanel,
   buildHelpPanel,
   buildHomePanel,
   buildManagePanel,
-  buildNewsPanel,
   buildPodcastPanel,
   buildReplyKeyboard,
   buildStatusPanel,
@@ -129,7 +126,7 @@ async function handleBotMessage(message, env, request) {
   }
 
   if (isMenuButtonText(text)) {
-    return handleMenuButton(message, env, text);
+    return handleMenuButton(message, env, request, text);
   }
 
   if (isCommand(text, "help") || isCommand(text, "commands")) {
@@ -154,7 +151,7 @@ async function handleBotMessage(message, env, request) {
   }
 
   if (isCommand(text, "news")) {
-    return handleNewsRequestCommand(message, env);
+    return handleNewsRequestCommand(message, env, request);
   }
 
   if (isCommand(text, "podcast")) {
@@ -206,7 +203,7 @@ async function handleMenuCommand(message, env) {
   return jsonResponse({ ok: true, command: "menu", admin });
 }
 
-async function handleMenuButton(message, env, text) {
+async function handleMenuButton(message, env, request, text) {
   const action = menuActionFromText(text);
   const admin = await isAdminMessage(message, env);
 
@@ -218,6 +215,10 @@ async function handleMenuButton(message, env, text) {
   if (!admin) {
     await replyToBotMessage(env, message, "Этот раздел доступен только редакторам.");
     return jsonResponse({ ok: true, command: "menu", denied: true });
+  }
+
+  if (action === "write") {
+    return handleNewsRequestCommand(message, env, request);
   }
 
   const panel = await buildMenuPanel(`menu_${action}`, env, message);
@@ -232,8 +233,8 @@ function isMenuButtonText(text) {
 
 function menuActionFromText(text) {
   const actions = {
-    "📰 Новость": "news",
-    "📝 Черновики": "drafts",
+    "✍️ Написать пост": "write",
+    "📰 Новость": "write",
     "🎙 Подкасты": "podcast",
     "⚙️ Управление": "manage",
     "ℹ️ Помощь": "help",
@@ -263,14 +264,6 @@ async function buildMenuPanel(action, env, message) {
       admin: await isAdminMessage(message, env),
       name: message.from?.first_name || "",
     });
-  }
-
-  if (action === "menu_news") {
-    return buildNewsPanel();
-  }
-
-  if (action === "menu_drafts") {
-    return buildDraftsPanel(await listNewsDrafts(env));
   }
 
   if (action === "menu_podcast") {
@@ -565,15 +558,30 @@ async function handleCallbackQuery(query, env, request) {
   return response;
 }
 
-async function handleNewsRequestCommand(message, env) {
+async function handleNewsRequestCommand(message, env, request) {
   if (!(await isAdminMessage(message, env))) {
     await replyToBotMessage(env, message, "Команда доступна только администраторам.");
     return jsonResponse({ ok: true, command: "news", denied: true });
   }
 
-  await sendBotPanel(env, message, buildNewsPanel());
+  await replyToBotMessage(env, message, "⏳ Ищу свежую новость и пишу пост...", {
+    reply_markup: buildReplyKeyboard(true),
+  });
+  const result = await requestNewsDraft(env, request, message.chat?.id);
 
-  return jsonResponse({ ok: true, command: "news", requested: false });
+  if (!result.ok) {
+    await replyToBotMessage(env, message, `Не удалось написать пост: ${result.error || "неизвестная ошибка"}.`);
+    return jsonResponse({ ok: false, command: "news", error: result.error || "request_failed" });
+  }
+
+  if (!result.created) {
+    await replyToBotMessage(env, message, "Подходящих свежих новостей пока нет. Попробуйте позже.");
+    return jsonResponse({ ok: true, command: "news", created: false });
+  }
+
+  await replyToBotMessage(env, message, "✅ Пост подготовлен и отправлен на согласование.");
+
+  return jsonResponse({ ok: true, command: "news", created: true, draftId: result.draftId || null });
 }
 
 async function handleMenuCallback(query, env) {
