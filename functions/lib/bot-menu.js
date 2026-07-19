@@ -62,16 +62,59 @@ export function buildManagePanel() {
 }
 
 export function buildStatusPanel(status) {
+  const telegramName = status.telegram.username ? ` @${escapeHtml(status.telegram.username)}` : "";
+  const channelName = status.channel.title || status.channel.username || status.channel.id || "не настроен";
+  const webhookState = !status.webhook.ok
+    ? "❌ нет ответа"
+    : status.webhook.lastError
+      ? "⚠️ есть ошибка"
+      : status.webhook.url
+        ? "✅ активен"
+        : "⚠️ URL не задан";
+  const groqState = !status.groq.configured
+    ? "❌ ключ не задан"
+    : status.groq.ok
+      ? `✅ ${escapeHtml(status.groq.model)}`
+      : `❌ ${escapeHtml(status.groq.model)}`;
+  const generationReady = status.groq.ok && status.news.runnerConfigured && status.telegram.ok;
+  const contentLines = [
+    `Постов на сайте: <b>${status.content.posts}</b>`,
+    `Последний пост: ${formatStatusDate(status.content.latestPostAt)}`,
+    `Фото последнего поста: ${escapeHtml(status.content.latestPostImage || "нет")}`,
+    `Подкастов: <b>${status.content.podcasts}</b>`,
+    `Последний подкаст: ${formatStatusDate(status.content.latestPodcastAt)}`,
+  ];
+  const warnings = [
+    status.webhook.lastError ? `Webhook: ${status.webhook.lastError}` : "",
+    status.telegram.error ? `Telegram: ${status.telegram.error}` : "",
+    status.channel.error ? `Канал: ${status.channel.error}` : "",
+    status.groq.error ? `Groq: ${status.groq.error}` : "",
+    status.kv.error ? `KV: ${status.kv.error}` : "",
+  ].filter(Boolean);
+
   return {
     text: [
-      "<b>🔎 Статус</b>",
-      `KV: ${status.kv ? "✅" : "❌"}`,
-      `Бот: ${status.bot ? "✅" : "❌"}`,
-      `Канал: ${escapeHtml(status.channel || "не настроен")}`,
-      `Постов на сайте: ${status.posts}`,
-      `Выпусков: ${status.podcasts}`,
-      `Новости: ${status.newsReady ? "✅ по кнопке" : "⚠️ не настроены"}`,
-    ].join("\n"),
+      "<b>🩺 Диагностика бота</b>",
+      `Проверено: ${formatStatusDate(status.checkedAt)}`,
+      [
+        "<b>Сервисы</b>",
+        `Telegram: ${status.telegram.ok ? "✅ работает" : "❌ недоступен"}${telegramName}`,
+        `Webhook: ${webhookState}`,
+        `Ожидающих обновлений: <b>${status.webhook.pendingUpdates}</b>`,
+        `Groq: ${groqState}`,
+        `KV: ${status.kv.ok ? "✅ читается" : "❌ ошибка чтения"}`,
+        `Канал: ${status.channel.ok ? "✅" : status.channel.configured ? "❌" : "⚠️"} ${escapeHtml(channelName)}`,
+      ].join("\n"),
+      [
+        "<b>Генератор</b>",
+        `Написать пост: ${generationReady ? "✅ готов" : "❌ не готов"}`,
+        `Premium emoji: ${status.news.premiumEmoji ? "✅ включены" : "⚪️ обычные emoji"}`,
+        `Резервные фото Pexels: ${status.news.pexels ? "✅ включены" : "⚪️ только первоисточник"}`,
+        `RSS-источники: <b>${status.news.builtInFeeds}</b> встроенных${status.news.customFeeds ? ` + ${status.news.customFeeds} своих` : ""}`,
+      ].join("\n"),
+      ["<b>Контент</b>", ...contentLines].join("\n"),
+      warnings.length ? ["<b>Что требует внимания</b>", ...warnings.map((warning) => `• ${escapeHtml(warning)}`)].join("\n") : "",
+    ].filter(Boolean).join("\n\n"),
     reply_markup: {
       inline_keyboard: [
         [{ text: "🔄 Обновить", callback_data: "menu_status" }],
@@ -79,6 +122,24 @@ export function buildStatusPanel(status) {
       ],
     },
   };
+}
+
+function formatStatusDate(value) {
+  if (!value) {
+    return "нет данных";
+  }
+
+  const date = typeof value === "number" ? new Date(value * 1000) : new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return "нет данных";
+  }
+
+  return escapeHtml(date.toLocaleString("ru-RU", {
+    dateStyle: "short",
+    timeStyle: "short",
+    timeZone: "Europe/Moscow",
+  }));
 }
 
 export function buildUsersPanel({ envIds, dynamicIds }) {

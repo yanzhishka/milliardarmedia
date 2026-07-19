@@ -34,6 +34,8 @@ const MAX_PODCAST_VIDEO_BYTES = 20 * 1024 * 1024;
 const DEFAULT_FEED_RESET_AT = 1779913144;
 const DELETE_CONFIRM_TTL_SECONDS = 10 * 60;
 const TELEGRAM_WEBHOOK_UPDATES = ["message", "channel_post", "edited_channel_post", "callback_query"];
+const DEFAULT_GROQ_MODEL = "llama-3.3-70b-versatile";
+const BUILT_IN_NEWS_FEED_COUNT = 20;
 
 export async function onRequestPost({ request, env }) {
   if (!env.POSTS_KV) {
@@ -275,15 +277,7 @@ async function buildMenuPanel(action, env, message) {
   }
 
   if (action === "menu_status") {
-    const [posts, podcasts] = await Promise.all([readPosts(env), readPodcasts(env)]);
-    return buildStatusPanel({
-      kv: Boolean(env.POSTS_KV),
-      bot: Boolean(env.TELEGRAM_BOT_TOKEN),
-      channel: getChannelChatId(env),
-      posts: posts.length,
-      podcasts: podcasts.length,
-      newsReady: Boolean(env.GROQ_API_KEY && env.NEWS_RUN_SECRET),
-    });
+    return buildStatusPanel(await collectBotStatus(env));
   }
 
   if (action === "menu_users") {
@@ -595,9 +589,16 @@ async function handleMenuCallback(query, env) {
     return jsonResponse({ ok: true, command: "menu_callback", denied: true });
   }
 
+  if (action === "menu_status") {
+    await answerCallbackQuery(env, query, "Проверяю сервисы...");
+  }
+
   const panel = await buildMenuPanel(action, env, message);
   await editBotPanelCallback(env, query, panel);
-  await answerCallbackQuery(env, query);
+
+  if (action !== "menu_status") {
+    await answerCallbackQuery(env, query);
+  }
 
   return jsonResponse({ ok: true, command: "menu_callback", action, admin });
 }
@@ -1167,32 +1168,151 @@ async function handleStatusCommand(message, env) {
     return jsonResponse({ ok: true, command: "status", denied: true });
   }
 
-  const posts = await readPosts(env);
-  const podcasts = await readPodcasts(env);
-  const latestPost = posts[0];
-  const latestPodcast = podcasts[0];
-  const latestImageLine = latestPost
-    ? `Последний пост: ${latestPost.mediaType || "text"}, фото: ${latestPost.imageStatus || "none"}`
-    : "Последний пост: нет";
-  const latestPodcastLine = latestPodcast
-    ? `Последний подкаст: ${latestPodcast.title}, видео: ${latestPodcast.videoStatus || "none"}`
-    : "Последний подкаст: нет";
-
-  await replyToBotMessage(
-    env,
-    message,
-    [
-      `KV: ${env.POSTS_KV ? "ok" : "нет"}`,
-      `TELEGRAM_BOT_TOKEN: ${env.TELEGRAM_BOT_TOKEN ? "ok" : "нет"}`,
-      `Канал: ${getChannelChatId(env) || "не настроен"}`,
-      `Постов в ленте: ${posts.length}`,
-      `Подкастов: ${podcasts.length}`,
-      latestImageLine,
-      latestPodcastLine,
-    ].join("\n"),
-  );
+  await sendBotPanel(env, message, buildStatusPanel(await collectBotStatus(env)));
 
   return jsonResponse({ ok: true, command: "status" });
+}
+
+async function collectBotStatus(env) {
+  const channelId = getChannelChatId(env);
+  const [postsState, podcastsState, telegramResult, webhookResult, channelResult, groq] = await Promise.all([
+    readDiagnosticCollection(() => readPosts(env)),
+    readDiagnosticCollection(() => readPodcasts(env)),
+    safeTelegramDiagnostic(env, "getMe"),
+    safeTelegramDiagnostic(env, "getWebhookInfo"),
+    channelId
+      ? safeTelegramDiagnostic(env, "getChat", { chat_id: channelId })
+      : Promise.resolve({ ok: false, description: "канал не настроен" }),
+    checkGroqStatus(env),
+  ]);
+  const posts = postsState.items;
+  const podcasts = podcastsState.items;
+  const latestPost = posts[0] || null;
+  const latestPodcast = podcasts[0] || null;
+  const webhook = webhookResult.result || {};
+  const channel = channelResult.result || {};
+
+  return {
+    checkedAt: new Date().toISOString(),
+    kv: {
+      ok: postsState.ok && podcastsState.ok,
+      error: postsState.error || podcastsState.error || "",
+    },
+    telegram: {
+      ok: Boolean(telegramResult.ok),
+      username: telegramResult.result?.username || "",
+      error: telegramResult.ok ? "" : cleanDiagnosticError(telegramResult.description),
+    },
+    webhook: {
+      ok: Boolean(webhookResult.ok),
+      url: String(webhook.url || ""),
+      pendingUpdates: Number(webhook.pending_update_count || 0),
+      lastError: cleanDiagnosticError(webhook.last_error_message || (webhookResult.ok ? "" : webhookResult.description)),
+    },
+    channel: {
+      configured: Boolean(channelId),
+      ok: Boolean(channelResult.ok),
+      id: channelId,
+      title: channel.title || "",
+      username: channel.username ? `@${channel.username}` : "",
+      error: channelResult.ok || !channelId ? "" : cleanDiagnosticError(channelResult.description),
+    },
+    groq,
+    news: {
+      runnerConfigured: Boolean(env.NEWS_RUN_SECRET),
+      premiumEmoji: isPremiumEmojiEnabled(env),
+      pexels: Boolean(env.PEXELS_API_KEY),
+      builtInFeeds: BUILT_IN_NEWS_FEED_COUNT,
+      customFeeds: countCustomNewsFeeds(env.NEWS_FEEDS),
+    },
+    content: {
+      posts: posts.length,
+      podcasts: podcasts.length,
+      latestPostAt: latestPost?.date || latestPost?.receivedAt || "",
+      latestPostImage: describePostImage(latestPost),
+      latestPodcastAt: latestPodcast?.date || latestPodcast?.createdAt || "",
+    },
+  };
+}
+
+async function readDiagnosticCollection(loader) {
+  try {
+    return { ok: true, items: await loader(), error: "" };
+  } catch (error) {
+    return { ok: false, items: [], error: cleanDiagnosticError(error?.message || "ошибка чтения") };
+  }
+}
+
+async function safeTelegramDiagnostic(env, method, payload = {}) {
+  try {
+    return await callTelegram(env, method, payload);
+  } catch (error) {
+    return { ok: false, description: cleanDiagnosticError(error?.message || "нет соединения") };
+  }
+}
+
+async function checkGroqStatus(env) {
+  const model = String(env.GROQ_MODEL || DEFAULT_GROQ_MODEL).trim();
+
+  if (!env.GROQ_API_KEY) {
+    return { configured: false, ok: false, model, error: "GROQ_API_KEY не настроен" };
+  }
+
+  try {
+    const response = await fetch(`https://api.groq.com/openai/v1/models/${encodeURIComponent(model)}`, {
+      headers: { Authorization: `Bearer ${env.GROQ_API_KEY}` },
+    });
+    const data = await response.json().catch(() => ({}));
+
+    return {
+      configured: true,
+      ok: response.ok,
+      model: data.id || model,
+      error: response.ok ? "" : cleanDiagnosticError(data.error?.message || `API ${response.status}`),
+    };
+  } catch (error) {
+    return {
+      configured: true,
+      ok: false,
+      model,
+      error: cleanDiagnosticError(error?.message || "нет соединения"),
+    };
+  }
+}
+
+function countCustomNewsFeeds(value) {
+  try {
+    const feeds = JSON.parse(String(value || ""));
+
+    return Array.isArray(feeds)
+      ? new Set(feeds.filter((feed) => typeof feed === "string" && feed.trim())).size
+      : 0;
+  } catch {
+    return 0;
+  }
+}
+
+function describePostImage(post) {
+  if (!post) {
+    return "нет данных";
+  }
+
+  if (post.imageStatus === "saved") {
+    return "✅ сохранено";
+  }
+
+  if (post.imageStatus === "error") {
+    return `❌ ${cleanDiagnosticError(post.imageError || "ошибка")}`;
+  }
+
+  return post.mediaType === "photo" ? "⚠️ не сохранено" : "нет";
+}
+
+function cleanDiagnosticError(value) {
+  return String(value || "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 180);
 }
 
 async function handleAddUserCommand(message, env, text) {
