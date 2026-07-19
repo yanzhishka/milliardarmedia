@@ -45,7 +45,8 @@ export function buildNewsPostHtml(draft, useCustomEmoji = false) {
 
 export function normalizeBlockEmojis(value, fallbackValue = "", count = 0) {
   const source = Array.isArray(value) ? value : [];
-  const fallback = normalizeEmoji(fallbackValue) || DEFAULT_CONTEXT_EMOJI;
+  const sourceFallback = source.map(normalizeEmoji).find(Boolean);
+  const fallback = normalizeEmoji(fallbackValue) || sourceFallback || DEFAULT_CONTEXT_EMOJI;
   const requestedCount = Number.isFinite(Number(count))
     ? Math.max(0, Math.min(Math.floor(Number(count)), 12))
     : source.length;

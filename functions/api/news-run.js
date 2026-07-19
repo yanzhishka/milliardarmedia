@@ -16,7 +16,7 @@ const DEFAULT_GROQ_MODEL = "llama-3.3-70b-versatile";
 const MAX_CANDIDATES_PER_RUN = 20;
 const MAX_ARTICLE_CHARS = 7000;
 const MIN_DRAFT_BODY_CHARS = 280;
-const MAX_DRAFT_BODY_CHARS = 720;
+const MAX_DRAFT_BODY_CHARS = 520;
 const MAX_NEWS_IMAGE_BYTES = 8 * 1024 * 1024;
 const MAX_NEWS_FEEDS = 24;
 const BLOCKED_CANDIDATE_PATTERN = /(?:^|[^\p{L}\p{N}])(?:политик\p{L}*|войн\p{L}*|военн\p{L}*|теракт\p{L}*|террор\p{L}*|убийств\p{L}*|погиб\p{L}*|смерт\p{L}*|катастроф\p{L}*|авари\p{L}*|взрыв\p{L}*|нападени\p{L}*|преступ\p{L}*|арест\p{L}*|судебн\p{L}*|санкц\p{L}*|выборы|выборов|выборах|президент\p{L}*|пожар\p{L}*|politic\p{L}*|war|military|terror\p{L}*|attack\p{L}*|killed|death\p{L}*|disaster\p{L}*|explosion\p{L}*|crime\p{L}*|arrest\p{L}*|court|sanction\p{L}*|election\p{L}*|president\p{L}*|wildfire\p{L}*)(?=$|[^\p{L}\p{N}])/iu;
@@ -139,14 +139,14 @@ async function createFreshDraft(env, candidates) {
 
     let body = cleanText(generated?.body, MAX_DRAFT_BODY_CHARS);
 
-    // Models occasionally ignore a single length instruction. Ask once more
-    // with a strict editorial brief instead of accepting a one-line post.
-    if (generated?.publish && body.length < MIN_DRAFT_BODY_CHARS) {
+    // Models occasionally ignore length or paragraph instructions. Ask once
+    // more instead of accepting a short post or a solid wall of text.
+    if (generated?.publish && (body.length < MIN_DRAFT_BODY_CHARS || countParagraphs(body) < 2)) {
       generated = await generatePost(
         env,
         candidate,
         article,
-        `Текст получился слишком коротким. Подготовь содержательный body объёмом ${MIN_DRAFT_BODY_CHARS}–${MAX_DRAFT_BODY_CHARS} знаков: от одного до трёх смысловых абзацев с контекстом, конкретными деталями из источника и объяснением, чем новость интересна. Простой инфоповод оставь одним блоком, отдельные детали вынеси в новые абзацы.`,
+        `Перепиши body: подготовь содержательный текст объёмом ${MIN_DRAFT_BODY_CHARS}–${MAX_DRAFT_BODY_CHARS} знаков и обязательно раздели его на 2–3 компактных смысловых блока пустой строкой. В каждом блоке должно быть от одного до трёх предложений. Добавь контекст, конкретные детали из источника и объяснение, чем новость интересна, без повторов и вводной воды.`,
       );
       body = cleanText(generated?.body, MAX_DRAFT_BODY_CHARS);
     }
@@ -156,7 +156,9 @@ async function createFreshDraft(env, candidates) {
       continue;
     }
 
-    if (!generated?.publish || body.length < MIN_DRAFT_BODY_CHARS) {
+    body = normalizeDraftParagraphs(body);
+
+    if (!generated?.publish || body.length < MIN_DRAFT_BODY_CHARS || countParagraphs(body) < 2) {
       continue;
     }
 
@@ -437,7 +439,7 @@ async function generatePost(env, candidate, article, additionalInstruction = "")
     "Тематика канала: наука, технологии, культура, искусство, любопытные открытия, дизайн, кино, игры, добрые и вдохновляющие события.",
     "Жёстко отклони политику и всё, что напрямую связано с государственными деятелями, выборами, санкциями и политическими конфликтами. Также не бери войны, терроризм, преступления, насилие, катастрофы, смерти и тяжёлые трагедии.",
     "Новость не обязана быть позитивной: допускаются интересные нейтральные, аналитические и необычные инфоповоды без запрещённых тем. Не отклоняй материал только из-за отсутствия вдохновляющего или радостного оттенка. Отклоняй при прямом нарушении правил, явной токсичности или недостатке проверяемых фактов.",
-    `Пиши по-русски: нейтрально, живо, без кликбейта, ${MIN_DRAFT_BODY_CHARS}–${MAX_DRAFT_BODY_CHARS} знаков в body. Делай от одного до трёх смысловых абзацев: простой инфоповод оставь одним цельным блоком, а отдельный контекст или детали отделяй пустой строкой. Раскрой суть, добавь подтверждённые детали и объясни, чем событие интересно. Не придумывай факты. Не добавляй ссылку, подпись канала или HTML.`,
+    `Пиши по-русски: нейтрально, живо, без кликбейта, ${MIN_DRAFT_BODY_CHARS}–${MAX_DRAFT_BODY_CHARS} знаков в body. Обязательно раздели текст на 2–3 компактных смысловых блока пустой строкой; не создавай сплошную стену текста. В каждом блоке должно быть от одного до трёх предложений. Раскрой суть, добавь подтверждённые детали и объясни, чем событие интересно, без повторов и вводной воды. Не придумывай факты. Не добавляй ссылку, подпись канала или HTML.`,
     "Верни строго JSON: {\"publish\":boolean,\"headline\":string,\"body\":string,\"blockEmojis\":string[],\"keyPhrases\":string[],\"imageQuery\":string}. headline можно оставить пустым, если отдельный заголовок лишь повторяет первое предложение; imageQuery — точный запрос для легального фотобанка на английском.",
     "blockEmojis — массив обычных тематических эмодзи: ровно по одному подходящему эмодзи для каждого смыслового абзаца body, в том же порядке. Число элементов массива должно точно совпадать с числом абзацев. Не добавляй никаких эмодзи в headline или body: бот сам поставит по одному emoji в конец каждого блока. Не используй Premium/custom emoji или Telegram-разметку.",
     "keyPhrases — массив из 1–3 коротких ключевых слов или фраз, которые дословно есть в body. Выбери самые важные смысловые акценты новости. Не включай служебные слова, не меняй форму слов и не добавляй разметку: бот сам выделит эти фразы жирным в Telegram.",
@@ -665,6 +667,47 @@ function countParagraphs(value) {
     .split(/\n\s*\n+/)
     .filter((paragraph) => paragraph.trim())
     .length;
+}
+
+function normalizeDraftParagraphs(value) {
+  const paragraphs = String(value || "")
+    .split(/\n\s*\n+/)
+    .map((paragraph) => paragraph.replace(/\s*\n\s*/g, " ").trim())
+    .filter(Boolean);
+
+  if (paragraphs.length >= 2) {
+    return groupTextParts(paragraphs, Math.min(paragraphs.length, 3)).join("\n\n");
+  }
+
+  const source = paragraphs[0] || "";
+  const sentences = source
+    .split(/(?<=[.!?…])\s+(?=[А-ЯЁA-Z«„"'])/u)
+    .map((sentence) => sentence.trim())
+    .filter(Boolean);
+
+  if (sentences.length < 2) {
+    return source;
+  }
+
+  const targetCount = source.length >= 430 && sentences.length >= 3 ? 3 : 2;
+
+  return groupTextParts(sentences, targetCount).join("\n\n");
+}
+
+function groupTextParts(parts, groupCount) {
+  const groups = [];
+  let offset = 0;
+
+  for (let index = 0; index < groupCount; index += 1) {
+    const partsLeft = parts.length - offset;
+    const groupsLeft = groupCount - index;
+    const take = Math.ceil(partsLeft / groupsLeft);
+
+    groups.push(parts.slice(offset, offset + take).join(" "));
+    offset += take;
+  }
+
+  return groups.filter(Boolean);
 }
 
 function stripHtml(value) {
