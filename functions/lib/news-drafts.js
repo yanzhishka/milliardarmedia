@@ -27,7 +27,6 @@ export function isPremiumEmojiEnabled(env) {
 export function buildNewsPostHtml(draft, useCustomEmoji = false) {
   const headline = stripBodyEmojis(draft.headline).trim();
   const body = String(draft.body || "").trim();
-  const emoji = normalizeEmoji(draft.emoji) || DEFAULT_CONTEXT_EMOJI;
   const keyPhrases = normalizeKeyPhrases(draft.keyPhrases, body);
   const parts = [];
 
@@ -36,12 +35,25 @@ export function buildNewsPostHtml(draft, useCustomEmoji = false) {
   }
 
   if (body) {
-    parts.push(formatParagraphs(body, emoji, keyPhrases));
+    parts.push(formatParagraphs(body, draft.blockEmojis, draft.emoji, keyPhrases));
   }
 
   parts.push(buildChannelFooter(useCustomEmoji));
 
   return parts.join("\n\n");
+}
+
+export function normalizeBlockEmojis(value, fallbackValue = "", count = 0) {
+  const source = Array.isArray(value) ? value : [];
+  const fallback = normalizeEmoji(fallbackValue) || DEFAULT_CONTEXT_EMOJI;
+  const requestedCount = Number.isFinite(Number(count))
+    ? Math.max(0, Math.min(Math.floor(Number(count)), 12))
+    : source.length;
+
+  return Array.from(
+    { length: requestedCount },
+    (_, index) => normalizeEmoji(source[index]) || fallback,
+  );
 }
 
 export function normalizeKeyPhrases(value, body) {
@@ -222,7 +234,7 @@ function buildChannelFooter(useCustomEmoji) {
   return `${icon} <a href="${CHANNEL_URL}">Миллиардар</a>`;
 }
 
-function formatParagraphs(value, emoji, keyPhrases = []) {
+function formatParagraphs(value, blockEmojis, fallbackEmoji, keyPhrases = []) {
   const paragraphs = stripBodyEmojis(value)
     .split(/\n\s*\n+/)
     .map((paragraph) => highlightKeyPhrases(
@@ -235,9 +247,11 @@ function formatParagraphs(value, emoji, keyPhrases = []) {
     return "";
   }
 
-  paragraphs[paragraphs.length - 1] = `${paragraphs.at(-1)} ${emoji}`;
+  const emojis = normalizeBlockEmojis(blockEmojis, fallbackEmoji, paragraphs.length);
 
-  return paragraphs.join("\n\n");
+  return paragraphs
+    .map((paragraph, index) => `${paragraph} ${emojis[index]}`)
+    .join("\n\n");
 }
 
 function highlightKeyPhrases(value, keyPhrases) {

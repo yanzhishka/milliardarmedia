@@ -5,6 +5,7 @@ import {
   getNewsReviewChatIds,
   hasSeenNews,
   isPremiumEmojiEnabled,
+  normalizeBlockEmojis,
   normalizeKeyPhrases,
   rememberSeenNews,
   saveNewsDraft,
@@ -173,7 +174,11 @@ async function createFreshDraft(env, candidates) {
         sourcePublishedAt: candidate.publishedAt,
         headline: cleanText(generated.headline, 130),
         body,
-        emoji: cleanEmoji(generated.emoji),
+        blockEmojis: normalizeBlockEmojis(
+          generated.blockEmojis,
+          generated.emoji,
+          countParagraphs(body),
+        ),
         keyPhrases: normalizeKeyPhrases(generated.keyPhrases, body),
         imageUrl,
         imageQuery: cleanText(generated.imageQuery, 120),
@@ -433,8 +438,8 @@ async function generatePost(env, candidate, article, additionalInstruction = "")
     "Жёстко отклони политику и всё, что напрямую связано с государственными деятелями, выборами, санкциями и политическими конфликтами. Также не бери войны, терроризм, преступления, насилие, катастрофы, смерти и тяжёлые трагедии.",
     "Новость не обязана быть позитивной: допускаются интересные нейтральные, аналитические и необычные инфоповоды без запрещённых тем. Не отклоняй материал только из-за отсутствия вдохновляющего или радостного оттенка. Отклоняй при прямом нарушении правил, явной токсичности или недостатке проверяемых фактов.",
     `Пиши по-русски: нейтрально, живо, без кликбейта, ${MIN_DRAFT_BODY_CHARS}–${MAX_DRAFT_BODY_CHARS} знаков в body. Делай от одного до трёх смысловых абзацев: простой инфоповод оставь одним цельным блоком, а отдельный контекст или детали отделяй пустой строкой. Раскрой суть, добавь подтверждённые детали и объясни, чем событие интересно. Не придумывай факты. Не добавляй ссылку, подпись канала или HTML.`,
-    "Верни строго JSON: {\"publish\":boolean,\"headline\":string,\"body\":string,\"emoji\":string,\"keyPhrases\":string[],\"imageQuery\":string}. headline можно оставить пустым, если отдельный заголовок лишь повторяет первое предложение; emoji — ровно один обычный тематический эмодзи, который подходит к конкретной новости; imageQuery — точный запрос для легального фотобанка на английском.",
-    "Не добавляй никаких эмодзи в headline или body. Бот сам поставит выбранный обычный emoji ровно один раз — после последнего предложения. Не используй Premium/custom emoji или Telegram-разметку.",
+    "Верни строго JSON: {\"publish\":boolean,\"headline\":string,\"body\":string,\"blockEmojis\":string[],\"keyPhrases\":string[],\"imageQuery\":string}. headline можно оставить пустым, если отдельный заголовок лишь повторяет первое предложение; imageQuery — точный запрос для легального фотобанка на английском.",
+    "blockEmojis — массив обычных тематических эмодзи: ровно по одному подходящему эмодзи для каждого смыслового абзаца body, в том же порядке. Число элементов массива должно точно совпадать с числом абзацев. Не добавляй никаких эмодзи в headline или body: бот сам поставит по одному emoji в конец каждого блока. Не используй Premium/custom emoji или Telegram-разметку.",
     "keyPhrases — массив из 1–3 коротких ключевых слов или фраз, которые дословно есть в body. Выбери самые важные смысловые акценты новости. Не включай служебные слова, не меняй форму слов и не добавляй разметку: бот сам выделит эти фразы жирным в Telegram.",
     "imageQuery — 5–12 английских слов для реалистичной редакционной фотографии именно об этом событии: назови конкретный объект, место или действие. Не используй общие слова вроде news, technology, abstract и не проси коллаж, текст или логотип.",
     additionalInstruction,
@@ -655,12 +660,11 @@ function cleanText(value, maxLength) {
     .slice(0, maxLength);
 }
 
-function cleanEmoji(value) {
-  const emoji = String(value || "").match(
-    /(?:\p{Regional_Indicator}{2}|[#*0-9]\uFE0F?\u20E3|\p{Extended_Pictographic}(?:\uFE0E|\uFE0F)?(?:\p{Emoji_Modifier})?(?:\u200D\p{Extended_Pictographic}(?:\uFE0E|\uFE0F)?(?:\p{Emoji_Modifier})?)*)/u,
-  );
-
-  return emoji?.[0] || "";
+function countParagraphs(value) {
+  return String(value || "")
+    .split(/\n\s*\n+/)
+    .filter((paragraph) => paragraph.trim())
+    .length;
 }
 
 function stripHtml(value) {
